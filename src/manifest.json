@@ -1,0 +1,15 @@
+{
+  "manifest_version": 2,
+
+  "name": "Highlighty",
+  "short_name": "highlighty",
+  "description": "Highlight phrases from custom word lists.",
+  "version": "1.0",
+
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["lib/jquery-3.3.1.min.js", "lib/jquery.mark.min.js", "highlighty.js"]
+    }
+  ]
+}
