@@ -80,9 +80,13 @@ $(function() {
 
   $(window).keydown(function(event) {
     if (event.keyCode == 117) { // F6
-      console.log(wordsToHighlight);
       $("body").unmark({ done: processHighlights });
-      event.preventDefault();
+    }
+  });
+
+  chrome.runtime.onMessage.addListener(function(message) {
+    if (message === "highlighty") {
+      $("body").unmark({ done: processHighlights });
     }
   });
 });
