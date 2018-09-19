@@ -8,12 +8,13 @@ $(function() {
 
   const HL_PREFIX = "__highlighter_";
   const HL_BASE_CLASS = "__highlighter";
+  const HL_STYLE_ID = "__highlights";
 
   let bodyHighlighted = false;
 
-  // Setup word list and highlight words
-  function populateWordsToHighlight(wordsToHighlight, options) {
-    let highlighterStyles = "<style>." + HL_BASE_CLASS + " { " + options.baseStyles + " } ";
+  // Setup word list and append proper styles
+  function setupHighlighter(wordsToHighlight, options) {
+    let highlighterStyles = "<style id='" + HL_STYLE_ID + "'>." + HL_BASE_CLASS + " { " + options.baseStyles + " } ";
     for (let i = 0; i < options.highlighter.length; i++) {
       let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
       highlighterStyles += "." + HL_PREFIX + i + " { background-color: " + highlighterColor + " }\r\n";
@@ -55,6 +56,10 @@ $(function() {
     bodyHighlighted = true;
   }
 
+  function removeHighlights() {
+    $('#' + HL_STYLE_ID).remove();
+  }
+
   // Process list loading and highlights if applicable
   function processHighlights() {
     $("body").unmark({
@@ -62,7 +67,8 @@ $(function() {
         if (!bodyHighlighted) {
           chrome.storage.local.get(function(options) {
             let wordsToHighlight = [];
-            populateWordsToHighlight(wordsToHighlight, options);
+            removeHighlights();
+            setupHighlighter(wordsToHighlight, options);
             highlightWords(wordsToHighlight, options);
           });
         } else {
