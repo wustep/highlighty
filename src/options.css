@@ -1,0 +1,28 @@
+span.highlighty-list-name {
+  font-weight: 400;
+}
+
+.highlighty-primary-settings {
+  margin-bottom: 2rem;
+}
+
+.highlighty-color-picker {
+  width: 5em;
+}
+
+.highlighty-phrase-input {
+  width: 20em;
+}
+
+.highlighty-label-left {
+  text-align: left;
+  margin-left: 0.4em;
+}
+
+#highlighty-mouseover-checkbox {
+  vertical-align: bottom;
+}
+
+#highlighty-import-list-btn {
+  margin-left: 0.5em;
+}
