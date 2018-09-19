@@ -13,11 +13,6 @@
     'use strict';
     $(function() {
 
-        /* ---------- Edit here! ---------- */
-        /* Follow format specified!
-           Use hexcodes or color names for color. See: https://www.w3schools.com/cssref/css_colors.asp
-           If you see red, it's probably because of either extra whitespace at the end of the line or a syntax error!
-        */
         let highlighter = [
             {
                 url: "https://pastebin.com/raw/CjGXA1BV",
@@ -35,7 +30,7 @@
                 color: "black"
             }
         ];
-        let enableMouseoverForContext = true; // Set to true if you want to see the context above when you hover.
+        const ENABLE_CONTEXT_MOUSEOVER = true; // Set to true if you want to see the context above when you hover.
         const HL_BASE_STYLES = "border-radius: 0.3em; color: white; font-weight: normal; box-shadow: 1px 1px 1px 1px grey;"
 
         /* -------------------------------- */
@@ -126,10 +121,12 @@
                 let options = { element: "span", className: newHLClasses, separateWordSearch: false };
                 $("body").mark(word, options);
             }
-            for (let i = 0; i < highlighter.length; i ++) {
-                if ("context" in highlighter[i]) {
-                    $("." + HL_PREFIX + i).attr("title", highlighter[i].context);
-                }
+            if (ENABLE_CONTEXT_MOUSEOVER) {
+              for (let i = 0; i < highlighter.length; i ++) {
+                  if ("context" in highlighter[i]) {
+                      $("." + HL_PREFIX + i).attr("title", highlighter[i].context);
+                  }
+              }
             }
             highlighted = true;
         }
