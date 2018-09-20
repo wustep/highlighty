@@ -1,3 +1,5 @@
+/* Highlighty.js v1.0 | by Stephen Wu | MIT License */
+
 $(function() {
 
   const HL_STYLE_ID = "HighlighterStyles"; // Style block containing highlighter styles
@@ -35,6 +37,7 @@ $(function() {
       let newListDiv = $("#PhraseList--invisible")
           .clone()
           .attr('id', `PhraseList--${i}`)
+          .data('index', i);
       newListDiv.find(".PhraseList__title").html(options.highlighter[i].title);
       for (let j = 0; j < options.highlighter[i].words.length; j++) {
         newListDiv.find(".PhraseList__words").append(
@@ -46,7 +49,24 @@ $(function() {
         );
       }
       newListDiv.insertBefore("#NewPhraseList");
+      setupPhraseListHandlers(newListDiv);
     }
+  }
+
+  function setupPhraseListHandlers(list) {
+    let listIndex = list.data("index");
+    list.on("click", ".PhraseList__editName", function() {
+      var oldListName = list.find(".PhraseList__title").text();
+      var newListName = prompt("Please enter a new phrase list name", oldListName);
+      if (newListName != null && newListName != "" && newListName != oldListName) {
+        chrome.storage.local.get(function(options) { // TODO: functionalize this?
+          options.highlighter[listIndex].title = newListName;
+          chrome.storage.local.set({"highlighter": options.highlighter }, function() {
+            list.find(".PhraseList__title").text(newListName); // TODO: This is safe, right?
+          });
+        });
+      }
+    });
   }
 
   chrome.storage.local.get(function(options) {
