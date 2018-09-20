@@ -7,6 +7,7 @@
     <title>Highlighty Options</title>
     <link rel="stylesheet" type="text/css" href="lib/bulma.min.css">
     <link rel="stylesheet" type="text/css" href="options.css">
+    <!-- TODO: Possible dynamic coloring -->
   </head>
   <body>
     <section class="hero is-info">
@@ -27,8 +28,7 @@
           <h1 class="title">
             Settings
           <h1>
-          <!-- TODO: Improved responsiveness in this section, probably using wrong Bulma elements
-               and .Settings__label is hacky. -->
+          <!-- TODO: Allow editing custom styling, in particular, the options.baseStyles -->
           <div class="field is-grouped">
             <div class="control">
               <input id="Settings__enableTitleMouseover" type="checkbox">
@@ -61,7 +61,8 @@
           <div class="columns">
             <div class="column is-three-quarters">
               <div class="field is-grouped PhraseList__header">
-                <!-- TODO: Add color block here that opens color editor -->
+                <!-- TODO: Allow extra individual custom styling per phrase list? -->
+                <!-- TODO: Add color block here that opens color editor, re-use for NewPhraseList too. -->
                 <h1 class="title">
                   List:
                   <span class="PhraseList__title">
@@ -77,7 +78,9 @@
                 <button class="button is-danger PhraseList__delete">
                   Delete
                 </button>
-                <!-- TODO: Import / Exports!
+                <!-- TODO: Import / Export functionality!
+                           Import should support importing from other extensions that use different delimiters.
+                           Imort / Export should be in JSON format.
                 <div class="field has-addons">
                   <p class="control">
                     <button class="button is-info">
@@ -138,6 +141,7 @@
           -->
         </div>
       </div>
+      <!-- TODO: Export ALL lists and settings at once -->
     </section>
     <footer class="footer">
       <div class="content has-text-centered">
@@ -147,8 +151,8 @@
           <a target="_blank" href="https://markjs.io/">Mark.js</a>, and <a target="_blank" href="https://jquery.com/">jQuery</a>.
         </p>
         <p>
-          This extension is still in Beta Testing! Some more features to come include: an interactive color picker, more custom styling, and list
-          import and exports!
+          This extension is still in <b>Beta Testing</b>! Some more features to come include: an interactive color picker,<br>
+          more custom styling, list import and exports, and more keyboard shortcut options. Feel free to email any suggestions.
         </p>
       </div>
     </footer>
