@@ -19,6 +19,14 @@ span.highlighty-list-name {
   margin-left: 0.4em;
 }
 
+.highlighty-word {
+  margin-right: 0.5rem;
+}
+
+#highlighty-invisible-list {
+  display: none;
+}
+
 #highlighty-mouseover-checkbox {
   vertical-align: bottom;
 }
