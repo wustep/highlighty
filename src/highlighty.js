@@ -16,15 +16,16 @@ $(function() {
   function setupHighlighter(wordsToHighlight, options) {
     let highlighterStyles = "<style id='" + HL_STYLE_ID + "'>." + HL_BASE_CLASS + " { " + options.baseStyles + " } ";
     for (let i = 0; i < options.highlighter.length; i++) {
-      let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
-      highlighterStyles += "." + HL_PREFIX_CLASS + i + " { background-color: " + highlighterColor + " }\r\n";
-      for (let j = 0; j < options.highlighter[i].words.length; j++) {
-        addHighlightWord(options.highlighter[i].words[j], i, wordsToHighlight);
+      if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
+        let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
+        highlighterStyles += "." + HL_PREFIX_CLASS + i + " { background-color: " + highlighterColor + " }\r\n";
+        for (let j = 0; j < options.highlighter[i].words.length; j++) {
+          addHighlightWord(options.highlighter[i].words[j], i, wordsToHighlight);
+        }
       }
     }
     highlighterStyles += "</style>";
     $("head").append(highlighterStyles);
-    console.log(wordsToHighlight);
   }
 
   // Add word to highlight list given word and its list index
