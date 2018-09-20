@@ -66,6 +66,7 @@ $(function() {
       done: function() {
         if (!bodyHighlighted) {
           chrome.storage.local.get(function(options) {
+            console.log(options);
             let wordsToHighlight = [];
             removeHighlights();
             setupHighlighter(wordsToHighlight, options);
@@ -78,10 +79,12 @@ $(function() {
     });
   }
 
-  $(window).keydown(function(event) {
-    if (event.keyCode == 117) { // F6
-      processHighlights();
-    }
+  chrome.storage.local.get("keyboardShortcut", function(options) {
+    $(window).keydown(function(event) {
+      if (event.keyCode == options.keyboardShortcut) {
+        processHighlights();
+      }
+    });
   });
 
   chrome.runtime.onMessage.addListener(function(message) {

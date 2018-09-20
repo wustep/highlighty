@@ -1,36 +1,44 @@
-span.highlighty-list-name {
+span.hl-list-name {
   font-weight: 400;
 }
 
-.highlighty-primary-settings {
+.hl-primary-settings {
   margin-bottom: 2rem;
 }
 
-.highlighty-color-picker {
+.hl-color-picker {
   width: 5em;
 }
 
-.highlighty-phrase-input {
+.hl-phrase-input {
   width: 20em;
 }
 
-.highlighty-label-left {
+.hl-label-left {
   text-align: left;
   margin-left: 0.4em;
 }
 
-.highlighty-word {
+.hl-word {
   margin-right: 0.5rem;
 }
 
-#highlighty-invisible-list {
+.hl-list-buttons {
+  margin: 0 0 0 auto;
+}
+
+.hl-import-export {
+  margin-left: 1rem;
+}
+
+#hl-invisible-list {
   display: none;
 }
 
-#highlighty-mouseover-checkbox {
+#hl-mouseover-checkbox {
   vertical-align: bottom;
 }
 
-#highlighty-import-list-btn {
+#hl-import-list-btn {
   margin-left: 0.5em;
 }

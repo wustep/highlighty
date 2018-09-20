@@ -3,13 +3,15 @@
 const defaultOptions = {
   highlighter: [
     {
-      words: ["hello", "there", "facebook"],
+      words: ["hello", "there", "facebook", "lorem ipsum"],
       context: "words from set 3",
       color: "black"
     }
   ],
   baseStyles: "border-radius: 0.3em; color: white; font-weight: normal; box-shadow: 1px 1px 1px 1px grey;",
-  enableContextMouseover: true
+  enableContextMouseover: true,
+  keyboardShortcut: 117
+  // TODO: Add case sensitive setting
 };
 
 chrome.runtime.onInstalled.addListener(function (details) {
