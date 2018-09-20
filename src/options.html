@@ -61,6 +61,7 @@
           <div class="columns">
             <div class="column">
               <div class="field is-grouped PhraseList__header">
+                <!-- TODO: Add color block here that opens color editor -->
                 <h1 class="title">
                   List:
                   <span class="PhraseList__title">
@@ -76,6 +77,7 @@
                 <button class="button is-danger PhraseList__delete">
                   Delete
                 </button>
+                <!-- TODO: Import / Exports!
                 <div class="field has-addons">
                   <p class="control">
                     <button class="button is-info">
@@ -88,6 +90,7 @@
                     </button>
                   </p>
                 </div>
+                -->
               </div>
             </div>
           </div>
@@ -110,23 +113,27 @@
         </div>
 
         <div id="NewPhraseList">
-          <label class="label">
-            Add new list
-          </label>
-          <div class="field has-addons">
-            <div class="control">
-              <input class="input NewPhraseList__name" type="text" placeholder="List name">
+          <form>
+            <label class="label">
+              Add new list
+            </label>
+            <div class="field has-addons">
+              <div class="control">
+                <input class="input" id="NewPhraseList__title" type="text" placeholder="List title">
+              </div>
+              <div class="control"> <!-- TODO: Make enhanced color picker -->
+                <input class="input" id="NewPhraseList__color" type="text" placeholder="Color">
+              </div>
+              <div class="control">
+                <button type="submit" class="button is-success" id="NewPhraseList__add"> + </button>
+              </div>
             </div>
-            <div class="control">
-              <input class="input NewPhraseList__color" type="text" placeholder="Color">
-            </div>
-            <div class="control">
-              <button class="button is-success NewPhraseList__add"> + </button>
-            </div>
-          </div>
+          </form>
+          <!-- TODO: Imports!
           <div class="field">
-            <button class="button is-info NewPhraseList__import">Import</button>
+            <button class="button is-info" id="NewPhraseList__import">Import</button>
           </div>
+          -->
         </div>
       </div>
     </section>

@@ -7,6 +7,7 @@ $(function() {
   function setupOptionsPage(options) {
     removeExistingListStyles();
     setupPrimarySettings(options);
+    setupAddPhraseListHandler();
     addExistingListStyles(options);
     addExistingLists(options);
   }
@@ -15,6 +16,33 @@ $(function() {
   function setupPrimarySettings(options) {
     $("#Settings__enableTitleMouseover").attr('checked', options.enabletitleMouseover);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
+  }
+
+  function setupAddPhraseListHandler() {
+    $("#NewPhraseList__add").on("click", function(e) {
+      e.preventDefault();
+      chrome.storage.local.get(function(options) {
+        let listIndex = options.highlighter.length;
+        let listTitle = $("#NewPhraseList__title").val().length > 0
+            ? $("#NewPhraseList__title").val()
+            : "Untitled";
+        let listColor = $("#NewPhraseList__color").val().length > 0
+            ? $("#NewPhraseList__color").val()
+            : "black";
+        addNewListDiv(listTitle, listIndex);
+        options.highlighter[listIndex] = {
+          phrases: [],
+          color: listColor,
+          title: listTitle
+        };
+        chrome.storage.local.set({"highlighter": options.highlighter},
+          function() {
+            $("#NewPhraseList__title").val("");
+            $("#NewPhraseList__color").val("");
+            alert("List added!");
+          });
+      });
+    });
   }
 
   function removeExistingListStyles() {
@@ -37,18 +65,22 @@ $(function() {
   function addExistingLists(options) {
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) {
-        let $newListDiv = $("#PhraseList--invisible")
-            .clone()
-            .attr('id', `PhraseList--${i}`)
-            .data('index', i);
-        $newListDiv.find(".PhraseList__title").html(options.highlighter[i].title);
+        let $newListDiv = addNewListDiv(options.highlighter[i].title, i);
         for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
           addPhrase($newListDiv, options.highlighter[i].phrases[j], i);
         }
-        $newListDiv.insertBefore("#NewPhraseList");
-        setupPhraseListHandlers($newListDiv);
       }
     }
+  }
+
+  function addNewListDiv(title, index) {
+    $newListDiv = $("#PhraseList--invisible").clone()
+        .attr('id', `PhraseList--${index}`)
+        .data('index', index);
+    $newListDiv.find(".PhraseList__title").html(title);
+    setupPhraseListHandlers($newListDiv);
+    $newListDiv.insertBefore("#NewPhraseList");
+    return $newListDiv;
   }
 
   function addPhrase($listDiv, phrase, listIndex) {
