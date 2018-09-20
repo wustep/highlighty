@@ -23,11 +23,11 @@ $(function() {
 
   function addExistingListStyles(options) {
     let highlighterStyles =
-        `<style id="${HL_STYLE_ID}">span.PhraseList__word { ${options.baseStyles} }\r\n`;
+        `<style id="${HL_STYLE_ID}">span.PhraseList__phrase { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
         let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
-        highlighterStyles += `span.PhraseList__word--from${i} { background-color: ${highlighterColor} }\r\n`;
+        highlighterStyles += `span.PhraseList__phrase--from${i} { background-color: ${highlighterColor} }\r\n`;
       }
     }
     highlighterStyles += "</style>";
@@ -37,29 +37,37 @@ $(function() {
   function addExistingLists(options) {
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) {
-        let newListDiv = $("#PhraseList--invisible")
+        let $newListDiv = $("#PhraseList--invisible")
             .clone()
             .attr('id', `PhraseList--${i}`)
             .data('index', i);
-        newListDiv.find(".PhraseList__title").html(options.highlighter[i].title);
-        for (let j = 0; j < options.highlighter[i].words.length; j++) {
-          newListDiv.find(".PhraseList__words").append(
-            `<span class="tag is-medium PhraseList__word PhraseList__word--from${i}"` +
-                 ` data-list="${i}" data-index="${j}">` +
-                options.highlighter[i].words[j] +
-                `<button class="delete is-small PhraseList__word__delete"></button>` +
-            `</span>`
-          );
+        $newListDiv.find(".PhraseList__title").html(options.highlighter[i].title);
+        for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
+          addPhrase($newListDiv, options.highlighter[i].phrases[j], i, j);
         }
-        newListDiv.insertBefore("#NewPhraseList");
-        setupPhraseListHandlers(newListDiv);
+        $newListDiv.insertBefore("#NewPhraseList");
+        setupPhraseListHandlers($newListDiv);
       }
     }
+  }
+
+  function addPhrase($listDiv, phrase, listIndex, phraseIndex) {
+    if (phraseIndex == undefined) {
+      phraseIndex = $listDiv.find(".PhraseList__phrases").length;
+    }
+    $listDiv.find(".PhraseList__phrases").append(
+      `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--from${listIndex}"` +
+           ` data-list="${listIndex}" data-index="${phraseIndex}">` +
+          phrase +
+          `<button class="delete is-small PhraseList__phrase__delete"></button>` +
+      `</span>`
+    );
   }
 
   function setupPhraseListHandlers(list) {
     setupPhraseListEditNameHandler(list);
     setupPhraseListDeleteHandler(list);
+    setupPhraseListAddPhraseHandler(list);
   }
 
   function setupPhraseListEditNameHandler(list) {
@@ -86,6 +94,29 @@ $(function() {
           chrome.storage.local.set({"highlighter": options.highlighter }, function() {
             list.remove();
           });
+        });
+      }
+    });
+  }
+
+  function setupPhraseListAddPhraseHandler($list) {
+    let listIndex = $list.data("index");
+    $list.on("click", ".PhraseList__newPhrase__add", function(e) {
+      e.preventDefault();
+      let newPhrase = $list.find(".PhraseList__newPhrase__phrase").val();
+      if (newPhrase.length > 0) {
+        chrome.storage.local.get(function(options) {
+          if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
+            $list.find(".PhraseList__newPhrase__phrase").val("");
+            alert("Phrase was already in list!")
+          } else {
+            options.highlighter[listIndex].phrases.push(newPhrase);
+            $list.find(".PhraseList__newPhrase__phrase").val("");
+            chrome.storage.local.set({"highlighter": options.highlighter }, function() {
+              addPhrase($list, newPhrase, listIndex);
+              alert("Phrase added!");
+            });
+          }
         });
       }
     });

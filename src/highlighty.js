@@ -12,15 +12,15 @@ $(function() {
 
   let bodyHighlighted = false;
 
-  // Setup word list and append proper styles
-  function setupHighlighter(wordsToHighlight, options) {
+  // Setup phrase list and append proper styles
+  function setupHighlighter(phrasesToHighlight, options) {
     let highlighterStyles = "<style id='" + HL_STYLE_ID + "'>." + HL_BASE_CLASS + " { " + options.baseStyles + " } ";
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
         let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
         highlighterStyles += "." + HL_PREFIX_CLASS + i + " { background-color: " + highlighterColor + " }\r\n";
-        for (let j = 0; j < options.highlighter[i].words.length; j++) {
-          addHighlightWord(options.highlighter[i].words[j], i, wordsToHighlight);
+        for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
+          addHighlightPhrase(options.highlighter[i].phrases[j], i, phrasesToHighlight);
         }
       }
     }
@@ -28,24 +28,24 @@ $(function() {
     $("head").append(highlighterStyles);
   }
 
-  // Add word to highlight list given word and its list index
-  function addHighlightWord(highlightWord, listNumber, wordsToHighlight) {
-    highlightWord = String(highlightWord);
-    if (highlightWord.length > 1) {
-      if (wordsToHighlight[highlightWord]) {
-        wordsToHighlight[highlightWord].push(listNumber);
+  // Add phrase to highlight list given phrase and its list index
+  function addHighlightPhrase(highlightPhrase, listNumber, phrasesToHighlight) {
+    highlightPhrase = String(highlightPhrase);
+    if (highlightPhrase.length > 1) {
+      if (phrasesToHighlight[highlightPhrase]) {
+        phrasesToHighlight[highlightPhrase].push(listNumber);
       } else {
-        wordsToHighlight[highlightWord] = [listNumber];
+        phrasesToHighlight[highlightPhrase] = [listNumber];
       }
     }
   }
 
-  // Highlight words in body
-  function highlightWords(wordsToHighlight, options) {
-    for (let word of Object.keys(wordsToHighlight)) {
-      let newHLClasses = HL_BASE_CLASS + " " + HL_PREFIX_CLASS + wordsToHighlight[word].join(" " + HL_PREFIX_CLASS);
+  // Highlight phrases in body
+  function highlightPhrases(phrasesToHighlight, options) {
+    for (let phrase of Object.keys(phrasesToHighlight)) {
+      let newHLClasses = HL_BASE_CLASS + " " + HL_PREFIX_CLASS + phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS);
       let markOptions = { element: "span", className: newHLClasses, separateWordSearch: false };
-      $("body").mark(word, markOptions);
+      $("body").mark(phrase, markOptions);
     }
     if (options.enabletitleMouseover) {
       for (let i = 0; i < options.highlighter.length; i++) {
@@ -68,10 +68,10 @@ $(function() {
         if (!bodyHighlighted) {
           chrome.storage.local.get(function(options) {
             console.log(options);
-            let wordsToHighlight = [];
+            let phrasesToHighlight = [];
             removeHighlights();
-            setupHighlighter(wordsToHighlight, options);
-            highlightWords(wordsToHighlight, options);
+            setupHighlighter(phrasesToHighlight, options);
+            highlightPhrases(phrasesToHighlight, options);
           });
         } else {
           bodyHighlighted = false;

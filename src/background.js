@@ -3,8 +3,8 @@
 const defaultOptions = {
   highlighter: [
     {
-      words: ["hello", "there", "facebook", "lorem ipsum"],
-      title: "words from set 3",
+      phrases: ["hello", "there", "facebook", "lorem ipsum"],
+      title: "phrases from set 3",
       color: "black"
     }
   ],

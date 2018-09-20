@@ -29,6 +29,7 @@ span.PhraseList__title {
   font-weight: 400;
 }
 
-.PhraseList__word {
+.PhraseList__phrase {
   margin-right: 0.5rem;
+  margin-bottom: 0.4rem;
 }
