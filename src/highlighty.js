@@ -2,6 +2,8 @@
 
 $(function() {
 
+  /* TODO: Add count of highlighted words, maybe a navigator */
+
   if (window.top != window.self) { // Don't run on frames or iframes
     return;
   }
@@ -44,7 +46,13 @@ $(function() {
   function highlightPhrases(phrasesToHighlight, options) {
     for (let phrase of Object.keys(phrasesToHighlight)) {
       let newHLClasses = HL_BASE_CLASS + " " + HL_PREFIX_CLASS + phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS);
-      let markOptions = { element: "span", className: newHLClasses, separateWordSearch: false };
+      let markOptions =
+          {
+            element: "span",
+            className: newHLClasses,
+            separateWordSearch: false,
+            acrossElements: true
+          };
       $("body").mark(phrase, markOptions);
     }
     if (options.enabletitleMouseover) {
