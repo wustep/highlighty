@@ -46,6 +46,7 @@ $(function() {
             $("#NewPhraseList__title").val("");
             $("#NewPhraseList__color").val("");
             alert("List added!");
+            // TODO: [Low] Avoid alerts here and elsewhere, use smooth dialogs with bulma styling instead later.
           });
       });
     });

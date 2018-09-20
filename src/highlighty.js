@@ -49,6 +49,7 @@ $(function() {
     }
     if (options.enabletitleMouseover) {
       for (let i = 0; i < options.highlighter.length; i++) {
+        /* TODO: [Med] Improved mouseover tooltips - these are slow and ugly */
         if ("title" in options.highlighter[i]) {
           $("." + HL_PREFIX_CLASS + i).attr("title", options.highlighter[i].title);
         }

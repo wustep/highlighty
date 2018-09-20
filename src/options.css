@@ -28,3 +28,7 @@ span.PhraseList__title {
   margin-right: 0.5rem;
   margin-bottom: 0.4rem;
 }
+
+.PhraseList__newPhrase {
+  margin-bottom: 1.0rem;
+}
