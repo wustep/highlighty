@@ -49,7 +49,7 @@ $(function() {
     if (options.enabletitleMouseover) {
       for (let i = 0; i < options.highlighter.length; i++) {
         if ("title" in options.highlighter[i]) {
-          $("." + HL_PREFIX + i).attr("title", options.highlighter[i].title);
+          $("." + HL_PREFIX_CLASS + i).attr("title", options.highlighter[i].title);
         }
       }
     }
