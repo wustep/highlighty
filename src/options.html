@@ -7,7 +7,7 @@
     <title>Highlighty Options</title>
     <link rel="stylesheet" type="text/css" href="lib/bulma.min.css">
     <link rel="stylesheet" type="text/css" href="options.css">
-    <!-- TODO: Possible dynamic coloring -->
+    <!-- TODO: [Low] Possible dynamic coloring -->
   </head>
   <body>
     <section class="hero is-info">
@@ -28,7 +28,7 @@
           <h1 class="title">
             Settings
           <h1>
-          <!-- TODO: Allow editing custom styling, in particular, the options.baseStyles -->
+          <!-- TODO: [High] Allow editing custom styling, in particular, the options.baseStyles -->
           <div class="field is-grouped">
             <div class="control">
               <input id="Settings__enableTitleMouseover" type="checkbox">
@@ -78,7 +78,7 @@
                 <button class="button is-danger PhraseList__delete">
                   Delete
                 </button>
-                <!-- TODO: Import / Export functionality!
+                <!-- TODO: [High] Import / Export functionality!
                            Import should support importing from other extensions that use different delimiters.
                            Imort / Export should be in JSON format.
                 <div class="field has-addons">
@@ -124,15 +124,15 @@
               <div class="control">
                 <input class="input" id="NewPhraseList__title" type="text" placeholder="List title">
               </div>
-              <div class="control"> <!-- TODO: Make enhanced color picker -->
+              <div class="control"> <!-- TODO: [High] Make enhanced color picker -->
                 <input class="input" id="NewPhraseList__color" type="text" placeholder="Color">
               </div>
               <div class="control">
                 <button type="submit" class="button is-success" id="NewPhraseList__add"> + </button>
               </div>
             </div>
-            <p>For colors, use <a href="https://htmlcolorcodes.com">htmlcolorcodes.com</a> for now!</p>
-            <p>You can use hex codes like <i>#317570</i> and some colors like <i>yellow</i>.</p>
+            <p>For colors, use <a href="https://htmlcolorcodes.com">htmlcolorcodes.com</a> to pick colors for now.</p>
+            <p>You can use hex codes like <i style="color: #317570">#317570</i> and some colors like <i style="color: purple">purple</i>.</p>
           </form>
           <!-- TODO: Imports!
           <div class="field">
@@ -141,7 +141,7 @@
           -->
         </div>
       </div>
-      <!-- TODO: Export ALL lists and settings at once -->
+      <!-- TODO: [Low] Export ALL lists and settings at once -->
     </section>
     <footer class="footer">
       <div class="content has-text-centered">

@@ -40,6 +40,9 @@ $(function() {
         };
         chrome.storage.local.set({"highlighter": options.highlighter},
           function() {
+            // TODO: [Low] Add styles smarter instead of redoing them all
+            removeExistingListStyles();
+            addExistingListStyles(options);
             $("#NewPhraseList__title").val("");
             $("#NewPhraseList__color").val("");
             alert("List added!");
