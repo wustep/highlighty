@@ -12,7 +12,10 @@ $(function() {
     addExistingLists(options);
   }
 
-  // Setup primary settings (mouseover, etc.)
+  function removeExistingListStyles() {
+    $('.' + HL_STYLE_ID).remove();
+  }
+
   function setupPrimarySettings(options) {
     $("#Settings__enableTitleMouseover").attr('checked', options.enabletitleMouseover);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
@@ -43,10 +46,6 @@ $(function() {
           });
       });
     });
-  }
-
-  function removeExistingListStyles() {
-    $('.' + HL_STYLE_ID).remove();
   }
 
   function addExistingListStyles(options) {
