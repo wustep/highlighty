@@ -65,6 +65,7 @@ $(function() {
     setupPhraseListEditNameHandler(list);
     setupPhraseListDeleteHandler(list);
     setupPhraseListAddPhraseHandler(list);
+    setupPhraseListDeletePhraseHandler(list);
   }
 
   function setupPhraseListEditNameHandler(list) {
@@ -114,6 +115,23 @@ $(function() {
               alert("Phrase added!");
             });
           }
+        });
+      }
+    });
+  }
+
+  function setupPhraseListDeletePhraseHandler($list) {
+    let listIndex = $list.data("index");
+    let $phrases = $list.find(".PhraseList__phrases");
+    $phrases.on("click", ".PhraseList__phrase__delete", function(e) {
+      let $phrase = $(this).parent();
+      if (window.confirm("Are you sure you want to delete: " + $phrase.text() + "?")) {
+        chrome.storage.local.get(function(options) {
+          let phraseIndex = options.highlighter[listIndex].phrases.indexOf($phrase.text());
+          options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
+          chrome.storage.local.set({"highlighter": options.highlighter }, function() {
+            $phrases.find($phrase).remove();
+          });
         });
       }
     });
