@@ -43,7 +43,7 @@ $(function() {
             .data('index', i);
         $newListDiv.find(".PhraseList__title").html(options.highlighter[i].title);
         for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
-          addPhrase($newListDiv, options.highlighter[i].phrases[j], i, j);
+          addPhrase($newListDiv, options.highlighter[i].phrases[j], i);
         }
         $newListDiv.insertBefore("#NewPhraseList");
         setupPhraseListHandlers($newListDiv);
@@ -51,13 +51,10 @@ $(function() {
     }
   }
 
-  function addPhrase($listDiv, phrase, listIndex, phraseIndex) {
-    if (phraseIndex == undefined) {
-      phraseIndex = $listDiv.find(".PhraseList__phrases").length;
-    }
+  function addPhrase($listDiv, phrase, listIndex) {
     $listDiv.find(".PhraseList__phrases").append(
       `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--from${listIndex}"` +
-           ` data-list="${listIndex}" data-index="${phraseIndex}">` +
+           ` data-list="${listIndex}">` +
           phrase +
           `<button class="delete is-small PhraseList__phrase__delete"></button>` +
       `</span>`
