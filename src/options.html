@@ -16,111 +16,116 @@
             Highlighty Options
           </h1>
           <h2 class="subtitle">
-            Add phrases to your phrase lists or modify settings below.
+            Add phrases to your lists or modify settings below.
           </h2>
         </div>
       </div>
     </section>
     <section class="section">
-      <div class="container hl-primary-settings">
+      <div class="container" id="Settings">
         <div class="box">
           <h1 class="title">
             Settings
           <h1>
           <div class="field is-horizontal">
             <div class="control">
-              <input id="hl-mouseover-checkbox" type="checkbox">
+              <input id="Settings__enableTitleMouseover" type="checkbox">
             </div>
             <div class="field-label is-normal">
-              <label for="hl-mouseover-checkbox" class="label hl-label-left">
-                Enable mouseover for list name tooltip
+              <label for="Settings__enableTitleMouseover" class="label Settings__label">
+                Enable mouseover for list title tooltip
               </label>
             </div>
           </div>
           <div class="field is-horizontal">
             <div class="control">
-              <div class="select hl-primary-settings-input">
-                <select id="hl-keyboard-shortcut">
+              <div class="select">
+                <select id="Settings__keyboardShortcut">
                   <option value="-1">None</option>
                   <option value="117">F6</option>
                 </select>
               </div>
             </div>
             <div class="field-label is-normal">
-              <label for="hl-keyboard-shortcut" class="label hl-label-left">Keyboard shortcut to highlight phrases</label>
+              <label for="Settings__keyboardShortcut" class="label Settings__label">Keyboard shortcut to highlight phrases</label>
             </div>
           </div>
-          <div id="hl-primary-settings-save" class="button is-info">Save</div>
+          <div class="button is-info" id="Settings__save">Save</div>
         </div>
       </div>
 
       <div class="container">
-        <div class="box" id="hl-invisible-list">
-          <div class="field is-grouped">
-            <h1 class="title">
-              List:
-              <span class="hl-list-name">
-              </span>
-            </h1>
-
-            <div class="field is-grouped hl-list-buttons">
-              <button class="button is-info is-hovered hl-edit-name">
-                Edit Name
-              </button>
-              <!-- TODO: import export btns
-              <div class="field has-addons hl-import-export">
-                <p class="control">
-                  <a class="button is-info">
-                    <span>Import</span>
-                  </a>
-                </p>
-                <p class="control">
-                  <a class="button is-link">
-                    <span>Export</span>
-                  </a>
-                </p>
+        <div class="box" class="PhraseList" id="PhraseList--invisible">
+          <div class="columns">
+            <div class="column">
+              <div class="field is-grouped PhraseList__header">
+                <h1 class="title">
+                  List:
+                  <span class="PhraseList__title">
+                  </span>
+                </h1>
               </div>
-            -->
+            </div>
+            <div class="column">
+              <div class="buttons is-right PhraseList__actions">
+                <button class="button is-primary PhraseList__editName">
+                  Edit Name
+                </button>
+                <button class="button is-danger PhraseList__delete">
+                  Delete
+                </button>
+                <div class="field has-addons">
+                  <p class="control">
+                    <button class="button is-info">
+                      <span>Import</span>
+                    </button>
+                  </p>
+                  <p class="control">
+                    <button class="button is-link">
+                      <span>Export</span>
+                    </button>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           <div class="field is-grouped">
             <div class="control">
               <div class="field has-addons">
                 <div class="control">
-                  <input class="input hl-phrase-input" type="text" placeholder="Add a new phrase">
+                  <input class="input PhraseList__newPhrase__phrase" type="text" placeholder="Add a new phrase">
                 </div>
                 <div class="control">
-                  <a class="button is-success"> + </a>
+                  <button class="button is-success PhraseList__newPhrase__add"> + </button>
                 </div>
               </div>
             </div>
           </div>
-          <div class="hl-words">
+          <div class="PhraseList__words">
           </div>
         </div>
 
-        <div id="hl-add-new-list">
+        <div id="NewPhraseList">
           <label class="label">
             Add new list
           </label>
-          <div class="field is-grouped">
-            <div class="field has-addons">
-              <div class="control">
-                <input class="input hl-phrase-input" type="text" placeholder="List name">
-              </div>
-              <div class="control">
-                <input class="input hl-color-picker" type="text" placeholder="Color">
-              </div>
-              <div class="control">
-                <a class="button is-info"> + </a>
-              </div>
+          <div class="field has-addons">
+            <div class="control">
+              <input class="input NewPhraseList__name" type="text" placeholder="List name">
             </div>
-            <div class="button is-info" id="hl-import-list-btn">Import</div>
+            <div class="control">
+              <input class="input NewPhraseList__color" type="text" placeholder="Color">
+            </div>
+            <div class="control">
+              <button class="button is-success NewPhraseList__add"> + </button>
+            </div>
+          </div>
+          <div class="field">
+            <button class="button is-info NewPhraseList__import">Import</button>
           </div>
         </div>
       </div>
     </section>
-
     <script type="text/javascript" src="lib/jquery.3.3.1.min.js"></script>
     <script type="text/javascript" src="options.js"></script>
   </body>

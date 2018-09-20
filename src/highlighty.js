@@ -6,9 +6,9 @@ $(function() {
     return;
   }
 
-  const HL_PREFIX = "__highlighter_";
-  const HL_BASE_CLASS = "__highlighter";
-  const HL_STYLE_ID = "__highlights";
+  const HL_PREFIX_CLASS = "__hl_";    // Phrases will have class prefixed with their list numbe
+  const HL_BASE_CLASS = "__hl";       // Phrases will all have this class
+  const HL_STYLE_ID = "__hl_styles";  // Style block containing highlighter styles
 
   let bodyHighlighted = false;
 
@@ -17,7 +17,7 @@ $(function() {
     let highlighterStyles = "<style id='" + HL_STYLE_ID + "'>." + HL_BASE_CLASS + " { " + options.baseStyles + " } ";
     for (let i = 0; i < options.highlighter.length; i++) {
       let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
-      highlighterStyles += "." + HL_PREFIX + i + " { background-color: " + highlighterColor + " }\r\n";
+      highlighterStyles += "." + HL_PREFIX_CLASS + i + " { background-color: " + highlighterColor + " }\r\n";
       for (let j = 0; j < options.highlighter[i].words.length; j++) {
         addHighlightWord(options.highlighter[i].words[j], i, wordsToHighlight);
       }
@@ -42,14 +42,14 @@ $(function() {
   // Highlight words in body
   function highlightWords(wordsToHighlight, options) {
     for (let word of Object.keys(wordsToHighlight)) {
-      let newHLClasses = HL_BASE_CLASS + " " + HL_PREFIX + wordsToHighlight[word].join(" " + HL_PREFIX);
+      let newHLClasses = HL_BASE_CLASS + " " + HL_PREFIX_CLASS + wordsToHighlight[word].join(" " + HL_PREFIX_CLASS);
       let markOptions = { element: "span", className: newHLClasses, separateWordSearch: false };
       $("body").mark(word, markOptions);
     }
-    if (options.enableContextMouseover) {
+    if (options.enabletitleMouseover) {
       for (let i = 0; i < options.highlighter.length; i++) {
-        if ("context" in options.highlighter[i]) {
-          $("." + HL_PREFIX + i).attr("title", options.highlighter[i].context);
+        if ("title" in options.highlighter[i]) {
+          $("." + HL_PREFIX + i).attr("title", options.highlighter[i].title);
         }
       }
     }

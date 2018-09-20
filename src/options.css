@@ -1,44 +1,32 @@
-span.hl-list-name {
-  font-weight: 400;
-}
+/* Primary settings */
 
-.hl-primary-settings {
+#Settings {
   margin-bottom: 2rem;
 }
 
-.hl-color-picker {
-  width: 5em;
+#Settings__enableTitleMouseover {
+  vertical-align: bottom;
 }
 
-.hl-phrase-input {
-  width: 20em;
-}
-
-.hl-label-left {
+.Settings__label {
   text-align: left;
   margin-left: 0.4em;
 }
 
-.hl-word {
-  margin-right: 0.5rem;
-}
+/* Phrase Lists */
 
-.hl-list-buttons {
-  margin: 0 0 0 auto;
-}
-
-.hl-import-export {
-  margin-left: 1rem;
-}
-
-#hl-invisible-list {
+#PhraseList--invisible {
   display: none;
 }
 
-#hl-mouseover-checkbox {
-  vertical-align: bottom;
+.PhraseList__header {
+  margin-bottom: 0px;
 }
 
-#hl-import-list-btn {
-  margin-left: 0.5em;
+span.PhraseList__title {
+  font-weight: 400;
+}
+
+.PhraseList__word {
+  margin-right: 0.5rem;
 }

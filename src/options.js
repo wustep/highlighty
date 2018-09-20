@@ -1,5 +1,7 @@
 $(function() {
 
+  const HL_STYLE_ID = "HighlighterStyles"; // Style block containing highlighter styles
+
   function setupOptionsPage(options) {
     removeExistingListStyles();
     setupPrimarySettings(options);
@@ -8,20 +10,21 @@ $(function() {
   }
 
   // Setup primary settings (mouseover, etc.)
-  function setupPrimarySettings(options) { // TODO: Validation & set defaults here?
-    $("#hl-mouseover-checkbox").attr('checked', options.enableContextMouseover);
-    $("#hl-keyboard-shortcut").attr('value', options.keyboardShortcut);
+  function setupPrimarySettings(options) {
+    $("#Settings__enableTitleMouseover").attr('checked', options.enabletitleMouseover);
+    $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
   }
 
   function removeExistingListStyles() {
-    $('#hl-styles').remove();
+    $('.' + HL_STYLE_ID).remove();
   }
 
   function addExistingListStyles(options) {
-    let highlighterStyles = "<style id='hl-styles'>span.hl-word { " + options.baseStyles + " } ";
+    let highlighterStyles =
+        `<style id="${HL_STYLE_ID}">span.PhraseList__word { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
       let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
-      highlighterStyles += "span.hl-word-from-" + i + " { background-color: " + highlighterColor + " }\r\n";
+      highlighterStyles += `span.PhraseList__word--from${i} { background-color: ${highlighterColor} }\r\n`;
     }
     highlighterStyles += "</style>";
     $("head").append(highlighterStyles);
@@ -29,19 +32,20 @@ $(function() {
 
   function addExistingLists(options) {
     for (let i = 0; i < options.highlighter.length; i++) {
-      let newListDiv = $("#hl-invisible-list")
+      let newListDiv = $("#PhraseList--invisible")
           .clone()
-          .attr('id', "hl-list-" + i)
-      newListDiv.find(".hl-list-name").html(options.highlighter[i].context);
+          .attr('id', `PhraseList--${i}`)
+      newListDiv.find(".PhraseList__title").html(options.highlighter[i].title);
       for (let j = 0; j < options.highlighter[i].words.length; j++) {
-        newListDiv.find(".hl-words").append(
-          "<span class='tag is-medium hl-word hl-word-from-" + i +
-              "' id='hl-word-" + i + "-" + j + "'>" +
+        newListDiv.find(".PhraseList__words").append(
+          `<span class="tag is-medium PhraseList__word PhraseList__word--from${i}"` +
+               ` data-list="${i}" data-index="${j}">` +
               options.highlighter[i].words[j] +
-              "<button class='delete is-small hl-delete-word'></button>" +
-          "</span>");
+              `<button class="delete is-small PhraseList__word__delete"></button>` +
+          `</span>`
+        );
       }
-      newListDiv.insertBefore("#hl-add-new-list");
+      newListDiv.insertBefore("#NewPhraseList");
     }
   }
 
@@ -49,15 +53,15 @@ $(function() {
     setupOptionsPage(options);
   });
 
-  $("#hl-primary-settings-save").on("click", function(e) {
-    let newKeyboardShortcut = $("#hl-keyboard-shortcut").val();
+  $("#Settings__save").on("click", function(e) {
+    let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
+    let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
+    console.log(newEnableTitleMouseover);
     console.log(newKeyboardShortcut);
-    let newEnableContextMouseover = $("#hl-mouseover-checkbox").is(":checked");
-    console.log(newEnableContextMouseover);
     chrome.storage.local.set(
       {
         "keyboardShortcut": newKeyboardShortcut,
-        "enableContextMouseover": newEnableContextMouseover
+        "enabletitleMouseover": newEnableTitleMouseover
       },
       function() {
         alert("Settings saved!");
