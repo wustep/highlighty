@@ -29,17 +29,17 @@
           <h1>
           <!-- TODO: Improved responsiveness in this section, probably using wrong Bulma elements
                and .Settings__label is hacky. -->
-          <div class="field is-horizontal">
+          <div class="field is-grouped">
             <div class="control">
               <input id="Settings__enableTitleMouseover" type="checkbox">
             </div>
             <div class="field-label is-normal">
-              <label for="Settings__enableTitleMouseover" class="label Settings__label">
+              <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
                 Enable mouseover for list title tooltip
               </label>
             </div>
           </div>
-          <div class="field is-horizontal">
+          <div class="field is-grouped">
             <div class="control">
               <div class="select">
                 <select id="Settings__keyboardShortcut">
@@ -49,7 +49,7 @@
               </div>
             </div>
             <div class="field-label is-normal">
-              <label for="Settings__keyboardShortcut" class="label Settings__label">Keyboard shortcut to highlight phrases</label>
+              <label for="Settings__keyboardShortcut" class="label is-pulled-left">Keyboard shortcut to highlight phrases</label>
             </div>
           </div>
           <div class="button is-info" id="Settings__save">Save</div>
@@ -59,7 +59,7 @@
       <div class="container" id="PhraseLists">
         <div class="box" class="PhraseList" id="PhraseList--invisible">
           <div class="columns">
-            <div class="column">
+            <div class="column is-three-quarters">
               <div class="field is-grouped PhraseList__header">
                 <!-- TODO: Add color block here that opens color editor -->
                 <h1 class="title">
@@ -69,7 +69,7 @@
                 </h1>
               </div>
             </div>
-            <div class="column">
+            <div class="column is-one-quarter">
               <div class="buttons is-right PhraseList__actions">
                 <button class="button is-primary PhraseList__editName">
                   Edit Name
