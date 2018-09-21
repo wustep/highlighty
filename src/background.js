@@ -1,4 +1,4 @@
-/* Highlighty.js v1.0 | by Stephen Wu | MIT License */
+/* Highlighty.js | by Stephen Wu */
 
 const defaultOptions = {
   highlighter: [

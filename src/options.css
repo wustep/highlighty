@@ -1,4 +1,4 @@
-/* Highlighty.js v1.0 | by Stephen Wu | MIT License */
+/* Highlighty.js | by Stephen Wu */
 
 /* Primary settings */
 
@@ -32,8 +32,4 @@ span.tag.PhraseList__phrase {
 
 .PhraseList__newPhrase {
   margin-bottom: 1.0rem;
-}
-
-button.delete.PhraseList__phrase__delete {
-  margin: 0.1rem;
 }
