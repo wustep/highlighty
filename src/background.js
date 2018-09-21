@@ -14,12 +14,28 @@ const defaultOptions = {
   // TODO: [Med] Add case sensitive setting
   // TODO: [Low] Add alphabetization of list setting
   // TODO: [Low] Add crossElements checkbox to have mark.js go across elements
+  // TODO: [Med] Add whitelist/blacklist
+  // TODO: [High] Add auto-highlight enable
 };
 
 chrome.runtime.onInstalled.addListener(function (details) {
   if (details.reason == "install") {
     chrome.runtime.openOptionsPage();
     chrome.storage.local.set(defaultOptions);
+  } else {
+    // When user updates, set new, missing options to their default.
+    chrome.storage.local.get(function(currentOptions) {
+      let changed = false;
+      for (let option of Object.keys(defaultOptions)) {
+        if (!(option in currentOptions)) {
+          changed = true;
+          currentOptions[option] = defaultOptions[option];
+        }
+      }
+      if (changed) {
+        chrome.storage.local.set(option, defaultOptions[option]);
+      }
+    }
   }
 });
 

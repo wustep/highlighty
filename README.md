@@ -1,2 +1,2 @@
 # highlighter-js
-quick Tamper/Greasemonkey script to highlight words from given word lists
+Web extension to highlight phrases from given lists.
