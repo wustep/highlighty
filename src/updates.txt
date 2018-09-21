@@ -1,0 +1,7 @@
+v1.0.1 - Sept 20, 2018:
+- Removed popup on successful phrase and list addition
+- Added enable partial match setting
+- Added case insensitive match setting
+
+v1.0 - Sept 20, 2018:
+- Base Beta Build

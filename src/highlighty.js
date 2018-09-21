@@ -50,7 +50,8 @@ $(function() {
           {
             element: "span",
             className: newHLClasses,
-            separateWordSearch: false,
+            accuracy: (options.enablePartialMatch) ? "partially" : "exactly",
+            caseSensitive: !options.enableCaseInsensitive,
             acrossElements: true
           };
       $("body").mark(phrase, markOptions);

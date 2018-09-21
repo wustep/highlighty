@@ -17,7 +17,9 @@ $(function() {
   }
 
   function setupPrimarySettings(options) {
-    $("#Settings__enableTitleMouseover").attr('checked', options.enabletitleMouseover);
+    $("#Settings__enableTitleMouseover").attr('checked', options.enableTitleMouseover);
+    $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
+    $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
   }
 
@@ -45,8 +47,6 @@ $(function() {
             addExistingListStyles(options);
             $("#NewPhraseList__title").val("");
             $("#NewPhraseList__color").val("");
-            alert("List added!");
-            // TODO: [Low] Avoid alerts here and elsewhere, use smooth dialogs with bulma styling instead later.
           });
       });
     });
@@ -147,7 +147,6 @@ $(function() {
             $list.find(".PhraseList__newPhrase__phrase").val("");
             chrome.storage.local.set({"highlighter": options.highlighter }, function() {
               addPhrase($list, newPhrase, listIndex);
-              alert("Phrase added!");
             });
           }
         });
@@ -173,16 +172,21 @@ $(function() {
   }
 
   chrome.storage.local.get(function(options) {
+    console.log(options);
     setupOptionsPage(options);
   });
 
   $("#Settings__save").on("click", function(e) {
-    let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
     let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
+    let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
+    let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
+    let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
     chrome.storage.local.set(
       {
-        "keyboardShortcut": newKeyboardShortcut,
-        "enabletitleMouseover": newEnableTitleMouseover
+        "enableTitleMouseover": newEnableTitleMouseover,
+        "enablePartialMatch": newEnablePartialMatch,
+        "enableCaseInsensitive": newEnableCaseInsensitive,
+        "keyboardShortcut": newKeyboardShortcut
       },
       function() {
         alert("Settings saved!");
