@@ -6,7 +6,7 @@
   margin-bottom: 2rem;
 }
 
-#Settings__enableTitleMouseover {
+#Settings input[type=checkbox] {
   vertical-align: bottom;
 }
 
@@ -24,11 +24,16 @@ span.PhraseList__title {
   font-weight: 400;
 }
 
-.PhraseList__phrase {
+span.tag.PhraseList__phrase {
   margin-right: 0.5rem;
   margin-bottom: 0.4rem;
+  padding: 0.5rem;
 }
 
 .PhraseList__newPhrase {
   margin-bottom: 1.0rem;
+}
+
+button.delete.PhraseList__phrase__delete {
+  margin: 0.1rem;
 }

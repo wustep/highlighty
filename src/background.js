@@ -13,8 +13,8 @@ const defaultOptions = {
   enablePartialMatch: true,
   enableCaseInsensitive: true,
   keyboardShortcut: 117
-  // TODO: [Low] Add alphabetization of list setting
-  // TODO: [Low] Add crossElements checkbox to have mark.js go across elements
+  // TODO: [Low] Add auto-alphabetization of list setting
+  // TODO: [Low] Add crossElements checkbox to have mark.js go across elements?
   // TODO: [Med] Add whitelist/blacklist
   // TODO: [High] Add auto-highlight enable
 };
