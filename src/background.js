@@ -3,9 +3,9 @@
 const defaultOptions = {
   highlighter: [
     {
-      phrases: ["hello", "there", "facebook", "lorem ipsum"],
-      title: "phrases from set 3",
-      color: "black"
+      phrases: ["Hello there", "welcome to", "Highlighty!"],
+      title: "Highlighty",
+      color: "purple"
     }
   ],
   baseStyles: "border-radius: 0.3rem; padding: 0.05rem; color: white; font-weight: normal; box-shadow: 1px 1px 1px 1px grey;",
@@ -19,13 +19,17 @@ const defaultOptions = {
   // TODO: [High] Add auto-highlight enable
 };
 
-chrome.runtime.onInstalled.addListener(function (details) {
+chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason == "install") {
     chrome.runtime.openOptionsPage();
     chrome.storage.local.set(defaultOptions);
   } else {
-    // When user updates, set new, missing options to their default.
-    chrome.storage.local.get(function(currentOptions) {
+    /*
+      When user updates, set new, missing options to their default.
+      This ensures updates are not breaking for new options.
+      Developers should still be cautious of modifying the structure of existing options.
+    */
+    chrome.storage.local.get((currentOptions) => {
       let changed = false;
       for (let option of Object.keys(defaultOptions)) {
         if (!(option in currentOptions)) {
@@ -40,6 +44,6 @@ chrome.runtime.onInstalled.addListener(function (details) {
   }
 });
 
-chrome.browserAction.onClicked.addListener(function(tab) {
+chrome.browserAction.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, "highlighty");
 });

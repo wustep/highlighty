@@ -2,7 +2,7 @@
 
 $(function() {
 
-  /* TODO: Add count of highlighted words, maybe a navigator */
+  /* TODO: [Low] Add count of highlighted phrases, maybe a navigator */
 
   if (window.top != window.self) { // Don't run on frames or iframes
     return;
@@ -16,11 +16,11 @@ $(function() {
 
   // Setup phrase list and append proper styles
   function setupHighlighter(phrasesToHighlight, options) {
-    let highlighterStyles = "<style id='" + HL_STYLE_ID + "'>." + HL_BASE_CLASS + " { " + options.baseStyles + " } ";
+    let highlighterStyles = `<style id="${HL_STYLE_ID}"'>${HL_BASE_CLASS} { ${options.baseStyles} } `;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
         let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
-        highlighterStyles += "." + HL_PREFIX_CLASS + i + " { background-color: " + highlighterColor + " }\r\n";
+        highlighterStyles += `.${HL_PREFIX_CLASS + i} { background-color: ${highlighterColor} }\r\n`;
         for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
           addHighlightPhrase(options.highlighter[i].phrases[j], i, phrasesToHighlight);
         }
@@ -45,11 +45,11 @@ $(function() {
   // Highlight phrases in body
   function highlightPhrases(phrasesToHighlight, options) {
     for (let phrase of Object.keys(phrasesToHighlight)) {
-      let newHLClasses = HL_BASE_CLASS + " " + HL_PREFIX_CLASS + phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS);
+      let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS} ${phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS)}`;
       let markOptions =
           {
             element: "span",
-            className: newHLClasses,
+            className: markClasses,
             accuracy: (options.enablePartialMatch) ? "partially" : "exactly",
             caseSensitive: !options.enableCaseInsensitive,
             acrossElements: true
@@ -71,13 +71,11 @@ $(function() {
     $('#' + HL_STYLE_ID).remove();
   }
 
-  // Process list loading and highlights if applicable
   function processHighlights() {
     $("body").unmark({
-      done: function() {
+      done: () => {
         if (!bodyHighlighted) {
-          chrome.storage.local.get(function(options) {
-            console.log(options);
+          chrome.storage.local.get((options) => {
             let phrasesToHighlight = [];
             removeHighlights();
             setupHighlighter(phrasesToHighlight, options);
@@ -90,15 +88,15 @@ $(function() {
     });
   }
 
-  chrome.storage.local.get("keyboardShortcut", function(options) {
-    $(window).keydown(function(event) {
+  chrome.storage.local.get("keyboardShortcut", (options) => {
+    $(window).keydown((event) => {
       if (event.keyCode == options.keyboardShortcut) {
         processHighlights();
       }
     });
   });
 
-  chrome.runtime.onMessage.addListener(function(message) {
+  chrome.runtime.onMessage.addListener((message) => {
     if (message === "highlighty") {
       processHighlights();
     }
