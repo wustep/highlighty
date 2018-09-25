@@ -4,7 +4,7 @@
   "name": "Highlighty",
   "short_name": "highlighty",
   "description": "Highlight phrases from custom word lists.",
-  "version": "1.0.1",
+  "version": "1.0.1.1",
 
   "content_scripts": [
     {

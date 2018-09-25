@@ -16,7 +16,7 @@ $(function() {
 
   // Setup phrase list and append proper styles
   function setupHighlighter(phrasesToHighlight, options) {
-    let highlighterStyles = `<style id="${HL_STYLE_ID}"'>${HL_BASE_CLASS} { ${options.baseStyles} } `;
+    let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
         let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
@@ -45,13 +45,14 @@ $(function() {
   // Highlight phrases in body
   function highlightPhrases(phrasesToHighlight, options) {
     for (let phrase of Object.keys(phrasesToHighlight)) {
-      let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS} ${phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS)}`;
+      let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS)}`;
       let markOptions =
           {
             element: "span",
             className: markClasses,
             accuracy: (options.enablePartialMatch) ? "partially" : "exactly",
             caseSensitive: !options.enableCaseInsensitive,
+            separateWordSearch: false,
             acrossElements: true
           };
       $("body").mark(phrase, markOptions);
