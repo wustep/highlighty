@@ -13,7 +13,7 @@ $(function() {
   }
 
   function removeExistingListStyles() {
-    $('.' + HL_STYLE_ID).remove();
+    $(`.${HL_STYLE_ID}`).remove();
   }
 
   function setupPrimarySettings(options) {
@@ -60,7 +60,7 @@ $(function() {
         let highlighterColor = ("color" in options.highlighter[i])
             ? options.highlighter[i].color
             : "black";
-        highlighterStyles += `span.PhraseList__phrase--from${i} { background-color: ${highlighterColor} }\r\n`;
+        highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor} }\r\n`;
       }
     }
     highlighterStyles += "</style>";
@@ -90,7 +90,7 @@ $(function() {
 
   function addPhrase($listDiv, phrase, listIndex) {
     $listDiv.find(".PhraseList__phrases").append(
-      `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--from${listIndex}"` +
+      `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}"` +
            ` data-list="${listIndex}">` +
           phrase +
           `<button class="delete is-small PhraseList__phrase__delete"></button>` +

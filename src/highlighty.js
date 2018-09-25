@@ -8,9 +8,9 @@ $(function() {
     return;
   }
 
-  const HL_PREFIX_CLASS = "__hl_";    // Phrases will have class prefixed with their list numbe
-  const HL_BASE_CLASS = "__hl";       // Phrases will all have this class
-  const HL_STYLE_ID = "__hl_styles";  // Style block containing highlighter styles
+  const HL_PREFIX_CLASS = "Highlighty__phrase--"; // Phrases will have class prefixed with their list numbe
+  const HL_BASE_CLASS = "Highlighty__phrase";     // Phrases will all have this class
+  const HL_STYLE_ID = "Highlighty__styles";       // Style block containing highlighter styles
 
   let bodyHighlighted = false;
 
