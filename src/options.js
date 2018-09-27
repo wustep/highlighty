@@ -145,7 +145,6 @@ $(function() {
           if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
             $list.find(".PhraseList__newPhrase__phrase").val("");
             alert("Phrase was already in list!");
-            // TODO: [Low] Convert alerts and confirms to prettier Bulma dialog
           } else {
             options.highlighter[listIndex].phrases.push(newPhrase);
             $list.find(".PhraseList__newPhrase__phrase").val("");
