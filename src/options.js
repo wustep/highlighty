@@ -42,7 +42,8 @@ $(function() {
         };
         chrome.storage.local.set({"highlighter": options.highlighter},
           () => {
-            // TODO: [Low] Add styles smarter here instead of redoing them all
+            /* TODO: [Low] Add styles smarter here instead of redoing them all
+               We redo them all in case of an index taking the spot of an old deleted list */
             removeExistingListStyles();
             addExistingListStyles(options);
             $("#NewPhraseList__title").val("");
@@ -143,7 +144,8 @@ $(function() {
         chrome.storage.local.get((options) => {
           if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
             $list.find(".PhraseList__newPhrase__phrase").val("");
-            alert("Phrase was already in list!")
+            alert("Phrase was already in list!");
+            // TODO: [Low] Convert alerts and confirms to prettier Bulma dialog
           } else {
             options.highlighter[listIndex].phrases.push(newPhrase);
             $list.find(".PhraseList__newPhrase__phrase").val("");
@@ -187,7 +189,7 @@ $(function() {
         "enableCaseInsensitive": newEnableCaseInsensitive,
         "keyboardShortcut": newKeyboardShortcut
       },
-      () => alert("Settings saved!")
+      () => { alert("Settings saved!"); }
     );
   });
 });

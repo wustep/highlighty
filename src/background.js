@@ -30,15 +30,10 @@ chrome.runtime.onInstalled.addListener((details) => {
       Developers should still be cautious of modifying the structure of existing options.
     */
     chrome.storage.local.get((currentOptions) => {
-      let changed = false;
       for (let option of Object.keys(defaultOptions)) {
         if (!(option in currentOptions)) {
-          changed = true;
-          currentOptions[option] = defaultOptions[option];
+          chrome.storage.local.set(option, defaultOptions[option]);
         }
-      }
-      if (changed) {
-        chrome.storage.local.set(option, defaultOptions[option]);
       }
     });
   }
