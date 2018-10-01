@@ -32,19 +32,25 @@
             Settings
           </h1>
           <div class="field is-grouped">
-            <input id="Settings__enableTitleMouseover" type="checkbox" class="switch is-info">
+            <input id="Settings__enableManualHighlight" type="checkbox" class="switch is-info" checked="checked">
+            <label for="Settings__enableManualHighlight" class="label is-pulled-left">
+              Enable manual highlight mode
+            </label>
+          </div>
+          <div class="field is-grouped">
+            <input id="Settings__enableTitleMouseover" type="checkbox" class="switch is-info" checked="checked">
             <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
               Enable mouseover for list title info
             </label>
           </div>
           <div class="field is-grouped">
-            <input id="Settings__enablePartialMatch" type="checkbox" class="switch is-info">
+            <input id="Settings__enablePartialMatch" type="checkbox" class="switch is-info" checked="checked">
             <label for="Settings__enablePartialMatch" class="label is-pulled-left">
               Enable partial phrase matching (e.g. "Lor" will match on "Lorem")
             </label>
           </div>
           <div class="field is-grouped">
-            <input id="Settings__enableCaseInsensitive" type="checkbox" class="switch is-info">
+            <input id="Settings__enableCaseInsensitive" type="checkbox" class="switch is-info" checked="checked">
             <label for="Settings__enableCaseInsensitive" class="label is-pulled-left">
               Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
             </label>
