@@ -9,7 +9,7 @@ const defaultOptions = {
     }
   ],
   baseStyles: "border-radius: 0.3rem; padding: 0.05rem; color: white; font-weight: normal; box-shadow: 1px 1px 1px 1px grey;",
-  autoHighlighter: true,
+  autoHighlighter: true, /* If !enableManualHighlight, represents whether autoHighlighter is active */
   enableManualHighlight: true,
   enableTitleMouseover: true,
   enablePartialMatch: true,
@@ -42,19 +42,23 @@ chrome.browserAction.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, "highlighty");
 });
 
-
-function getFakeImage(on) {
-  var canvas = document.createElement("canvas");
-  var ctx = canvas.getContext("2d");
-
-  ctx.fillStyle = (on) ? "yellow" : "black";
-  ctx.fillRect(10, 10, 100, 100);
-
-  return ctx.getImageData(50, 50, 100, 100);
-}
-
 chrome.runtime.onMessage.addListener((request) => {
+  /*
+    AutoHighlighter Mode:
+      Green - on
+      Black - blacklisted or not in whitelist? (TBD)
+      Red - off
+    ManualHighlighter Mode:
+      Yellow - tab highlighted (TBD), always for now
+      none - not highlighted (TBD)
+  */
   if ("autoHighlighter" in request) { // Change icon request from content script
-    chrome.browserAction.setIcon({imageData: getFakeImage(request.autoHighlighter)});
+    chrome.browserAction.setBadgeText({text: " "});
+    chrome.browserAction.setBadgeBackgroundColor({color: (request.autoHighlighter) ? "green" : "red"});
+    chrome.browserAction.setBadgeBackgroundColor(badgeColor);
+  } else if ("manualHighlighter" in request) {
+    chrome.browserAction.setBadgeText({text: " "});
+    chrome.browserAction.setBadgeBackgroundColor({color: "yellow"});
+    chrome.browserAction.setBadgeBackgroundColor(badgeColor);
   }
 });

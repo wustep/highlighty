@@ -175,17 +175,13 @@ $(function() {
     });
   }
 
-  chrome.storage.local.get((options) => { setupOptionsPage(options) });
-
-  function getFakeImage(on) {
-    var canvas = document.createElement("canvas");
-    var ctx = canvas.getContext("2d");
-
-    ctx.fillStyle = (on) ? "yellow" : "black";
-    ctx.fillRect(10, 10, 100, 100);
-
-    return ctx.getImageData(50, 50, 100, 100);
+  function setHighlightBadge(options) {
+    let mode = (options.enableManualHighlight) ? "manualHighlighter" : "autoHighlighter";
+    let status = options.enableManualHighlight || options.autoHighlighter;
+    chrome.runtime.sendMessage({[mode]: status});
   }
+
+  chrome.storage.local.get((options) => { setupOptionsPage(options) });
 
   $("#Settings__save").on("click", (e) => {
     chrome.storage.local.get((options) => {
@@ -203,11 +199,9 @@ $(function() {
         "keyboardShortcut": newKeyboardShortcut
       };
 
-      if (!newEnableManualHighlight && options.enableManualHighlight) {
-        newOptions.autoHighlighter = true;
-        chrome.browserAction.setIcon({imageData: getFakeImage(true)});
-      } else if (newEnableManualHighlight) {
-        chrome.browserAction.setIcon({imageData: getFakeImage(false)});
+      if (newEnableManualHighlight !== options.enableManualHighlight) {
+        newOptions.autoHighlighter = true; // No harm in setting this to true either way.
+        setHighlightBadge(newOptions);
       }
 
       chrome.storage.local.set(
@@ -216,5 +210,4 @@ $(function() {
       );
     });
   });
-
 });

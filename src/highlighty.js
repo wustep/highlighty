@@ -73,14 +73,16 @@ $(function() {
     $("body").unmark({
       done: () => {
         chrome.storage.local.get((options) => {
+          /* Toggle auto-highlighter if applicable */
           if (manualTrigger && !options.enableManualHighlight) {
+            let newAutoHighlighter = !options.autoHighlighter;
             chrome.storage.local.set(
-              {"autoHighlighter": !options.autoHighlighter},
+              {"autoHighlighter": newAutoHighlighter},
               () => {
-                // Tells background to change the extension icon
-                chrome.runtime.sendMessage({autoHighlighter: !options.autoHighlighter})
+                chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter})
               });
           }
+          /* Highlight body if applicable */
           if (!bodyHighlighted) {
               let phrasesToHighlight = [];
               removeHighlights();
