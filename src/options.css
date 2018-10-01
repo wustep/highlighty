@@ -12,7 +12,7 @@
 
 /* Phrase Lists */
 
-#PhraseList--invisible {
+#PhraseList--invisible, .Settings__enableManualHighlight--invisible {
   display: none;
 }
 

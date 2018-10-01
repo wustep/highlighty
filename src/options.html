@@ -7,6 +7,7 @@
     <title>Highlighty Options</title>
     <!-- TODO: [Med] We could use a favicon!! -->
     <link rel="stylesheet" type="text/css" href="lib/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="lib/bulma.extensions.min.css">
     <link rel="stylesheet" type="text/css" href="options.css">
     <!-- TODO: [Low] Possible dynamic coloring -->
   </head>
@@ -30,36 +31,23 @@
           <h1 class="title">
             Settings
           </h1>
-          <!-- TODO: [High] Allow editing custom styling, in particular, the options.baseStyles -->
           <div class="field is-grouped">
-            <div class="control">
-              <input id="Settings__enableTitleMouseover" type="checkbox">
-            </div>
-            <div class="field-label is-normal">
-              <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
-                Enable mouseover for list title info
-              </label>
-            </div>
+            <input id="Settings__enableTitleMouseover" type="checkbox" class="switch is-info">
+            <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
+              Enable mouseover for list title info
+            </label>
           </div>
           <div class="field is-grouped">
-            <div class="control">
-              <input id="Settings__enablePartialMatch" type="checkbox">
-            </div>
-            <div class="field-label is-normal">
-              <label for="Settings__enablePartialMatch" class="label is-pulled-left">
-                Enable partial phrase matching (e.g. "Lor" will match on "Lorem")
-              </label>
-            </div>
+            <input id="Settings__enablePartialMatch" type="checkbox" class="switch is-info">
+            <label for="Settings__enablePartialMatch" class="label is-pulled-left">
+              Enable partial phrase matching (e.g. "Lor" will match on "Lorem")
+            </label>
           </div>
           <div class="field is-grouped">
-            <div class="control">
-              <input id="Settings__enableCaseInsensitive" type="checkbox">
-            </div>
-            <div class="field-label is-normal">
-              <label for="Settings__enableCaseInsensitive" class="label is-pulled-left">
-                Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
-              </label>
-            </div>
+            <input id="Settings__enableCaseInsensitive" type="checkbox" class="switch is-info">
+            <label for="Settings__enableCaseInsensitive" class="label is-pulled-left">
+              Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
+            </label>
           </div>
           <div class="field is-grouped">
             <div class="control">
