@@ -9,8 +9,8 @@ const defaultOptions = {
     }
   ],
   baseStyles: "border-radius: 0.3rem; padding: 0.05rem; color: white; font-weight: normal; box-shadow: 1px 1px 1px 1px grey;",
-  autoHighlighter: true, /* If !enableManualHighlight, represents whether autoHighlighter is active */
-  enableManualHighlight: true,
+  autoHighlighter: true, /* If enableAutoHighlight, represents whether autoHighlighter is active */
+  enableAutoHighlight: false,
   enableTitleMouseover: true,
   enablePartialMatch: true,
   enableCaseInsensitive: true,

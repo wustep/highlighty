@@ -18,7 +18,7 @@
 
 /* Phrase Lists */
 
-#PhraseList--invisible, .Settings__enableManualHighlight--invisible {
+#PhraseList--invisible {
   display: none;
 }
 

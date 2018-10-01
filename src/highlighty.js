@@ -74,10 +74,10 @@ $(function() {
       done: () => {
         chrome.storage.local.get((options) => {
           /* Set manual highlighter badge if applicable */
-          if (options.enableManualHighlight) {
+          if (!options.enableAutoHighlight) {
             chrome.runtime.sendMessage({manualHighlighter: !bodyHighlighted, tab: true})
           /* Toggle auto-highlighter & set badge if applicable */
-          } else if (manualTrigger && !options.enableManualHighlight) {
+          } else if (manualTrigger && options.enableAutoHighlight) {
             let newAutoHighlighter = !options.autoHighlighter;
             chrome.storage.local.set(
               {"autoHighlighter": newAutoHighlighter},
@@ -100,7 +100,7 @@ $(function() {
   }
 
   chrome.storage.local.get((options) => {
-    if (!options.enableManualHighlight && options.autoHighlighter) {
+    if (options.enableAutoHighlight && options.autoHighlighter) {
       processHighlights();
     }
   });

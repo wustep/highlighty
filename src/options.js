@@ -17,7 +17,7 @@ $(function() {
   }
 
   function setupPrimarySettings(options) {
-    $("#Settings__enableManualHighlight").attr('checked', options.enableManualHighlight);
+    $("#Settings__enableAutoHighlight").attr('checked', options.enableAutoHighlight);
     $("#Settings__enableTitleMouseover").attr('checked', options.enableTitleMouseover);
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
@@ -176,8 +176,8 @@ $(function() {
   }
 
   function setHighlightBadge(options) {
-    let mode = (options.enableManualHighlight) ? "manualHighlighter" : "autoHighlighter";
-    let status = !options.enableManualHighlight && options.autoHighlighter;
+    let mode = (options.enableAutoHighlight) ? "autoHighlighter" : "manualHighlighter";
+    let status = options.enableAutoHighlight && options.autoHighlighter;
     chrome.runtime.sendMessage({[mode]: status});
   }
 
@@ -185,21 +185,21 @@ $(function() {
 
   $("#Settings__save").on("click", (e) => {
     chrome.storage.local.get((options) => {
-      let newEnableManualHighlight = $("#Settings__enableManualHighlight").is(":checked");
+      let newEnableAutoHighlight = $("#Settings__enableAutoHighlight").is(":checked");
       let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
       let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
       let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
       let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
 
       let newOptions = {
-        "enableManualHighlight": newEnableManualHighlight,
+        "enableAutoHighlight": newEnableAutoHighlight,
         "enableTitleMouseover": newEnableTitleMouseover,
         "enablePartialMatch": newEnablePartialMatch,
         "enableCaseInsensitive": newEnableCaseInsensitive,
         "keyboardShortcut": newKeyboardShortcut
       };
 
-      if (newEnableManualHighlight !== options.enableManualHighlight) {
+      if (newEnableAutoHighlight !== options.newEnableAutoHighlight) {
         newOptions.autoHighlighter = true; // No harm in setting this to true either way.
         setHighlightBadge(newOptions);
       }
