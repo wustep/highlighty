@@ -17,6 +17,7 @@ $(function() {
   }
 
   function setupPrimarySettings(options) {
+    $("#Settings__enableManualHighlight").attr('checked', options.enableManualHighlight);
     $("#Settings__enableTitleMouseover").attr('checked', options.enableTitleMouseover);
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
@@ -177,12 +178,15 @@ $(function() {
   chrome.storage.local.get((options) => { setupOptionsPage(options) });
 
   $("#Settings__save").on("click", (e) => {
+    // TODO: Address autoHighlight setting proper
+    let newEnableManualHighlight = $("#Settings__enableManualHighlight").is(":checked");
     let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
     let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
     let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
     let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
     chrome.storage.local.set(
       {
+        "enableManualHighlight": newEnableManualHighlight,
         "enableTitleMouseover": newEnableTitleMouseover,
         "enablePartialMatch": newEnablePartialMatch,
         "enableCaseInsensitive": newEnableCaseInsensitive,

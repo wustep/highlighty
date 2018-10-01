@@ -9,6 +9,8 @@ const defaultOptions = {
     }
   ],
   baseStyles: "border-radius: 0.3rem; padding: 0.05rem; color: white; font-weight: normal; box-shadow: 1px 1px 1px 1px grey;",
+  autoHighlighter: true,
+  enableManualHighlight: true,
   enableTitleMouseover: true,
   enablePartialMatch: true,
   enableCaseInsensitive: true,

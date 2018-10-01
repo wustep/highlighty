@@ -69,34 +69,44 @@ $(function() {
     $('#' + HL_STYLE_ID).remove();
   }
 
-  function processHighlights() {
+  function processHighlights(manualTrigger=false) {
     $("body").unmark({
       done: () => {
-        if (!bodyHighlighted) {
-          chrome.storage.local.get((options) => {
-            let phrasesToHighlight = [];
-            removeHighlights();
-            setupHighlighter(phrasesToHighlight, options);
-            highlightPhrases(phrasesToHighlight, options);
-          });
-        } else {
-          bodyHighlighted = false;
-        }
+        chrome.storage.local.get((options) => {
+          if (manualTrigger && !options.enableManualHighlight) {
+            chrome.storage.local.set({"autoHighlighter": !options.autoHighlighter});
+          }
+          if (!bodyHighlighted) {
+              let phrasesToHighlight = [];
+              removeHighlights();
+              setupHighlighter(phrasesToHighlight, options);
+              highlightPhrases(phrasesToHighlight, options);
+          } else {
+            bodyHighlighted = false;
+          }
+        });
       }
     });
   }
 
-  chrome.storage.local.get("keyboardShortcut", (options) => {
+  chrome.storage.local.get((options) => {
+    console.log(options);
+    if (!options.enableManualHighlight && options.autoHighlighter) {
+      processHighlights();
+    }
+  });
+
+  chrome.storage.local.get((options) => {
     $(window).keydown((event) => {
       if (event.keyCode == options.keyboardShortcut) {
-        processHighlights();
+        processHighlights(true);
       }
     });
   });
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message === "highlighty") {
-      processHighlights();
+        processHighlights(true);
     }
   });
 });
