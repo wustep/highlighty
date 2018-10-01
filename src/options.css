@@ -1,5 +1,11 @@
 /* Highlighty.js | by Stephen Wu */
 
+/* Bulma overrides */
+
+.footer {
+  padding: 3rem 1.5rem; /* from: 3rem 1.5rem 6rem */
+}
+
 /* Primary settings */
 
 #Settings {

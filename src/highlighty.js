@@ -69,34 +69,53 @@ $(function() {
     $('#' + HL_STYLE_ID).remove();
   }
 
-  function processHighlights() {
+  function processHighlights(manualTrigger=false) {
     $("body").unmark({
       done: () => {
-        if (!bodyHighlighted) {
-          chrome.storage.local.get((options) => {
-            let phrasesToHighlight = [];
-            removeHighlights();
-            setupHighlighter(phrasesToHighlight, options);
-            highlightPhrases(phrasesToHighlight, options);
-          });
-        } else {
-          bodyHighlighted = false;
-        }
+        chrome.storage.local.get((options) => {
+          /* Set manual highlighter badge if applicable */
+          if (!options.enableAutoHighlight) {
+            chrome.runtime.sendMessage({manualHighlighter: !bodyHighlighted, tab: true})
+          /* Toggle auto-highlighter & set badge if applicable */
+          } else if (manualTrigger && options.enableAutoHighlight) {
+            let newAutoHighlighter = !options.autoHighlighter;
+            chrome.storage.local.set(
+              {"autoHighlighter": newAutoHighlighter},
+              () => {
+                chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter})
+              });
+          }
+          /* Highlight body if applicable */
+          if (!bodyHighlighted) {
+              let phrasesToHighlight = [];
+              removeHighlights();
+              setupHighlighter(phrasesToHighlight, options);
+              highlightPhrases(phrasesToHighlight, options);
+          } else {
+            bodyHighlighted = false;
+          }
+        });
       }
     });
   }
 
-  chrome.storage.local.get("keyboardShortcut", (options) => {
+  chrome.storage.local.get((options) => {
+    if (options.enableAutoHighlight && options.autoHighlighter) {
+      processHighlights();
+    }
+  });
+
+  chrome.storage.local.get((options) => {
     $(window).keydown((event) => {
       if (event.keyCode == options.keyboardShortcut) {
-        processHighlights();
+        processHighlights(true);
       }
     });
   });
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message === "highlighty") {
-      processHighlights();
+        processHighlights(true);
     }
   });
 });

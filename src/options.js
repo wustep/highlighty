@@ -17,6 +17,7 @@ $(function() {
   }
 
   function setupPrimarySettings(options) {
+    $("#Settings__enableAutoHighlight").attr('checked', options.enableAutoHighlight);
     $("#Settings__enableTitleMouseover").attr('checked', options.enableTitleMouseover);
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
@@ -174,21 +175,39 @@ $(function() {
     });
   }
 
+  function setHighlightBadge(options) {
+    let mode = (options.enableAutoHighlight) ? "autoHighlighter" : "manualHighlighter";
+    let status = options.enableAutoHighlight && options.autoHighlighter;
+    chrome.runtime.sendMessage({[mode]: status});
+  }
+
   chrome.storage.local.get((options) => { setupOptionsPage(options) });
 
   $("#Settings__save").on("click", (e) => {
-    let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
-    let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
-    let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
-    let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
-    chrome.storage.local.set(
-      {
+    chrome.storage.local.get((options) => {
+      let newEnableAutoHighlight = $("#Settings__enableAutoHighlight").is(":checked");
+      let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
+      let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
+      let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
+      let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
+
+      let newOptions = {
+        "enableAutoHighlight": newEnableAutoHighlight,
         "enableTitleMouseover": newEnableTitleMouseover,
         "enablePartialMatch": newEnablePartialMatch,
         "enableCaseInsensitive": newEnableCaseInsensitive,
         "keyboardShortcut": newKeyboardShortcut
-      },
-      () => { alert("Settings saved!"); }
-    );
+      };
+
+      if (newEnableAutoHighlight !== options.newEnableAutoHighlight) {
+        newOptions.autoHighlighter = true; // No harm in setting this to true either way.
+        setHighlightBadge(newOptions);
+      }
+
+      chrome.storage.local.set(
+        newOptions,
+        () => { alert("Settings saved!"); }
+      );
+    });
   });
 });

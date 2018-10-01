@@ -5,10 +5,9 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Highlighty Options</title>
-    <!-- TODO: [Med] We could use a favicon!! -->
     <link rel="stylesheet" type="text/css" href="lib/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="lib/bulma.extensions.min.css">
     <link rel="stylesheet" type="text/css" href="options.css">
-    <!-- TODO: [Low] Possible dynamic coloring -->
   </head>
   <body>
     <section class="hero is-info">
@@ -30,36 +29,29 @@
           <h1 class="title">
             Settings
           </h1>
-          <!-- TODO: [High] Allow editing custom styling, in particular, the options.baseStyles -->
           <div class="field is-grouped">
-            <div class="control">
-              <input id="Settings__enableTitleMouseover" type="checkbox">
-            </div>
-            <div class="field-label is-normal">
-              <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
-                Enable mouseover for list title info
-              </label>
-            </div>
+            <input id="Settings__enableAutoHighlight" type="checkbox" class="switch is-info">
+            <label for="Settings__enableAutoHighlight" class="label is-pulled-left">
+              Enable auto-highlight mode
+            </label>
           </div>
           <div class="field is-grouped">
-            <div class="control">
-              <input id="Settings__enablePartialMatch" type="checkbox">
-            </div>
-            <div class="field-label is-normal">
-              <label for="Settings__enablePartialMatch" class="label is-pulled-left">
-                Enable partial phrase matching (e.g. "Lor" will match on "Lorem")
-              </label>
-            </div>
+            <input id="Settings__enableTitleMouseover" type="checkbox" class="switch is-info" checked="checked">
+            <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
+              Enable mouseover for list title info
+            </label>
           </div>
           <div class="field is-grouped">
-            <div class="control">
-              <input id="Settings__enableCaseInsensitive" type="checkbox">
-            </div>
-            <div class="field-label is-normal">
-              <label for="Settings__enableCaseInsensitive" class="label is-pulled-left">
-                Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
-              </label>
-            </div>
+            <input id="Settings__enablePartialMatch" type="checkbox" class="switch is-info" checked="checked">
+            <label for="Settings__enablePartialMatch" class="label is-pulled-left">
+              Enable partial phrase matching (e.g. "Lor" will match on "Lorem")
+            </label>
+          </div>
+          <div class="field is-grouped">
+            <input id="Settings__enableCaseSensitive" type="checkbox" class="switch is-info" checked="checked">
+            <label for="Settings__enableCaseSensitive" class="label is-pulled-left">
+              Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
+            </label>
           </div>
           <div class="field is-grouped">
             <div class="control">
@@ -71,7 +63,7 @@
               </div>
             </div>
             <div class="field-label is-normal">
-              <label for="Settings__keyboardShortcut" class="label is-pulled-left">Keyboard shortcut to highlight phrases</label>
+              <label for="Settings__keyboardShortcut" class="label is-pulled-left">Keyboard shortcut to highlight phrases or toggle auto-highlight</label>
             </div>
           </div>
           <div class="button is-info" id="Settings__save">Save</div>
@@ -83,8 +75,6 @@
           <div class="columns">
             <div class="column is-three-quarters">
               <div class="field is-grouped PhraseList__header">
-                <!-- TODO: [Low] Allow extra individual custom styling per phrase list? -->
-                <!-- TODO: [High] Add color block here that opens color editor, re-use for NewPhraseList too. -->
                 <h1 class="title">
                   List:
                   <span class="PhraseList__title">
@@ -100,22 +90,6 @@
                 <button class="button is-danger PhraseList__delete">
                   Delete
                 </button>
-                <!-- TODO: [High] Import / Export functionality!
-                           Import should support importing from other extensions that use different delimiters.
-                           Imort / Export should be in JSON format.
-                <div class="field has-addons">
-                  <p class="control">
-                    <button class="button is-info">
-                      <span>Import</span>
-                    </button>
-                  </p>
-                  <p class="control">
-                    <button class="button is-link">
-                      <span>Export</span>
-                    </button>
-                  </p>
-                </div>
-                -->
               </div>
             </div>
           </div>
@@ -131,7 +105,6 @@
                   </div>
                 </div>
               </div>
-              <!-- TODO: [Low] Allow regex matching -->
             </div>
           </form>
           <div class="PhraseList__phrases">
@@ -149,7 +122,7 @@
                   <div class="control is-expanded">
                     <input class="input" id="NewPhraseList__title" type="text" placeholder="List title">
                   </div>
-                  <div class="control"> <!-- TODO: [High] Make enhanced color picker -->
+                  <div class="control">
                     <input class="input" id="NewPhraseList__color" type="text" placeholder="Color">
                   </div>
                   <div class="control">
@@ -161,25 +134,15 @@
             <p>For colors, use <a href="https://htmlcolorcodes.com">htmlcolorcodes.com</a> to pick colors for now.</p>
             <p>You can use hex codes like <i style="color: #317570">#317570</i> and some colors like <i style="color: purple">purple</i>.</p>
           </form>
-          <!-- TODO: [Med] Imports!
-          <div class="field">
-            <button class="button is-info" id="NewPhraseList__import">Import</button>
-          </div>
-          -->
         </div>
       </div>
-      <!-- TODO: [Low] Export ALL lists and settings at once -->
     </section>
     <footer class="footer">
       <div class="content has-text-centered">
         <p>
-          <b>Highlighty</b> by <a target="_blank" href="https://github.com/wustep">Stephen Wu</a>,
+          <b>Highlighty</b> (Beta) by <a target="_blank" href="https://github.com/wustep">Stephen Wu</a>,
           built with <a target="_blank" href="https://bulma.io/">Bulma</a>,
           <a target="_blank" href="https://markjs.io/">Mark.js</a>, and <a target="_blank" href="https://jquery.com/">jQuery</a>.
-        </p>
-        <p>
-          This extension is still in <b>Beta Testing</b>! Some more features to come include: an interactive color picker,<br>
-          more custom styling, list import and exports, and more keyboard shortcut options. Feel free to email any suggestions.
         </p>
       </div>
     </footer>
