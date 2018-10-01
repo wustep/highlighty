@@ -74,7 +74,12 @@ $(function() {
       done: () => {
         chrome.storage.local.get((options) => {
           if (manualTrigger && !options.enableManualHighlight) {
-            chrome.storage.local.set({"autoHighlighter": !options.autoHighlighter});
+            chrome.storage.local.set(
+              {"autoHighlighter": !options.autoHighlighter},
+              () => {
+                // Tells background to change the extension icon
+                chrome.runtime.sendMessage({autoHighlighter: !options.autoHighlighter})
+              });
           }
           if (!bodyHighlighted) {
               let phrasesToHighlight = [];
@@ -90,7 +95,6 @@ $(function() {
   }
 
   chrome.storage.local.get((options) => {
-    console.log(options);
     if (!options.enableManualHighlight && options.autoHighlighter) {
       processHighlights();
     }

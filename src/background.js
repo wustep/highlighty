@@ -41,3 +41,20 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.browserAction.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, "highlighty");
 });
+
+
+function getFakeImage(on) {
+  var canvas = document.createElement("canvas");
+  var ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = (on) ? "yellow" : "black";
+  ctx.fillRect(10, 10, 100, 100);
+
+  return ctx.getImageData(50, 50, 100, 100);
+}
+
+chrome.runtime.onMessage.addListener((request) => {
+  if ("autoHighlighter" in request) { // Change icon request from content script
+    chrome.browserAction.setIcon({imageData: getFakeImage(request.autoHighlighter)});
+  }
+});

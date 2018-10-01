@@ -177,22 +177,44 @@ $(function() {
 
   chrome.storage.local.get((options) => { setupOptionsPage(options) });
 
+  function getFakeImage(on) {
+    var canvas = document.createElement("canvas");
+    var ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = (on) ? "yellow" : "black";
+    ctx.fillRect(10, 10, 100, 100);
+
+    return ctx.getImageData(50, 50, 100, 100);
+  }
+
   $("#Settings__save").on("click", (e) => {
-    // TODO: Address autoHighlight setting proper
-    let newEnableManualHighlight = $("#Settings__enableManualHighlight").is(":checked");
-    let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
-    let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
-    let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
-    let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
-    chrome.storage.local.set(
-      {
+    chrome.storage.local.get((options) => {
+      let newEnableManualHighlight = $("#Settings__enableManualHighlight").is(":checked");
+      let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
+      let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
+      let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
+      let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
+
+      let newOptions = {
         "enableManualHighlight": newEnableManualHighlight,
         "enableTitleMouseover": newEnableTitleMouseover,
         "enablePartialMatch": newEnablePartialMatch,
         "enableCaseInsensitive": newEnableCaseInsensitive,
         "keyboardShortcut": newKeyboardShortcut
-      },
-      () => { alert("Settings saved!"); }
-    );
+      };
+
+      if (!newEnableManualHighlight && options.enableManualHighlight) {
+        newOptions.autoHighlighter = true;
+        chrome.browserAction.setIcon({imageData: getFakeImage(true)});
+      } else if (newEnableManualHighlight) {
+        chrome.browserAction.setIcon({imageData: getFakeImage(false)});
+      }
+
+      chrome.storage.local.set(
+        newOptions,
+        () => { alert("Settings saved!"); }
+      );
+    });
   });
+
 });
