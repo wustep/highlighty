@@ -42,23 +42,33 @@ chrome.browserAction.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, "highlighty");
 });
 
-chrome.runtime.onMessage.addListener((request) => {
+/*
+  Possible received messages:
+  {autoHighlighter: bool}
+    - update the autoHighlighter badge
+  {manualHighlighter: bool, tab: bool=true}
+    - updates the manualHighlighter badge, for tab if true, otherwise all tabs
+*/
+chrome.runtime.onMessage.addListener((request, sender) => {
   /*
     AutoHighlighter Mode:
       Green - on
       Black - blacklisted or not in whitelist? (TBD)
       Red - off
     ManualHighlighter Mode:
-      Yellow - tab highlighted (TBD), always for now
-      none - not highlighted (TBD)
+      Yellow - tab highlighted
+      none - tab not highlighted
   */
-  if ("autoHighlighter" in request) { // Change icon request from content script
+  if ("autoHighlighter" in request) {
     chrome.browserAction.setBadgeText({text: " "});
     chrome.browserAction.setBadgeBackgroundColor({color: (request.autoHighlighter) ? "green" : "red"});
     chrome.browserAction.setBadgeBackgroundColor(badgeColor);
   } else if ("manualHighlighter" in request) {
-    chrome.browserAction.setBadgeText({text: " "});
+    let badgeText = {text: (request.manualHighlighter) ? " " : ""};
+    if (!"tab" in request || request.tab) {
+      badgeText.tabId = sender.tab.id;
+    }
+    chrome.browserAction.setBadgeText(badgeText);
     chrome.browserAction.setBadgeBackgroundColor({color: "yellow"});
-    chrome.browserAction.setBadgeBackgroundColor(badgeColor);
   }
 });

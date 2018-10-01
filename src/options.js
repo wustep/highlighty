@@ -177,7 +177,7 @@ $(function() {
 
   function setHighlightBadge(options) {
     let mode = (options.enableManualHighlight) ? "manualHighlighter" : "autoHighlighter";
-    let status = options.enableManualHighlight || options.autoHighlighter;
+    let status = !options.enableManualHighlight && options.autoHighlighter;
     chrome.runtime.sendMessage({[mode]: status});
   }
 
