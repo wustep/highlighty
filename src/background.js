@@ -17,8 +17,9 @@ const defaultOptions = {
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason == "install") {
-    chrome.runtime.openOptionsPage();
-    chrome.storage.local.set(defaultOptions);
+    chrome.storage.local.set(defaultOptions, () => {
+      chrome.runtime.openOptionsPage();
+    });
   } else {
     /*
       When user updates, set new, missing options to their default.
