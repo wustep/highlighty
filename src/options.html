@@ -155,12 +155,12 @@
       <div class="modal-card">
         <header class="modal-card-head">
           <p class="modal-card-title"><b>Import to: </b> <span id="ImportModal__listName"></span></p>
-          <button class="delete" aria-label="close"></button>
+          <button id="ImportModal__close" class="delete" aria-label="close"></button>
         </header>
         <section class="modal-card-body">
-          <div class="tabs ImportModal__tabs">
-            <ul>
-              <li id="ImportModal__tab--Highlighty"><a>Highlighty</a></li>
+          <div class="tabs">
+            <ul id="ImportModal__tabs">
+              <!--<li id="ImportModal__tab\-\-Highlighty"><a>Highlighty</a></li>-->
               <li id="ImportModal__tab--Space-Delimited" class="is-active"><a>Space-Delimited</a></li>
               <li id="ImportModal__tab--Line-Delimited"><a>Line-Delimited</a></li>
             </ul>
@@ -169,7 +169,7 @@
         </section>
         <footer class="modal-card-foot">
           <button class="button is-success">Submit</button>
-          <button class="button">Cancel</button>
+          <button id="ImportModal__cancel" class="button">Cancel</button>
         </footer>
       </div>
     </div>
