@@ -128,7 +128,14 @@ $(function() {
     $list.on("click", ".PhraseList__import", (e) => {
       $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
       $("#ImportModal").addClass("is-active");
+      setImportModalTab("Space-Delimited");
     });
+  }
+
+  function setImportModalTab(tabName) {
+    $("#ImportModal__tabs").find("li").removeClass("is-active");
+    $("#ImportModal__tabs").find(`#ImportModal__tab--${tabName}`).addClass("is-active");
+    $("#ImportModal__body").attr("placeholder", `Enter your ${tabName.toLowerCase()} phrase list here.`);
   }
 
   function setupPhraseListDeleteHandler($list) {

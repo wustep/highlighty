@@ -154,11 +154,18 @@
       <div class="modal-background"></div>
       <div class="modal-card">
         <header class="modal-card-head">
-          <p class="modal-card-title"><b>Import:</b> <span id="ImportModal__listName"></span></p>
+          <p class="modal-card-title"><b>Import to: </b> <span id="ImportModal__listName"></span></p>
           <button class="delete" aria-label="close"></button>
         </header>
         <section class="modal-card-body">
-          blahblahblah
+          <div class="tabs ImportModal__tabs">
+            <ul>
+              <li id="ImportModal__tab--Highlighty"><a>Highlighty</a></li>
+              <li id="ImportModal__tab--Space-Delimited" class="is-active"><a>Space-Delimited</a></li>
+              <li id="ImportModal__tab--Line-Delimited"><a>Line-Delimited</a></li>
+            </ul>
+          </div>
+          <textarea id="ImportModal__body" class="textarea"></textarea>
         </section>
         <footer class="modal-card-foot">
           <button class="button is-success">Submit</button>
