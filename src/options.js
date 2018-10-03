@@ -130,6 +130,7 @@ $(function() {
       $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
       $("#ImportModal").addClass("is-active");
       $("#ImportModal__body").text('');
+      $("#ImportModal__phraseCount").text("0");
       setImportModalTab("Space-Delimited");
     });
   }
@@ -196,6 +197,7 @@ $(function() {
   function setupImportButtons() {
     setupImportTabHandlers();
     setupImportCloseHandlers();
+    setupImportPhraseCountHandler();
     setupImportSubmitButton();
   }
 
@@ -203,6 +205,7 @@ $(function() {
     $("#ImportModal__tabs > li").on("click", (e) => {
       let tabName = e.currentTarget.id.split("--")[1];
       setImportModalTab(tabName);
+      $('#ImportModal__body').trigger('change'); // Force change to trigger phrase count change
     })
   }
 
@@ -212,8 +215,23 @@ $(function() {
     });
   }
 
-  function setupImportSubmitButton() {
+  function setupImportPhraseCountHandler() {
+    $("#ImportModal__body").on("change keyup paste", () => {
+      let importFormat = $("#ImportModal__tabs li.is-active").attr("id").split("--")[1];
+      let phraseCount = 0;
+      if (importFormat === "Space-Delimited") {
+        phraseCount = ($("#ImportModal__body").val().match(/\S+/g) || []).length;
+      } else if (importFormat == "Line-Delimited") {
+        phraseCount = ($("#ImportModal__body").val().split("\n").filter(p => p.trim() != '') || []).length;
+      }
+      $("#ImportModal__phraseCount").text(phraseCount);
+    });
+  }
 
+  function setupImportSubmitButton() {
+    $("#ImportModal__submit").on("click", (e) => {
+      $("#ImportModal").removeClass("is-active");
+    });
   }
 
   function setHighlightBadge(options) {
