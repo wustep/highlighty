@@ -10,6 +10,7 @@ $(function() {
     setupAddPhraseListHandler();
     addExistingListStyles(options);
     addExistingLists(options);
+    setupImportButtons();
   }
 
   function removeExistingListStyles() {
@@ -128,6 +129,7 @@ $(function() {
     $list.on("click", ".PhraseList__import", (e) => {
       $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
       $("#ImportModal").addClass("is-active");
+      $("#ImportModal__body").text('');
       setImportModalTab("Space-Delimited");
     });
   }
@@ -189,6 +191,29 @@ $(function() {
         });
       }
     });
+  }
+
+  function setupImportButtons() {
+    setupImportTabHandlers();
+    setupImportCloseHandlers();
+    setupImportSubmitButton();
+  }
+
+  function setupImportTabHandlers() {
+    $("#ImportModal__tabs > li").on("click", (e) => {
+      let tabName = e.currentTarget.id.split("--")[1];
+      setImportModalTab(tabName);
+    })
+  }
+
+  function setupImportCloseHandlers() {
+    $("#ImportModal__cancel, #ImportModal__close").on("click", (e) => {
+      $("#ImportModal").removeClass("is-active");
+    });
+  }
+
+  function setupImportSubmitButton() {
+
   }
 
   function setHighlightBadge(options) {
