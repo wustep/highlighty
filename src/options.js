@@ -100,36 +100,45 @@ $(function() {
     );
   }
 
-  function setupPhraseListHandlers(list) {
-    setupPhraseListEditNameHandler(list);
-    setupPhraseListDeleteHandler(list);
-    setupPhraseListAddPhraseHandler(list);
-    setupPhraseListDeletePhraseHandler(list);
+  function setupPhraseListHandlers($list) {
+    setupPhraseListEditNameHandler($list);
+    setupPhraseListImportHandler($list);
+    setupPhraseListDeleteHandler($list);
+    setupPhraseListAddPhraseHandler($list);
+    setupPhraseListDeletePhraseHandler($list);
   }
 
-  function setupPhraseListEditNameHandler(list) {
-    list.on("click", ".PhraseList__editName", () => {
-      var oldListName = list.find(".PhraseList__title").text();
+  function setupPhraseListEditNameHandler($list) {
+    $list.on("click", ".PhraseList__editName", () => {
+      var oldListName = $list.find(".PhraseList__title").text();
       var newListName = window.prompt("Please enter a new phrase list name", oldListName);
       if (newListName != null && newListName != "" && newListName != oldListName) {
         chrome.storage.local.get((options) => { // TODO: functionalize this?
-          options.highlighter[list.data("index")].title = newListName;
+          options.highlighter[$list.data("index")].title = newListName;
           chrome.storage.local.set({ "highlighter": options.highlighter },
-            () => { list.find(".PhraseList__title").text(newListName) }
+            () => { $list.find(".PhraseList__title").text(newListName) }
           );
         });
       }
     });
   }
 
-  function setupPhraseListDeleteHandler(list) {
-    list.on("click", ".PhraseList__delete", () => {
-      var oldListName = list.find(".PhraseList__title").text();
+  function setupPhraseListImportHandler($list) {
+    let $phrases = $list.find(".PhraseList__phrases");
+    $list.on("click", ".PhraseList__import", (e) => {
+      $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
+      $("#ImportModal").addClass("is-active");
+    });
+  }
+
+  function setupPhraseListDeleteHandler($list) {
+    $list.on("click", ".PhraseList__delete", () => {
+      var oldListName = $list.find(".PhraseList__title").text();
       if (window.confirm(`Are you sure you want to delete ${oldListName}?`)) {
         chrome.storage.local.get((options) => {
-          options.highlighter[list.data("index")] = {};
+          options.highlighter[$list.data("index")] = {};
           chrome.storage.local.set({ "highlighter": options.highlighter },
-            () => { list.remove() }
+            () => { $list.remove() }
           );
         });
       }
