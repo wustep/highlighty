@@ -149,7 +149,7 @@ $(function() {
       if (window.confirm(`Are you sure you want to delete ${oldListName}?`)) {
         chrome.storage.local.get((options) => {
           options.highlighter[$list.data("index")] = {};
-          chrome.storage.local.set({ "highlighter": options.highlighter },
+          chrome.storage.local.set({"highlighter": options.highlighter},
             () => { $list.remove() }
           );
         });
@@ -169,9 +169,8 @@ $(function() {
             alert("Phrase was already in list!");
           } else {
             options.highlighter[listIndex].phrases.push(newPhrase.trim());
-            console.log(options);
             $list.find(".PhraseList__newPhrase__phrase").val("");
-            chrome.storage.local.set({ "highlighter": options.highlighter },
+            chrome.storage.local.set({"highlighter": options.highlighter},
               () => { addPhrase($list, newPhrase, listIndex); }
             );
           }
@@ -189,7 +188,7 @@ $(function() {
         chrome.storage.local.get((options) => {
           let phraseIndex = options.highlighter[listIndex].phrases.indexOf($phrase.text());
           options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
-          chrome.storage.local.set({ "highlighter": options.highlighter },
+          chrome.storage.local.set({"highlighter": options.highlighter},
             () => { $phrases.find($phrase).remove(); }
           );
         });
@@ -255,9 +254,9 @@ $(function() {
               phrasesSkipped++;
             }
           }
-          let alertMessage = `${phrasesAdded} phrases were added.`;
+          let alertMessage = `${pluralize(phrasesAdded, "phrase")} added.`;
           if (phrasesSkipped > 0) {
-              alertMessage += `\n${phrasesSkipped} phrases were skipped due to already being in the list.`;
+              alertMessage += `\n${pluralize(phrasesSkipped, "phrase")} skipped due to already being in the list.`;
           }
           alert(alertMessage);
           chrome.storage.local.set({"highlighter": options.highlighter});
@@ -302,4 +301,8 @@ $(function() {
       );
     });
   });
+
+  function pluralize(count, noun, suffix='s') {
+    return `${count} ${noun}${count !== 1 ? suffix : ''}`;
+  }
 });
