@@ -129,9 +129,10 @@ $(function() {
     $list.on("click", ".PhraseList__import", (e) => {
       $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
       $("#ImportModal").addClass("is-active");
-      $("#ImportModal__body").text('');
+      $("#ImportModal__body").val('');
       $("#ImportModal__phraseCount").text("0");
       setImportModalTab("Space-Delimited");
+      $("#ImportModal__body").focus()
     });
   }
 
@@ -230,6 +231,9 @@ $(function() {
 
   function setupImportSubmitButton() {
     $("#ImportModal__submit").on("click", (e) => {
+      chrome.storage.local.get((options) => {
+        // TODO: Get current phrases and add all new phrases if not exist
+      });
       $("#ImportModal").removeClass("is-active");
     });
   }
