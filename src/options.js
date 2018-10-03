@@ -168,7 +168,8 @@ $(function() {
             $list.find(".PhraseList__newPhrase__phrase").val("");
             alert("Phrase was already in list!");
           } else {
-            options.highlighter[listIndex].phrases.push(newPhrase);
+            options.highlighter[listIndex].phrases.push(newPhrase.trim());
+            console.log(options);
             $list.find(".PhraseList__newPhrase__phrase").val("");
             chrome.storage.local.set({ "highlighter": options.highlighter },
               () => { addPhrase($list, newPhrase, listIndex); }
