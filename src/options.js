@@ -116,7 +116,7 @@ $(function() {
       if (newListName != null && newListName != "" && newListName != oldListName) {
         chrome.storage.local.get((options) => { // TODO: functionalize this?
           options.highlighter[$list.data("index")].title = newListName;
-          chrome.storage.local.set({ "highlighter": options.highlighter },
+          chrome.storage.local.set({"highlighter": options.highlighter},
             () => { $list.find(".PhraseList__title").text(newListName) }
           );
         });
@@ -127,6 +127,7 @@ $(function() {
   function setupPhraseListImportHandler($list) {
     let $phrases = $list.find(".PhraseList__phrases");
     $list.on("click", ".PhraseList__import", (e) => {
+      $("#ImportModal").data("index", $list.data("index"));
       $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
       $("#ImportModal").addClass("is-active");
       $("#ImportModal__body").val('');
@@ -231,9 +232,36 @@ $(function() {
 
   function setupImportSubmitButton() {
     $("#ImportModal__submit").on("click", (e) => {
-      chrome.storage.local.get((options) => {
-        // TODO: Get current phrases and add all new phrases if not exist
-      });
+      let phraseCount = $("#ImportModal__phraseCount").text();
+      if (phraseCount > 0) {
+        chrome.storage.local.get((options) => {
+          let listIndex = $("#ImportModal").data("index");
+          let currentPhraseList = options.highlighter[listIndex].phrases;
+          let importFormat = $("#ImportModal__tabs li.is-active").attr("id").split("--")[1];
+          let phrasesToAdd = [];
+          if (importFormat === "Space-Delimited") {
+            phrasesToAdd = ($("#ImportModal__body").val().match(/\S+/g) || []);
+          } else if (importFormat == "Line-Delimited") {
+            phrasesToAdd = ($("#ImportModal__body").val().split("\n").filter(p => p.trim() != '') || []);
+          }
+          let phrasesSkipped = 0, phrasesAdded = 0;
+          for (let phrase of phrasesToAdd) {
+            if (!currentPhraseList.includes(phrase)) {
+              options.highlighter[listIndex].phrases.push(phrase);
+              addPhrase($(`#PhraseList--${listIndex}`), phrase, listIndex);
+              phrasesAdded++;
+            } else {
+              phrasesSkipped++;
+            }
+          }
+          let alertMessage = `${phrasesAdded} phrases were added.`;
+          if (phrasesSkipped > 0) {
+              alertMessage += `\n${phrasesSkipped} phrases were skipped due to already being in the list.`;
+          }
+          alert(alertMessage);
+          chrome.storage.local.set({"highlighter": options.highlighter});
+        });
+      }
       $("#ImportModal").removeClass("is-active");
     });
   }
