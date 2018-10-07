@@ -47,28 +47,40 @@ chrome.browserAction.onClicked.addListener((tab) => {
   {autoHighlighter: bool}
     - update the autoHighlighter badge
   {manualHighlighter: bool, tab: bool=true}
-    - updates the manualHighlighter badge, for tab if true, otherwise all tabs
+    - updates the manualHighlighter badge, for only current tab if tab is false
 */
 chrome.runtime.onMessage.addListener((request, sender) => {
   /*
     AutoHighlighter Mode:
-      Green - on
-      Black - blacklisted or not in whitelist? (TBD)
-      Red - off
+      Yellow - on
+      Red - blacklisted or not in whitelist? (TBD)
+      Blue - off
     ManualHighlighter Mode:
       Yellow - tab highlighted
-      none - tab not highlighted
+      Blue - tab not highlighted
   */
   if ("autoHighlighter" in request) {
-    chrome.browserAction.setBadgeText({text: " "});
-    chrome.browserAction.setBadgeBackgroundColor({color: (request.autoHighlighter) ? "green" : "red"});
-    chrome.browserAction.setBadgeBackgroundColor(badgeColor);
+    setBrowserIcon((request.autoHighlighter) ? "Green" : "Blue");
   } else if ("manualHighlighter" in request) {
-    let badgeText = {text: (request.manualHighlighter) ? " " : ""};
-    if (!"tab" in request || request.tab) {
-      badgeText.tabId = sender.tab.id;
+    let color = (request.manualHighlighter) ? "Yellow" : "Blue";
+    if ("tab" in request || request.tab) {
+      setBrowserIcon(color, sender.tab.id);
+    } else {
+      setBrowserIcon(color);
     }
-    chrome.browserAction.setBadgeText(badgeText);
-    chrome.browserAction.setBadgeBackgroundColor({color: "yellow"});
   }
 });
+
+function setBrowserIcon(color, tab=false) {
+  let iconObject = {
+      path: {
+        "16": `img/16px${color}.png`,
+        "24": `img/24px${color}.png`,
+        "32": `img/32px${color}.png`
+      }
+    };
+  if (tab) {
+    iconObject.tabId = tab;
+  }
+  chrome.browserAction.setIcon(iconObject);
+}

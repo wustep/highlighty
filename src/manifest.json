@@ -6,6 +6,14 @@
   "description": "Highlight phrases from custom word lists.",
   "version": "1.0.3",
 
+  "icons": {
+    "16": "img/16pxYellow.png",
+    "32": "img/32pxYellow.png",
+    "48": "img/48pxYellow.png",
+    "96": "img/96pxYellow.png",
+    "128": "img/128pxYellow.png"
+  },
+
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
@@ -14,7 +22,12 @@
   ],
 
   "browser_action": {
-    "default_title": "Highlight phrases!"
+    "default_title": "Highlight phrases!",
+    "default_icon": {
+      "16": "img/16pxBlue.png",
+      "24": "img/24pxBlue.png",
+      "32": "img/32pxBlue.png"
+    }
   },
 
   "options_page": "options.html",
