@@ -8,7 +8,7 @@ const defaultOptions = {
       color: "purple"
     }
   ],
-  baseStyles: "border-radius: 0.3rem; padding: 0.05rem; color: white; font-weight: normal; box-shadow: 1px 1px 1px 1px grey;",
+  baseStyles: "border-radius: 0.3rem; padding: 0.1rem; color: white; font-weight: normal; box-shadow: inset 0 -0.1rem 0 rgba(20,20,20,0.40)",
   autoHighlighter: true, /* If enableAutoHighlight, represents whether autoHighlighter is active */
   enableAutoHighlight: false,
   enableTitleMouseover: true,
@@ -52,7 +52,7 @@ chrome.browserAction.onClicked.addListener((tab) => {
 chrome.runtime.onMessage.addListener((request, sender) => {
   /*
     AutoHighlighter Mode:
-      Yellow - on
+      Green - on
       Red - blacklisted or not in whitelist? (TBD)
       Blue - off
     ManualHighlighter Mode:
@@ -63,7 +63,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     setBrowserIcon((request.autoHighlighter) ? "Green" : "Blue");
   } else if ("manualHighlighter" in request) {
     let color = (request.manualHighlighter) ? "Yellow" : "Blue";
-    if ("tab" in request || request.tab) {
+    if ("tab" in request && request.tab) {
       setBrowserIcon(color, sender.tab.id);
     } else {
       setBrowserIcon(color);
