@@ -51,7 +51,8 @@ $(function() {
             accuracy: (options.enablePartialMatch) ? "partially" : "exactly",
             caseSensitive: !options.enableCaseInsensitive,
             separateWordSearch: false,
-            acrossElements: true
+            acrossElements: true,
+            iframes: true
           };
       $("body").mark(phrase, markOptions);
     }
