@@ -8,7 +8,7 @@ const defaultOptions = {
       color: "purple"
     }
   ],
-  baseStyles: "border-radius: 0.3rem; padding: 0.1rem; color: white; font-weight: normal; box-shadow: inset 0 -0.1rem 0 rgba(20,20,20,0.40)",
+  baseStyles: "border-radius: 0.3rem; padding: 0.1rem; color: white; font-weight: normal; box-shadow: inset 0 -0.1rem 0 rgba(20,20,20,0.40);",
   autoHighlighter: true, /* If enableAutoHighlight, represents whether autoHighlighter is active */
   enableAutoHighlight: false,
   enableTitleMouseover: true,
