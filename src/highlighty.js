@@ -124,26 +124,29 @@ $(function() {
     }
   });
 
-  /* Listen for changes to body every MUTATION_TIMER */
-  MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-  var observer = new MutationObserver(function(mutations, observer) {
-    if (mutationTime) {
-      mutationTime = false;
-      setTimeout(() => { mutationTime = true; }, MUTATION_TIMER);
-      chrome.storage.local.get((options) => {
-        if (options.autoHighlighter && bodyHighlighted) {
-           // TODO: ^ Re-examine this logic and make sure it's sound and efficient
-          let phrasesToHighlight = [];
-          removeHighlightStyles();
-          setupHighlighter(phrasesToHighlight, options);
-          highlightPhrases(phrasesToHighlight, options);
+  chrome.storage.local.get((options) => {
+    if (options.enableAutoHighlightUpdates) {
+      MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+      var observer = new MutationObserver(function(mutations, observer) {
+        if (mutationTime) {
+          mutationTime = false;
+          setTimeout(() => { mutationTime = true; }, MUTATION_TIMER);
+          chrome.storage.local.get((options) => {
+            if (options.enableAutoHighlight && options.autoHighlighter) {
+               // TODO: ^ Re-examine this logic and make sure it's sound and efficient
+               // We can probably figure out WHICH element was mutated intsead of checking whole body
+              let phrasesToHighlight = [];
+              removeHighlightStyles();
+              setupHighlighter(phrasesToHighlight, options);
+              highlightPhrases(phrasesToHighlight, options);
+            }
+          });
         }
       });
+      observer.observe(document, {
+        subtree: true,
+        childList: true
+      });
     }
-  });
-
-  observer.observe(document, {
-    subtree: true,
-    childList: true
   });
 });

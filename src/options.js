@@ -19,6 +19,7 @@ $(function() {
 
   function setupPrimarySettings(options) {
     $("#Settings__enableAutoHighlight").attr('checked', options.enableAutoHighlight);
+    $("#Settings__enableAutoHighlightUpdates").attr('checked', options.enableAutoHighlightUpdates);
     $("#Settings__enableTitleMouseover").attr('checked', options.enableTitleMouseover);
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
@@ -277,6 +278,7 @@ $(function() {
   $("#Settings__save").on("click", (e) => {
     chrome.storage.local.get((options) => {
       let newEnableAutoHighlight = $("#Settings__enableAutoHighlight").is(":checked");
+      let newEnableAutoHighlightUpdates = $("#Settings__enableAutoHighlightUpdates").is(":checked");
       let newEnableTitleMouseover = $("#Settings__enableTitleMouseover").is(":checked");
       let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
       let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
@@ -284,6 +286,7 @@ $(function() {
 
       let newOptions = {
         "enableAutoHighlight": newEnableAutoHighlight,
+        "enableAutoHighlightUpdates": newEnableAutoHighlightUpdates,
         "enableTitleMouseover": newEnableTitleMouseover,
         "enablePartialMatch": newEnablePartialMatch,
         "enableCaseInsensitive": newEnableCaseInsensitive,
