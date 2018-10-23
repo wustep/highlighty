@@ -55,7 +55,7 @@ $(function() {
             accuracy: (options.enablePartialMatch) ? "partially" : "exactly",
             caseSensitive: !options.enableCaseInsensitive,
             separateWordSearch: false,
-            acrossElements: true,
+            acrossElements: false,
             iframes: true
           };
       $("body").mark(phrase, markOptions);
