@@ -12,6 +12,9 @@ $(function() {
 
   let bodyHighlighted = false;
 
+  const MUTATION_TIMER = 2000; // Number of miliseconds between updating body after DOM change
+  let mutationTime = true;   // Whether body should be updated after DOM change
+
   // Setup phrase list and append proper styles
   function setupHighlighter(phrasesToHighlight, options) {
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
@@ -48,6 +51,7 @@ $(function() {
           {
             element: "span",
             className: markClasses,
+            exclude: [`.${HL_BASE_CLASS}`],
             accuracy: (options.enablePartialMatch) ? "partially" : "exactly",
             caseSensitive: !options.enableCaseInsensitive,
             separateWordSearch: false,
@@ -66,7 +70,7 @@ $(function() {
     bodyHighlighted = true;
   }
 
-  function removeHighlights() {
+  function removeHighlightStyles() {
     $('#' + HL_STYLE_ID).remove();
   }
 
@@ -89,7 +93,7 @@ $(function() {
           /* Highlight body if applicable */
           if (!bodyHighlighted) {
               let phrasesToHighlight = [];
-              removeHighlights();
+              removeHighlightStyles();
               setupHighlighter(phrasesToHighlight, options);
               highlightPhrases(phrasesToHighlight, options);
           } else {
@@ -118,5 +122,28 @@ $(function() {
     if (message === "highlighty") {
         processHighlights(true);
     }
+  });
+
+  /* Listen for changes to body every MUTATION_TIMER */
+  MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+  var observer = new MutationObserver(function(mutations, observer) {
+    if (mutationTime) {
+      mutationTime = false;
+      setTimeout(() => { mutationTime = true; }, MUTATION_TIMER);
+      chrome.storage.local.get((options) => {
+        if (options.autoHighlighter && bodyHighlighted) {
+           // TODO: ^ Re-examine this logic and make sure it's sound and efficient
+          let phrasesToHighlight = [];
+          removeHighlightStyles();
+          setupHighlighter(phrasesToHighlight, options);
+          highlightPhrases(phrasesToHighlight, options);
+        }
+      });
+    }
+  });
+
+  observer.observe(document, {
+    subtree: true,
+    childList: true
   });
 });
