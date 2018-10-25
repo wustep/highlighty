@@ -11,6 +11,7 @@ $(function() {
   const HL_STYLE_ID = "Highlighty__styles";       // Style block containing highlighter styles
 
   let bodyHighlighted = false;
+  let urlBlacklisted = false;
 
   const MUTATION_TIMER = 2000; // Number of miliseconds between updating body after DOM change
   let mutationTime = true;   // Whether body should be updated after DOM change
@@ -75,37 +76,44 @@ $(function() {
   }
 
   function processHighlights(manualTrigger=false) {
-    $("body").unmark({
-      done: () => {
-        chrome.storage.local.get((options) => {
-          /* Set manual highlighter badge if applicable */
-          if (!options.enableAutoHighlight) {
-            chrome.runtime.sendMessage({manualHighlighter: !bodyHighlighted, tab: true})
-          /* Toggle auto-highlighter & set badge if applicable */
-          } else if (manualTrigger && options.enableAutoHighlight) {
-            let newAutoHighlighter = !options.autoHighlighter;
-            chrome.storage.local.set(
-              {"autoHighlighter": newAutoHighlighter},
-              () => {
-                chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter})
-              });
-          }
-          /* Highlight body if applicable */
-          if (!bodyHighlighted) {
-              let phrasesToHighlight = [];
-              removeHighlightStyles();
-              setupHighlighter(phrasesToHighlight, options);
-              highlightPhrases(phrasesToHighlight, options);
-          } else {
-            bodyHighlighted = false;
-          }
-        });
+    chrome.storage.local.get((options) => {
+      if (!manualTrigger && urlBlacklisted) {
+        chrome.runtime.sendMessage({blockedHighlighter: true});
+      } else { // Let a manualTrigger override blacklist and go directly to highlight mode.
+        // Deal with badges, notifying background.js.
+        if (!options.enableAutoHighlight) {
+          chrome.runtime.sendMessage({manualHighlighter: !bodyHighlighted, tab: true});
+        } else if (manualTrigger) {
+          let newAutoHighlighter = (urlBlacklisted) ? true : !options.autoHighlighter;
+          urlBlacklisted = false;
+          chrome.storage.local.set(
+            {"autoHighlighter": newAutoHighlighter},
+            () => {
+              chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter})
+            });
+        }
+        // Deal with appropriate (un)highlighting.
+        if (!bodyHighlighted) {
+            let phrasesToHighlight = [];
+            removeHighlightStyles();
+            setupHighlighter(phrasesToHighlight, options);
+            highlightPhrases(phrasesToHighlight, options);
+        } else {
+          $("body").unmark();
+          bodyHighlighted = false;
+        }
       }
     });
   }
 
   chrome.storage.local.get((options) => {
     if (options.enableAutoHighlight && options.autoHighlighter) {
+      for (let url of options.blacklist) {
+        if (window.location.href.indexOf(url)) {
+          urlBlacklisted = true;
+          break;
+        }
+      }
       processHighlights();
     }
   });

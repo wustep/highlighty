@@ -50,6 +50,8 @@ chrome.browserAction.onClicked.addListener((tab) => {
     - update the autoHighlighter badge
   {manualHighlighter: bool, tab: bool=true}
     - updates the manualHighlighter badge, for only current tab if tab is false
+  {blockedHighlighter: bool}
+    - updates the blockedHighlighter badge for tab
 */
 chrome.runtime.onMessage.addListener((request, sender) => {
   /*
@@ -70,6 +72,8 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     } else {
       setBrowserIcon(color);
     }
+  } else if ("blockedHighlighter" in request) {
+    setBrowserIcon("Red", sender.tab.id);
   }
 });
 
