@@ -90,8 +90,11 @@
             </div>
             <div class="column is-two-fifths">
               <div class="buttons is-right PhraseList__actions">
-                <button class="button is-link PhraseList__editName">
+                <button class="button is-info PhraseList__editName">
                   Edit Name
+                </button>
+                <button class="button is-link PhraseList__export">
+                  Export
                 </button>
                 <button class="button is-success PhraseList__import">
                   Import
@@ -166,9 +169,8 @@
         <section class="modal-card-body">
           <div class="tabs">
             <ul id="ImportModal__tabs">
-              <!--<li id="ImportModal__tab\-\-Highlighty"><a>Highlighty</a></li>-->
-              <li id="ImportModal__tab--Space-Delimited" class="is-active"><a>Space-Delimited</a></li>
-              <li id="ImportModal__tab--Line-Delimited"><a>Line-Delimited</a></li>
+              <li id="ImportModal__tab--Line-Delimited" class="is-active"><a>Line-Delimited</a></li>
+              <li id="ImportModal__tab--Space-Delimited"><a>Space-Delimited</a></li>
             </ul>
           </div>
           <textarea id="ImportModal__body" class="textarea"></textarea>
@@ -177,6 +179,30 @@
           <button id="ImportModal__submit" class="button is-success">Submit</button>
           <button id="ImportModal__cancel" class="button">Cancel</button>
           <span>Phrases found: <span id="ImportModal__phraseCount">0</span></span>
+        </footer>
+      </div>
+    </div>
+    <!-- Modal: Export -->
+    <div class="modal" id="ExportModal">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title"><b>Export from: </b> <span id="ExportModal__listName"></span></p>
+          <button id="ExportModal__close" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <div class="tabs">
+            <ul id="ExportModal__tabs">
+              <li id="ExportModal__tab--Line-Delimited" class="is-active"><a>Line-Delimited</a></li>
+              <li id="ExportModal__tab--Space-Delimited" class="is-active"><a>Space-Delimited</a></li>
+            </ul>
+          </div>
+          <textarea id="ExportModal__body" class="textarea" readonly></textarea>
+        </section>
+        <footer class="modal-card-foot">
+          <button id="ExportModal__copy" class="button is-link">Copy</button>
+          <button id="ExportModal__cancel" class="button">Close</button>
+          <span>Phrases found: <span id="ExportModal__phraseCount">0</span></span>
         </footer>
       </div>
     </div>

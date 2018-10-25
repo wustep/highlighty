@@ -10,7 +10,7 @@ $(function() {
     setupAddPhraseListHandler();
     addExistingListStyles(options);
     addExistingLists(options);
-    setupImportButtons();
+    setupImportExportButtons();
   }
 
   function removeExistingListStyles() {
@@ -105,6 +105,7 @@ $(function() {
   function setupPhraseListHandlers($list) {
     setupPhraseListEditNameHandler($list);
     setupPhraseListImportHandler($list);
+    setupPhraseListExportHandler($list);
     setupPhraseListDeleteHandler($list);
     setupPhraseListAddPhraseHandler($list);
     setupPhraseListDeletePhraseHandler($list);
@@ -123,25 +124,6 @@ $(function() {
         });
       }
     });
-  }
-
-  function setupPhraseListImportHandler($list) {
-    let $phrases = $list.find(".PhraseList__phrases");
-    $list.on("click", ".PhraseList__import", (e) => {
-      $("#ImportModal").data("index", $list.data("index"));
-      $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
-      $("#ImportModal").addClass("is-active");
-      $("#ImportModal__body").val('');
-      $("#ImportModal__phraseCount").text("0");
-      setImportModalTab("Space-Delimited");
-      $("#ImportModal__body").focus()
-    });
-  }
-
-  function setImportModalTab(tabName) {
-    $("#ImportModal__tabs").find("li").removeClass("is-active");
-    $("#ImportModal__tabs").find(`#ImportModal__tab--${tabName}`).addClass("is-active");
-    $("#ImportModal__body").attr("placeholder", `Enter your ${tabName.toLowerCase()} phrase list here.`);
   }
 
   function setupPhraseListDeleteHandler($list) {
@@ -197,37 +179,102 @@ $(function() {
     });
   }
 
-  function setupImportButtons() {
-    setupImportTabHandlers();
-    setupImportCloseHandlers();
-    setupImportPhraseCountHandler();
-    setupImportSubmitButton();
+  function setupPhraseListImportHandler($list) {
+    $list.on("click", ".PhraseList__import", (e) => {
+      $("#ImportModal").data("index", $list.data("index"));
+      $("#ImportModal__listName").text($list.find(".PhraseList__title").text());
+      $("#ImportModal__body").val('');
+      $("#ImportModal__phraseCount").text("0");
+      setImportModalTab("Line-Delimited");
+      $("#ImportModal").addClass("is-active");
+      $("#ImportModal__body").focus();
+    });
   }
 
-  function setupImportTabHandlers() {
+  function setupPhraseListExportHandler($list) {
+    $list.on("click", ".PhraseList__export", (e) => {
+      $("#ExportModal__listName").text($list.find(".PhraseList__title").text());
+      $("#ExportModal").data("index", $list.data("index"));
+      setExportModalTab("Line-Delimited");
+      $("#ExportModal").addClass("is-active");
+    });
+  }
+
+  function setImportModalTab(tabName) {
+    $("#ImportModal__tabs").find("li").removeClass("is-active");
+    $("#ImportModal__tabs").find(`#ImportModal__tab--${tabName}`).addClass("is-active");
+    $("#ImportModal__body").attr("placeholder", `Enter your ${tabName.toLowerCase()} phrase list here.`);
+  }
+
+  function setExportModalTab(tabName) {
+    $("#ExportModal__tabs").find("li").removeClass("is-active");
+    $("#ExportModal__tabs").find(`#ExportModal__tab--${tabName}`).addClass("is-active");
+    chrome.storage.local.get((options) => {
+      let listIndex = $("#ExportModal").data("index");
+      let exportFormat = $("#ExportModal__tabs li.is-active").attr("id").split("--")[1];
+      let phraseList = "";
+      if (exportFormat === "Line-Delimited") {
+        for (let phrase of options.highlighter[listIndex].phrases) {
+          phraseList += phrase + "\r\n";
+        }
+      } else if (exportFormat === "Space-Delimited") {
+        for (let phrase of options.highlighter[listIndex].phrases) {
+          phraseList += phrase + " ";
+        }
+      }
+      $("#ExportModal__body").val(phraseList.trim());
+      $("#ExportModal__body").trigger("change");
+    });
+  }
+
+  function setupImportExportButtons() {
+    setupImportExportTabHandlers();
+    setupImportExportCloseHandlers();
+    setupImportExportPhraseCountHandler();
+    setupImportSubmitButton();
+    setupExportCopyButton();
+  }
+
+  function setupImportExportTabHandlers() {
     $("#ImportModal__tabs > li").on("click", (e) => {
       let tabName = e.currentTarget.id.split("--")[1];
       setImportModalTab(tabName);
       $('#ImportModal__body').trigger('change'); // Force change to trigger phrase count change
     })
-  }
-
-  function setupImportCloseHandlers() {
-    $("#ImportModal__cancel, #ImportModal__close").on("click", (e) => {
-      $("#ImportModal").removeClass("is-active");
+    $("#ExportModal__tabs > li").on("click", (e) => {
+      let tabName = e.currentTarget.id.split("--")[1];
+      setExportModalTab(tabName);
     });
   }
 
-  function setupImportPhraseCountHandler() {
+  function setupImportExportCloseHandlers() {
+    $("#ImportModal__cancel, #ImportModal__close").on("click", (e) => {
+      $("#ImportModal").removeClass("is-active");
+    });
+    $("#ExportModal__cancel, #ExportModal__close").on("click", (e) => {
+      $("#ExportModal").removeClass("is-active");
+    });
+  }
+
+  function setupImportExportPhraseCountHandler() {
     $("#ImportModal__body").on("change keyup paste", () => {
       let importFormat = $("#ImportModal__tabs li.is-active").attr("id").split("--")[1];
       let phraseCount = 0;
-      if (importFormat === "Space-Delimited") {
-        phraseCount = ($("#ImportModal__body").val().match(/\S+/g) || []).length;
-      } else if (importFormat == "Line-Delimited") {
+      if (importFormat === "Line-Delimited") {
         phraseCount = ($("#ImportModal__body").val().split("\n").filter(p => p.trim() != '') || []).length;
+      } else if (importFormat === "Space-Delimited") {
+        phraseCount = ($("#ImportModal__body").val().match(/\S+/g) || []).length;
       }
       $("#ImportModal__phraseCount").text(phraseCount);
+    });
+    $("#ExportModal__body").on("change", () => {
+      let exportFormat = $("#ExportModal__tabs li.is-active").attr("id").split("--")[1];
+      if (exportFormat === "Line-Delimited") {
+        phraseCount = ($("#ExportModal__body").val().split("\n").filter(p => p.trim() != '') || []).length;
+      } else if (exportFormat === "Space-Delimited") {
+        phraseCount = ($("#ExportModal__body").val().match(/\S+/g) || []).length;
+      }
+      $("#ExportModal__phraseCount").text(phraseCount);
     });
   }
 
@@ -264,6 +311,13 @@ $(function() {
         });
       }
       $("#ImportModal").removeClass("is-active");
+    });
+  }
+
+  function setupExportCopyButton() {
+    $("#ExportModal__copy").on("click", (e) => {
+      $("#ExportModal__body").select();
+      document.execCommand('copy');
     });
   }
 
