@@ -12,7 +12,8 @@ $(function() {
     addExistingListStyles(options);
     addExistingLists(options);
 
-    setupAddBlacklistHandler();
+    setupBlacklistAddHandler();
+    setupBlacklistDeleteHandler();
     setupAddPhraseListHandler();
     setupImportExportModals();
   }
@@ -30,8 +31,103 @@ $(function() {
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
   }
 
-  function setupAddBlacklistHandler() {
-    // TODO
+  function addExistingBlacklist(options) {
+    for (let url of options.blacklist) {
+      addBlacklistURLElement(url);
+    }
+  }
+
+  function addBlacklistURLElement(url) {
+    $("#Blacklist__urls").append(
+      `<span class="tag is-medium Blacklist__url">` +
+          url +
+          `<button class="delete is-small Blacklist__url__delete"></button>` +
+      `</span>`
+    );
+  }
+
+  function addExistingListStyles(options) {
+    let highlighterStyles =
+        `<style id="${HL_STYLE_ID}">span.PhraseList__phrase { ${options.baseStyles} }\r\n`;
+    for (let i = 0; i < options.highlighter.length; i++) {
+      if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
+        let highlighterColor = ("color" in options.highlighter[i])
+            ? options.highlighter[i].color
+            : "black";
+        highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor} }\r\n`;
+      }
+    }
+    highlighterStyles += "</style>";
+    $("head").append(highlighterStyles);
+  }
+
+  function addExistingLists(options) {
+    for (let i = 0; i < options.highlighter.length; i++) {
+      if (Object.keys(options.highlighter[i]).length) {
+        let $newListDiv = addNewListDiv(options.highlighter[i].title, i);
+        for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
+          addPhraseElement($newListDiv, options.highlighter[i].phrases[j], i);
+        }
+      }
+    }
+  }
+
+  function addNewListDiv(title, index) {
+    $newListDiv = $("#PhraseList--invisible").clone()
+        .attr('id', `PhraseList--${index}`)
+        .data('index', index);
+    $newListDiv.find(".PhraseList__title").text(title);
+    setupPhraseListHandlers($newListDiv);
+    $newListDiv.insertBefore("#NewPhraseList");
+    return $newListDiv;
+  }
+
+  function addPhraseElement($listDiv, phrase, listIndex) {
+    $listDiv.find(".PhraseList__phrases").append(
+      `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}"` +
+           ` data-list="${listIndex}">` +
+          phrase +
+          `<button class="delete is-small PhraseList__phrase__delete"></button>` +
+      `</span>`
+    );
+  }
+
+  function setupBlacklistAddHandler() {
+    $("#Blacklist__add").on("click", (e) => {
+      e.preventDefault();
+      chrome.storage.local.get((options) => {
+        let newURL = $("#Blacklist__urlInput").val();
+        if (newURL.length > 0) {
+          chrome.storage.local.get((options) => {
+            if (options.blacklist.includes(newURL)) {
+              $("#Blacklist__urlInput").val("");
+              alert("URL was already in list!");
+            } else {
+              $("#Blacklist__urlInput").val("");
+              options.blacklist.push(newURL.trim());
+              chrome.storage.local.set({"blacklist": options.blacklist},
+                () => { addBlacklistURLElement(newURL); }
+              );
+            }
+          });
+        }
+      });
+    });
+  }
+
+  function setupBlacklistDeleteHandler() {
+    $(".Blacklist__url__delete").on("click", (e) => {
+      let $url = $(e.target).parent();
+      if (window.confirm("Are you sure you want to delete: " + $url.text() + "?")) {
+        chrome.storage.local.get((options) => {
+          let urlIndex = options.blacklist.indexOf($url.text());
+          options.blacklist.splice(urlIndex, 1);
+          chrome.storage.local.set({"blacklist": options.blacklist},
+            () => { $url.remove(); }
+          );
+        });
+      }
+    });
   }
 
   function setupAddPhraseListHandler() {
@@ -62,56 +158,6 @@ $(function() {
           });
       });
     });
-  }
-
-  function addExistingBlacklist(options) {
-    // TODO
-  }
-
-  function addExistingListStyles(options) {
-    let highlighterStyles =
-        `<style id="${HL_STYLE_ID}">span.PhraseList__phrase { ${options.baseStyles} }\r\n`;
-    for (let i = 0; i < options.highlighter.length; i++) {
-      if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
-        let highlighterColor = ("color" in options.highlighter[i])
-            ? options.highlighter[i].color
-            : "black";
-        highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor} }\r\n`;
-      }
-    }
-    highlighterStyles += "</style>";
-    $("head").append(highlighterStyles);
-  }
-
-  function addExistingLists(options) {
-    for (let i = 0; i < options.highlighter.length; i++) {
-      if (Object.keys(options.highlighter[i]).length) {
-        let $newListDiv = addNewListDiv(options.highlighter[i].title, i);
-        for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
-          addPhrase($newListDiv, options.highlighter[i].phrases[j], i);
-        }
-      }
-    }
-  }
-
-  function addNewListDiv(title, index) {
-    $newListDiv = $("#PhraseList--invisible").clone()
-        .attr('id', `PhraseList--${index}`)
-        .data('index', index);
-    $newListDiv.find(".PhraseList__title").text(title);
-    setupPhraseListHandlers($newListDiv);
-    $newListDiv.insertBefore("#NewPhraseList");
-    return $newListDiv;
-  }
-
-  function addPhrase($listDiv, phrase, listIndex) {
-    $listDiv.find(".PhraseList__phrases").append(
-      `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}"` +
-           ` data-list="${listIndex}">` +
-          phrase +
-          `<button class="delete is-small PhraseList__phrase__delete"></button>` +
-      `</span>`
-    );
   }
 
   function setupPhraseListHandlers($list) {
@@ -166,7 +212,7 @@ $(function() {
             options.highlighter[listIndex].phrases.push(newPhrase.trim());
             $list.find(".PhraseList__newPhrase__phrase").val("");
             chrome.storage.local.set({"highlighter": options.highlighter},
-              () => { addPhrase($list, newPhrase, listIndex); }
+              () => { addPhraseElement($list, newPhrase, listIndex); }
             );
           }
         });
@@ -308,7 +354,7 @@ $(function() {
           for (let phrase of phrasesToAdd) {
             if (!currentPhraseList.includes(phrase)) {
               options.highlighter[listIndex].phrases.push(phrase);
-              addPhrase($(`#PhraseList--${listIndex}`), phrase, listIndex);
+              addPhraseElement($(`#PhraseList--${listIndex}`), phrase, listIndex);
               phrasesAdded++;
             } else {
               phrasesSkipped++;

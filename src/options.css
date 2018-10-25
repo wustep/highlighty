@@ -30,12 +30,12 @@ span.PhraseList__title {
   font-weight: 400;
 }
 
-span.tag.PhraseList__phrase {
+span.tag.PhraseList__phrase, span.tag.Blacklist__url {
   margin-right: 0.5rem;
   margin-bottom: 0.4rem;
   padding: 0.5rem;
 }
 
-.PhraseList__newPhrase {
+.PhraseList__newPhrase, #Blacklist__newURL {
   margin-bottom: 1.0rem;
 }
