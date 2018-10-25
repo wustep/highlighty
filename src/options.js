@@ -6,24 +6,32 @@ $(function() {
 
   function setupOptionsPage(options) {
     removeExistingListStyles();
-    setupPrimarySettings(options);
-    setupAddPhraseListHandler();
+    setPrimarySettings(options);
+
+    addExistingBlacklist(options);
     addExistingListStyles(options);
     addExistingLists(options);
-    setupImportExportButtons();
+
+    setupAddBlacklistHandler();
+    setupAddPhraseListHandler();
+    setupImportExportModals();
   }
 
   function removeExistingListStyles() {
     $(`.${HL_STYLE_ID}`).remove();
   }
 
-  function setupPrimarySettings(options) {
+  function setPrimarySettings(options) {
     $("#Settings__enableAutoHighlight").attr('checked', options.enableAutoHighlight);
     $("#Settings__enableAutoHighlightUpdates").attr('checked', options.enableAutoHighlightUpdates);
     $("#Settings__enableTitleMouseover").attr('checked', options.enableTitleMouseover);
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
+  }
+
+  function setupAddBlacklistHandler() {
+    // TODO
   }
 
   function setupAddPhraseListHandler() {
@@ -54,6 +62,10 @@ $(function() {
           });
       });
     });
+  }
+
+  function addExistingBlacklist(options) {
+    // TODO
   }
 
   function addExistingListStyles(options) {
@@ -227,7 +239,7 @@ $(function() {
     });
   }
 
-  function setupImportExportButtons() {
+  function setupImportExportModals() {
     setupImportExportTabHandlers();
     setupImportExportCloseHandlers();
     setupImportExportPhraseCountHandler();

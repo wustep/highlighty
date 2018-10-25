@@ -76,6 +76,33 @@
         </div>
       </div>
 
+      <div class="container" id="Blacklist">
+        <div class="box">
+          <h1 class="title">
+            URL Blacklist
+          </h1>
+          <p>
+            Any URLs containing these phrases here will not be highlighted by auto highlight, e.g. <i>"facebook.com"</i>.
+          </p><br>
+          <form>
+            <div class="columns">
+              <div class="column is-three-fifths Blacklist__newURL">
+                <div class="field has-addons">
+                  <div class="control is-expanded">
+                    <input class="input Blacklist__newURL__url" type="text" placeholder="Add a new URL to blacklist">
+                  </div>
+                  <div class="control">
+                    <button type="submit" class="button is-danger Blacklist__newURL__add"> + </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+          <div class="Blacklist_urls">
+          </div>
+        </div>
+      </div>
+
       <div class="container" id="PhraseLists">
         <div class="box" class="PhraseList" id="PhraseList--invisible">
           <div class="columns">
