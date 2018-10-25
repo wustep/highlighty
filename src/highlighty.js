@@ -86,11 +86,8 @@ $(function() {
         } else if (manualTrigger) {
           let newAutoHighlighter = (urlBlacklisted) ? true : !options.autoHighlighter;
           urlBlacklisted = false;
-          chrome.storage.local.set(
-            {"autoHighlighter": newAutoHighlighter},
-            () => {
-              chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter})
-            });
+          chrome.storage.local.set({"autoHighlighter": newAutoHighlighter});
+          chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter});
         }
         // Deal with appropriate (un)highlighting.
         if (!bodyHighlighted) {
@@ -109,7 +106,7 @@ $(function() {
   chrome.storage.local.get((options) => {
     if (options.enableAutoHighlight && options.autoHighlighter) {
       for (let url of options.blacklist) {
-        if (window.location.href.indexOf(url)) {
+        if (window.location.href.indexOf(url) !== -1) {
           urlBlacklisted = true;
           break;
         }
@@ -136,7 +133,7 @@ $(function() {
     if (options.enableAutoHighlightUpdates) {
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function(mutations, observer) {
-        if (mutationTime) {
+        if (mutationTime && !urlBlacklisted) {
           mutationTime = false;
           setTimeout(() => { mutationTime = true; }, MUTATION_TIMER);
           chrome.storage.local.get((options) => {

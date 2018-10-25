@@ -64,7 +64,9 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       Blue - tab not highlighted
   */
   if ("autoHighlighter" in request) {
-    setBrowserIcon((request.autoHighlighter) ? "Green" : "Blue");
+    let color = (request.autoHighlighter) ? "Green" : "Blue";
+    setBrowserIcon(color);
+    setBrowserIcon(color, sender.tab.id); // Need to set both here or else tab doesn't get set sometimes
   } else if ("manualHighlighter" in request) {
     let color = (request.manualHighlighter) ? "Yellow" : "Blue";
     if ("tab" in request && request.tab) {
