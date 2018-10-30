@@ -108,10 +108,12 @@ $(function() {
 
   chrome.storage.local.get((options) => {
     if (options.enableAutoHighlight && options.autoHighlighter) {
-      for (let url of options.blacklist) {
-        if (window.location.href.indexOf(url) !== -1) {
-          urlBlacklisted = true;
-          break;
+      if (options.blacklist.length) {
+        for (let url of options.blacklist) {
+          if (window.location.href.indexOf(url) !== -1) {
+            urlBlacklisted = true;
+            break;
+          }
         }
       }
       processHighlights();

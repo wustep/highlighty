@@ -32,8 +32,10 @@ $(function() {
   }
 
   function addExistingBlacklist(options) {
-    for (let url of options.blacklist) {
-      addBlacklistURLElement(url);
+    if (options.blacklist.length) {
+      for (let url of options.blacklist) {
+        addBlacklistURLElement(url);
+      }
     }
   }
 
