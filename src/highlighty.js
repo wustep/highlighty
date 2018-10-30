@@ -12,19 +12,22 @@ $(function() {
 
   let bodyHighlighted = false;
   let urlBlacklisted = false;
+  let phrasesToHighlight = [];
 
-  const MUTATION_TIMER = 2000; // Number of miliseconds between updating body after DOM change
-  let mutationTime = true;   // Whether body should be updated after DOM change
+  const MUTATION_TIMER = 2000;    // Number of miliseconds between updating body after DOM change
+  let mutationTime = true;        // Whether body should be updated after DOM change
 
   // Setup phrase list and append proper styles
-  function setupHighlighter(phrasesToHighlight, options) {
+  // We don't re-setup the highlighter on incremental auto-updates but we do on manual triggers
+  function setupHighlighter(options) {
+    phrasesToHighlight = [];
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
         let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
         highlighterStyles += `.${HL_PREFIX_CLASS + i} { background-color: ${highlighterColor} }\r\n`;
         for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
-          addHighlightPhrase(options.highlighter[i].phrases[j], i, phrasesToHighlight);
+          addHighlightPhrase(options.highlighter[i].phrases[j], i);
         }
       }
     }
@@ -33,7 +36,7 @@ $(function() {
   }
 
   // Add phrase to highlight list given phrase and its list index
-  function addHighlightPhrase(highlightPhrase, listNumber, phrasesToHighlight) {
+  function addHighlightPhrase(highlightPhrase, listNumber) {
     highlightPhrase = String(highlightPhrase);
     if (highlightPhrase.length > 1) {
       if (phrasesToHighlight[highlightPhrase]) {
@@ -45,7 +48,7 @@ $(function() {
   }
 
   // Highlight phrases in body
-  function highlightPhrases(phrasesToHighlight, options) {
+  function highlightPhrases(options) {
     for (let phrase of Object.keys(phrasesToHighlight)) {
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS)}`;
       let markOptions =
@@ -62,6 +65,7 @@ $(function() {
       $("body").mark(phrase, markOptions);
     }
     if (options.enableTitleMouseover) {
+      // TODO: Probably can have a more efficient algorithm here using mark.js callback
       for (let i = 0; i < options.highlighter.length; i++) {
         if ("title" in options.highlighter[i]) {
           $("." + HL_PREFIX_CLASS + i).attr("title", options.highlighter[i].title);
@@ -91,13 +95,12 @@ $(function() {
         }
         // Deal with appropriate (un)highlighting.
         if (!bodyHighlighted) {
-            let phrasesToHighlight = [];
             removeHighlightStyles();
-            setupHighlighter(phrasesToHighlight, options);
-            highlightPhrases(phrasesToHighlight, options);
+            setupHighlighter(options);
+            highlightPhrases(options);
         } else {
-          $("body").unmark();
           bodyHighlighted = false;
+          $("body").unmark();
         }
       }
     });
@@ -130,19 +133,15 @@ $(function() {
   });
 
   chrome.storage.local.get((options) => {
-    if (options.enableAutoHighlightUpdates) {
+    // TODO: Re-examine this logic, make more efficient..
+    if (options.enableAutoHighlightUpdates && !urlBlacklisted) {
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function(mutations, observer) {
-        if (mutationTime && !urlBlacklisted) {
+        if (mutationTime) {
           mutationTime = false;
           setTimeout(() => { mutationTime = true; }, MUTATION_TIMER);
           chrome.storage.local.get((options) => {
             if (options.enableAutoHighlight && options.autoHighlighter) {
-               // TODO: ^ Re-examine this logic and make sure it's sound and efficient
-               // We can probably figure out WHICH element was mutated intsead of checking whole body
-              let phrasesToHighlight = [];
-              removeHighlightStyles();
-              setupHighlighter(phrasesToHighlight, options);
               highlightPhrases(phrasesToHighlight, options);
             }
           });
@@ -153,5 +152,5 @@ $(function() {
         childList: true
       });
     }
-  });
+ });
 });
