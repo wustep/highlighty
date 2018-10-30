@@ -16,7 +16,7 @@
   vertical-align: bottom;
 }
 
-/* Phrase Lists */
+/* Phrase & black lists */
 
 #PhraseList--invisible {
   display: none;
@@ -38,4 +38,8 @@ span.tag.PhraseList__phrase, span.tag.Blacklist__url {
 
 .PhraseList__newPhrase, #Blacklist__newURL {
   margin-bottom: 1.0rem;
+}
+
+span.Blacklist__url {
+  background-color: #ff3860;
 }

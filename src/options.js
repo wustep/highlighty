@@ -48,7 +48,7 @@ $(function() {
 
   function addExistingListStyles(options) {
     let highlighterStyles =
-        `<style id="${HL_STYLE_ID}">span.PhraseList__phrase { ${options.baseStyles} }\r\n`;
+        `<style id="${HL_STYLE_ID}">span.PhraseList__phrase, span.Blacklist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
         let highlighterColor = ("color" in options.highlighter[i])
