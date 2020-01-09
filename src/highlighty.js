@@ -84,12 +84,14 @@ $(function() {
       $("body").mark(phrasesToHighlight[phraseListIndex], markOptions);
     }
     if (options.enableTitleMouseover) {
+      log("enableTitleMousever start");
       // TODO: Probably can have a more efficient algorithm here using mark.js callback
       for (let i = 0; i < options.highlighter.length; i++) {
         if ("title" in options.highlighter[i]) {
           $("." + HL_PREFIX_CLASS + i).attr("title", options.highlighter[i].title);
         }
       }
+      log("enableTitleMousever end");
     }
     bodyHighlighted = true;
     log("highlightPhrases end");
@@ -151,7 +153,7 @@ $(function() {
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message === "highlighty") {
-        processHighlights(true);
+      processHighlights(true);
     }
   });
 
