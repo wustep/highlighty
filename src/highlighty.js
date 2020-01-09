@@ -164,7 +164,7 @@ $(function() {
           setTimeout(() => { mutationTime = true; }, MUTATION_TIMER);
           chrome.storage.local.get((options) => {
             if (options.enableAutoHighlight && options.autoHighlighter) {
-              highlightPhrases(phrasesToHighlight, options);
+              highlightPhrases(options);
             }
           });
         }
