@@ -12,7 +12,7 @@ $(function() {
 
   let bodyHighlighted = false;
   let urlBlacklisted = false;
-  let phrasesToHighlight = [];
+  let phrasesToHighlight = [];    // Array of arrays of phrases, where index represents the phrase list number.
 
   const MUTATION_TIMER = 2000;    // Number of miliseconds between updating body after DOM change
   let mutationTime = true;        // Whether body should be updated after DOM change
@@ -37,12 +37,12 @@ $(function() {
     log("setupHighligher start");
     phrasesToHighlight = [];
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
-    for (let i = 0; i < options.highlighter.length; i++) {
+    for (i in options.highlighter) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
         let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
         highlighterStyles += `.${HL_PREFIX_CLASS + i} { background-color: ${highlighterColor} }\r\n`;
-        for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
-          addHighlightPhrase(options.highlighter[i].phrases[j], i);
+        for (phrase of options.highlighter[i].phrases) {
+          addHighlightPhrase(phrase, i);
         }
       }
     }
@@ -55,20 +55,19 @@ $(function() {
   // Add phrase to highlight list given phrase and its list index
   function addHighlightPhrase(highlightPhrase, listNumber) {
     highlightPhrase = String(highlightPhrase);
-    if (highlightPhrase.length > 1) {
-      if (phrasesToHighlight[highlightPhrase]) {
-        phrasesToHighlight[highlightPhrase].push(listNumber);
-      } else {
-        phrasesToHighlight[highlightPhrase] = [listNumber];
-      }
+    if (phrasesToHighlight[listNumber]) {
+      phrasesToHighlight[listNumber].push(highlightPhrase);
+    } else {
+      phrasesToHighlight[listNumber] = [highlightPhrase];
     }
   }
 
   // Highlight phrases in body
   function highlightPhrases(options) {
     log("highlightPhrases start");
-    for (let phrase of Object.keys(phrasesToHighlight)) {
-      let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS)}`;
+    for (let phraseListIndex in phrasesToHighlight) {
+      log("highlightPhrases " + phraseListIndex)
+      let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
       let markOptions =
           {
             element: "span",
@@ -80,7 +79,9 @@ $(function() {
             acrossElements: false,
             iframes: true
           };
-      $("body").mark(phrase, markOptions);
+      log(phrasesToHighlight[phraseListIndex]);
+      log(markOptions);
+      $("body").mark(phrasesToHighlight[phraseListIndex], markOptions);
     }
     if (options.enableTitleMouseover) {
       // TODO: Probably can have a more efficient algorithm here using mark.js callback
