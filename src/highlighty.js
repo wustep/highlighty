@@ -16,10 +16,25 @@ $(function() {
 
   const MUTATION_TIMER = 2000;    // Number of miliseconds between updating body after DOM change
   let mutationTime = true;        // Whether body should be updated after DOM change
+  let developerMode = true;       // Whether to log messages to track perf
+
+  function log(stuff) {
+    if (developerMode) {
+      const now = new Date();
+      const logPrefix = "[Highlighty] [" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "." + now.getMilliseconds() + "]";
+      if (typeof stuff === "string") {
+        console.log(logPrefix + " " + stuff);
+      } else {
+        console.log(logPrefix);
+        console.log(stuff);
+      }
+    }
+  }
 
   // Setup phrase list and append proper styles
   // We don't re-setup the highlighter on incremental auto-updates but we do on manual triggers
   function setupHighlighter(options) {
+    log("setupHighligher start");
     phrasesToHighlight = [];
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
     for (let i = 0; i < options.highlighter.length; i++) {
@@ -33,6 +48,8 @@ $(function() {
     }
     highlighterStyles += "</style>";
     $("head").append(highlighterStyles);
+    log(phrasesToHighlight);
+    log("setupHighligher end");
   }
 
   // Add phrase to highlight list given phrase and its list index
@@ -49,6 +66,7 @@ $(function() {
 
   // Highlight phrases in body
   function highlightPhrases(options) {
+    log("highlightPhrases start");
     for (let phrase of Object.keys(phrasesToHighlight)) {
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phrasesToHighlight[phrase].join(" " + HL_PREFIX_CLASS)}`;
       let markOptions =
@@ -73,6 +91,7 @@ $(function() {
       }
     }
     bodyHighlighted = true;
+    log("highlightPhrases end");
   }
 
   function removeHighlightStyles() {
@@ -80,6 +99,7 @@ $(function() {
   }
 
   function processHighlights(manualTrigger=false) {
+    log("processHighlights");
     chrome.storage.local.get((options) => {
       if (!manualTrigger && urlBlacklisted) {
         chrome.runtime.sendMessage({blockedHighlighter: true});
