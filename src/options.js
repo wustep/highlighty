@@ -53,10 +53,9 @@ $(function() {
         `<style id="${HL_STYLE_ID}">span.PhraseList__phrase, span.Blacklist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
-        let highlighterColor = ("color" in options.highlighter[i])
-            ? options.highlighter[i].color
-            : "black";
-        highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor} }\r\n`;
+        let highlighterColor = options.highlighter[i].color || "black";
+        let textColor = options.highlighter[i].textColor || "white";
+        highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
       }
     }
     highlighterStyles += "</style>";
@@ -133,6 +132,17 @@ $(function() {
   }
 
   function setupAddPhraseListHandler() {
+    const colorInput = document.querySelector('#NewPhraseList__color');
+    const colorPicker = new Picker({
+      alpha: false,
+      color: '#dbeb',
+      parent: colorInput,
+      popup: "top",
+      onDone: (color) => {
+        colorInput.style["background-color"] = color.rgbaString;
+        colorInput.style["color"] = getTextColor(color._rgba)
+      },
+    });
     $("#NewPhraseList__add").on("click", (e) => {
       e.preventDefault();
       chrome.storage.local.get((options) => {
@@ -140,13 +150,13 @@ $(function() {
         let listTitle = $("#NewPhraseList__title").val().length > 0
             ? $("#NewPhraseList__title").val()
             : "Untitled";
-        let listColor = $("#NewPhraseList__color").val().length > 0
-            ? $("#NewPhraseList__color").val()
-            : "black";
+        let listColor = $("#NewPhraseList__color").css("background-color");
+        let listTextColor = $("#NewPhraseList__color").css("color");
         addNewListDiv(listTitle, listIndex);
         options.highlighter[listIndex] = {
           phrases: [],
           color: listColor,
+          textColor: listTextColor,
           title: listTitle
         };
         chrome.storage.local.set({"highlighter": options.highlighter},
@@ -160,6 +170,14 @@ $(function() {
           });
       });
     });
+  }
+
+  // Returns black or white based on the background color provided.
+  // backgroundColor should be Array of [r,g,b]
+  // https://stackoverflow.com/a/1855903
+  function getTextColor(backgroundColor) {
+    const luminance = (0.299 * backgroundColor[0] + 0.587 * backgroundColor[1] + 0.114 * backgroundColor[2]) / 255;
+    return luminance > 0.5 ? "black" : "white";
   }
 
   function setupPhraseListHandlers($list) {

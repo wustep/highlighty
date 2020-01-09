@@ -39,8 +39,9 @@ $(function() {
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
     for (i in options.highlighter) {
       if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
-        let highlighterColor = ("color" in options.highlighter[i]) ? options.highlighter[i].color : "black";
-        highlighterStyles += `.${HL_PREFIX_CLASS + i} { background-color: ${highlighterColor} }\r\n`;
+        let highlighterColor = options.highlighter[i].color || "black";
+        let textColor = options.highlighter[i].textColor || "white";
+        highlighterStyles += `.${HL_PREFIX_CLASS + i} { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
         for (phrase of options.highlighter[i].phrases) {
           addHighlightPhrase(phrase, i);
         }
