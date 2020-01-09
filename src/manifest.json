@@ -3,8 +3,8 @@
 
   "name": "Highlighty",
   "short_name": "highlighty",
-  "description": "Highlight phrases from custom word lists.",
-  "version": "1.0.6.1",
+  "description": "Highlight selected phrases from custom word lists.",
+  "version": "1.10.0",
 
   "icons": {
     "16": "img/16pxYellow.png",
