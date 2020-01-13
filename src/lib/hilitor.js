@@ -60,8 +60,7 @@ function Hilitor(id, tag) {
   function setRegexFromPhrases(phrases, caseSensitive) {
     let input = "";
     for (phrase of phrases) {
-        phrase = phrase.replace(/\\/g, "\\\\");
-        phrase = phrase.replace(/\./g, "\\.");
+        phrase = phrase.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
         input += phrase + "|";
     }
     console.log(setRegex(input, caseSensitive));
@@ -69,8 +68,7 @@ function Hilitor(id, tag) {
 
   function getRegex() {
     let retval = matchRegExp.toString();
-    retval = retval.replace(/(^\/(\\b)?|\(|\)|(\\b)?\/i$)/g, "");
-    retval = retval.replace(/\|/g, " ");
+    retval = retval.replace(/(^\/(\\b)?|\(|\)|(\\b)?\/i$)/g, "").replace(/\|/g, " ");
     return retval;
   };
 
