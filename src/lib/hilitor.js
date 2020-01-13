@@ -50,7 +50,7 @@ function Hilitor() {
   function setRegexFromPhrases(phrases, caseSensitive) {
     let input = "";
     for (phrase of phrases) {
-        phrase = phrase.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
+        phrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         input += phrase + "|";
     }
     setRegex(input, caseSensitive);
