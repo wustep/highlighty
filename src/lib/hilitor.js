@@ -5,9 +5,8 @@
  * Modifications by @wustep to support applying specified classes to many phrase lists.
  */
 
-function Hilitor(id) {
+function Hilitor() {
 
-  let targetNode = document.getElementById(id) || document.body;
   let hiliteTag = "MARK";
   let skipTags = new RegExp("^(?:" + hiliteTag + "|SCRIPT|FORM|SPAN)$");
   let matchRegExp = "";
@@ -55,14 +54,13 @@ function Hilitor(id) {
         phrase = phrase.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
         input += phrase + "|";
     }
-    console.log(setRegex(input, caseSensitive));
+    setRegex(input, caseSensitive);
   }
 
   // Recursively apply word highlighting
   function hiliteWords(node, classes="") {
     if (node === undefined || !node) return;
     if (!matchRegExp) return;
-    console.log(node.nodeName);
     if (skipTags.test(node.nodeName)) return;
 
     if (node.hasChildNodes()) {
@@ -105,6 +103,6 @@ function Hilitor(id) {
       setMatchType("closed");
     }
     setRegexFromPhrases(phrases, !!options.caseSensitive);
-    hiliteWords(targetNode, classes);
+    hiliteWords(options.targetNode ? options.targetNode : document.body, classes);
   }
 }
