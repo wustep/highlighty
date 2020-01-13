@@ -40,28 +40,31 @@ function Hilitor(id, tag) {
     }
   };
 
-  function setRegex(input) {
+  function setRegex(input, caseSensitive) {
     input = input.replace(endRegExp, "");
     if (input) {
-      let re = "(" + input + ")";
+      let regex = "(" + input + ")";
       if (!this.openLeft) {
-        re = "\\b" + re;
+        regex = "\\b" + regex;
       }
       if (!this.openRight) {
-        re = re + "\\b";
+        regex = regex + "\\b";
       }
-      matchRegExp = new RegExp(re, "i");
+      let flags = (caseSensitive) ? "" : "i";
+      matchRegExp = new RegExp(regex, flags);
       return matchRegExp;
     }
     return false;
   };
 
-  function setRegexFromPhrases(phrases) {
+  function setRegexFromPhrases(phrases, caseSensitive) {
     let input = "";
     for (phrase of phrases) {
+        phrase = phrase.replace(/\\/g, "\\\\");
+        phrase = phrase.replace(/\./g, "\\.");
         input += phrase + "|";
     }
-    console.log(setRegex(input));
+    console.log(setRegex(input, caseSensitive));
   }
 
   function getRegex() {
@@ -125,8 +128,13 @@ function Hilitor(id, tag) {
    * Apply classes to provided phrases list to provided targetNode.
    * markOptions should be { caseSensitive: bool, partialMatch: bool, ... }
    */
-  this.applyPhrases = function(phrases, classes, markOptions) {
-    setRegexFromPhrases(phrases);
+  this.applyPhrases = function(phrases, classes = "", options = {}) {
+    if (options.partialMatch) {
+      setMatchType("open");
+    } else {
+      setMatchType("closed");
+    }
+    setRegexFromPhrases(phrases, !!options.caseSensitive);
     hiliteWords(targetNode);
     //hiliteHighlightyPhrases(classes, markOptions);
   }
