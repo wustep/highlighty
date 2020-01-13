@@ -91,7 +91,18 @@ $(function() {
   }
 
   function removeHighlightStyles() {
-    $('#' + HL_STYLE_ID).remove();
+    $("#" + HL_STYLE_ID).remove();
+  }
+
+  // Remove all highlights (from Hilitor code!)
+  function removeHighlights() {
+    let arr = document.getElementsByClassName(HL_BASE_CLASS);
+    // Remove the wrapping Highlighty span.
+    while (arr.length && (mark = arr[0])) {
+      let parent = mark.parentNode;
+      parent.replaceChild(mark.firstChild, mark);
+      parent.normalize();
+    }
   }
 
   function processHighlights(manualTrigger=false) {
@@ -116,7 +127,7 @@ $(function() {
             highlightPhrases(options);
         } else {
           bodyHighlighted = false;
-          // TODO: Fix highlight removal.
+          removeHighlights();
         }
       }
     });
