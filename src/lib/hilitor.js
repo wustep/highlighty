@@ -56,6 +56,14 @@ function Hilitor(id, tag) {
     return false;
   };
 
+  function setRegexFromPhrases(phrases) {
+    let input = "";
+    for (phrase of phrases) {
+        input += phrase + "|";
+    }
+    console.log(setRegex(input));
+  }
+
   function getRegex() {
     let retval = matchRegExp.toString();
     retval = retval.replace(/(^\/(\\b)?|\(|\)|(\\b)?\/i$)/g, "");
@@ -112,4 +120,14 @@ function Hilitor(id, tag) {
     }
     return matchRegExp;
   };
+
+  /*
+   * Apply classes to provided phrases list to provided targetNode.
+   * markOptions should be { caseSensitive: bool, partialMatch: bool, ... }
+   */
+  this.applyPhrases = function(phrases, classes, markOptions) {
+    setRegexFromPhrases(phrases);
+    hiliteWords(targetNode);
+    //hiliteHighlightyPhrases(classes, markOptions);
+  }
 }
