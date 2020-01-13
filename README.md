@@ -12,7 +12,7 @@ Web extension to highlight phrases from given lists.
   - Modern CSS framework based on flexbox
 - [jQuery](https://jquery.com/)
   - JavaScript extension library
-- [Mark.js](https://markjs.io/)
+- [Hilitor.js](https://www.the-art-of-web.com/javascript/search-highlight/)
   - Keyword highlighting library
 
 # contributing
