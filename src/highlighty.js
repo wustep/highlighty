@@ -69,20 +69,12 @@ $(function() {
     for (let phraseListIndex in phrasesToHighlight) {
       log("highlightPhrases " + phraseListIndex)
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
-      let markOptions =
-          {
-            element: "span",
-            className: markClasses,
-            exclude: [`.${HL_BASE_CLASS}`],
-            accuracy: (options.enablePartialMatch) ? "partially" : "exactly",
-            caseSensitive: !options.enableCaseInsensitive,
-            separateWordSearch: false,
-            acrossElements: false,
-            iframes: true
-          };
-      log(phrasesToHighlight[phraseListIndex]);
-      log(markOptions);
-      $("body").mark(phrasesToHighlight[phraseListIndex], markOptions);
+      let hilitor = new Hilitor();
+      hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
+        classes: markClasses,
+        caseSensitive: !options.enableCaseInsensitive,
+        partialMatch: options.enablePartialMatch
+      });
     }
     if (options.enableTitleMouseover) {
       log("enableTitleMousever start");
@@ -124,7 +116,7 @@ $(function() {
             highlightPhrases(options);
         } else {
           bodyHighlighted = false;
-          $("body").unmark();
+          // TODO: Fix highlight removal.
         }
       }
     });
