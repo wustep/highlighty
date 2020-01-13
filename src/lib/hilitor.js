@@ -3,7 +3,8 @@
  * Original JavaScript code by Chirp Internet: www.chirp.com.au
  *
  * Modifications by @wustep:
- * - Revised coding conventions
+ * - Revised coding conventions, made some functions private.
+ * - Removed breakExpRegExp logic, removing bars by default.
  */
 
 function Hilitor(id, tag) {
@@ -21,20 +22,7 @@ function Hilitor(id, tag) {
   // Characters to strip from start and end of the input string
   let endRegExp = new RegExp('^[^\\w]+|[^\\w]+$', "g");
 
-  // Characters used to break up the input string into words
-  let breakRegExp = new RegExp('[^\\w\'-]+', "g");
-
-  this.setEndRegExp = function(regex) {
-    endRegExp = regex;
-    return endRegExp;
-  };
-
-  this.setBreakRegExp = function(regex) {
-    breakRegExp = regex;
-    return breakRegExp;
-  };
-
-  this.setMatchType = function(type) {
+  function setMatchType(type) {
     switch (type) {
       case "left":
         this.openLeft = false;
@@ -52,10 +40,8 @@ function Hilitor(id, tag) {
     }
   };
 
-  this.setRegex = function(input) {
+  function setRegex(input) {
     input = input.replace(endRegExp, "");
-    input = input.replace(breakRegExp, "|");
-    input = input.replace(/^\||\|$/g, "");
     if (input) {
       let re = "(" + input + ")";
       if (!this.openLeft) {
@@ -70,7 +56,7 @@ function Hilitor(id, tag) {
     return false;
   };
 
-  this.getRegex = function() {
+  function getRegex() {
     let retval = matchRegExp.toString();
     retval = retval.replace(/(^\/(\\b)?|\(|\)|(\\b)?\/i$)/g, "");
     retval = retval.replace(/\|/g, " ");
@@ -78,14 +64,14 @@ function Hilitor(id, tag) {
   };
 
   // Recursively apply word highlighting
-  this.hiliteWords = function(node) {
+  function hiliteWords(node) {
     if (node === undefined || !node) return;
     if (!matchRegExp) return;
     if (skipTags.test(node.nodeName)) return;
 
     if (node.hasChildNodes()) {
       for(let i = 0; i < node.childNodes.length; i++)
-        this.hiliteWords(node.childNodes[i]);
+        hiliteWords(node.childNodes[i]);
     }
     if (node.nodeType == 3) { // NODE_TEXT
       if ((nv = node.nodeValue) && (regs = matchRegExp.exec(nv))) {
@@ -121,8 +107,8 @@ function Hilitor(id, tag) {
     if (input === undefined || !(input = input.replace(/(^\s+|\s+$)/g, ""))) {
       return;
     }
-    if (this.setRegex(input)) {
-      this.hiliteWords(targetNode);
+    if (setRegex(input)) {
+      hiliteWords(targetNode);
     }
     return matchRegExp;
   };
