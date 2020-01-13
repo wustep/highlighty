@@ -35,25 +35,20 @@ function Hilitor(id, tag) {
   };
 
   this.setMatchType = function(type) {
-    switch (type)
-    {
+    switch (type) {
       case "left":
         this.openLeft = false;
         this.openRight = true;
         break;
-
       case "right":
         this.openLeft = true;
         this.openRight = false;
         break;
-
       case "open":
         this.openLeft = this.openRight = true;
         break;
-
       default:
         this.openLeft = this.openRight = false;
-
     }
   };
 
