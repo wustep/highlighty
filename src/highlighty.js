@@ -16,7 +16,7 @@ $(function() {
 
   const MUTATION_TIMER = 2000;    // Number of miliseconds between updating body after DOM change
   let mutationTime = true;        // Whether body should be updated after DOM change
-  let developerMode = true;       // Whether to log messages to track perf
+  let developerMode = !('update_url' in chrome.runtime.getManifest());       // Whether to log messages to track perf
 
   function log(stuff) {
     if (developerMode) {
@@ -78,7 +78,6 @@ $(function() {
     }
     if (options.enableTitleMouseover) {
       log("enableTitleMousever start");
-      // TODO: Probably can have a more efficient algorithm here using mark.js callback
       for (let i = 0; i < options.highlighter.length; i++) {
         if ("title" in options.highlighter[i]) {
           $("." + HL_PREFIX_CLASS + i).attr("title", options.highlighter[i].title);
@@ -162,7 +161,6 @@ $(function() {
   });
 
   chrome.storage.local.get((options) => {
-    // TODO: Re-examine this logic, make more efficient..
     if (options.enableAutoHighlightUpdates && !urlBlacklisted) {
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function(mutations, observer) {
