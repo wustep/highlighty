@@ -6,7 +6,6 @@
  */
 
 function Hilitor() {
-
   let hiliteTag = "MARK";
   let skipTags = new RegExp("^(?:" + hiliteTag + "|SCRIPT|FORM|SPAN)$");
   let matchRegExp = "";
@@ -82,27 +81,17 @@ function Hilitor() {
     };
   };
 
-  // Remove highlighting
-  this.remove = function() {
-    let arr = document.getElementsByTagName(hiliteTag);
-    while (arr.length && (el = arr[0])) {
-      let parent = el.parentNode;
-      parent.replaceChild(el.firstChild, el);
-      parent.normalize();
-    }
-  };
-
   /*
    * Apply classes to provided phrases list to provided targetNode.
    * markOptions should be { caseSensitive: bool, partialMatch: bool, ... }
    */
-  this.applyPhrases = function(phrases, classes = "", options = {}) {
+  this.applyPhrases = function(phrases, options = {}) {
     if (options.partialMatch) {
       setMatchType("open");
     } else {
       setMatchType("closed");
     }
     setRegexFromPhrases(phrases, !!options.caseSensitive);
-    hiliteWords(options.targetNode ? options.targetNode : document.body, classes);
+    hiliteWords(options.targetNode ? options.targetNode : document.body, options.classes ? options.classes : "");
   }
 }
