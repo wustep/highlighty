@@ -30,15 +30,20 @@ $(function() {
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
+    showHideAutoHighlightSettings();
+  }
+
+  function showHideAutoHighlightSettings() {
+    if ($("#Settings__enableAutoHighlight").is(":checked")) {
+      $("#Settings__AutoHighlight").show();
+    } else {
+      $("#Settings__AutoHighlight").hide();
+    }
   }
 
   function setupAutoHighlightHandler() {
     $("#Settings__enableAutoHighlight").on('click', function() {
-      if (this.checked) {
-        $("#Settings__AutoHighlight").show();
-      } else {
-        $("#Settings__AutoHighlight").hide();
-      }
+      showHideAutoHighlightSettings();
     });
   }
 
