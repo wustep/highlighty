@@ -29,6 +29,8 @@ $(function() {
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
+    $("#Settings__enableBlacklist").val(options.enableURLBlacklist);
+    $("#Settings__enableWhitelist").val(options.enableURLWhitelist);
     showHideAutoHighlightSettings();
   }
 
@@ -53,7 +55,7 @@ $(function() {
       }
     }
     if (options.whitelist.length) {
-      for (let url of options.blacklist) {
+      for (let url of options.whitelist) {
         addWhitelistURLElement(url);
       }
     }
@@ -165,7 +167,7 @@ $(function() {
     });
     $("#Settings").on("click", ".Blacklist__url__delete", (e) => {
       let $url = $(e.target).parent();
-      if (window.confirm("Are you sure you want to delete: " + $url.text() + "?")) {
+      if (window.confirm("Are you sure you want to remove: " + $url.text() + "?")) {
         chrome.storage.local.get((options) => {
           let urlIndex = options.blacklist.indexOf($url.text());
           options.blacklist.splice(urlIndex, 1);
@@ -177,7 +179,7 @@ $(function() {
     });
     $("#Settings").on("click", ".Whitelist__url__delete", (e) => {
       let $url = $(e.target).parent();
-      if (window.confirm("Are you sure you want to delete: " + $url.text() + "?")) {
+      if (window.confirm("Are you sure you want to remove: " + $url.text() + "?")) {
         chrome.storage.local.get((options) => {
           let urlIndex = options.whitelist.indexOf($url.text());
           options.whitelist.splice(urlIndex, 1);
@@ -479,6 +481,8 @@ $(function() {
       let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
       let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
       let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
+      let newEnableURLBlacklist = $("#Settings__enableBlacklist").is(":checked");
+      let newEnableURLWhitelist = $("#Settings__enableWhitelist").is(":checked");
 
       let newOptions = {
         "enableAutoHighlight": newEnableAutoHighlight,
@@ -486,6 +490,8 @@ $(function() {
         "enableTitleMouseover": newEnableTitleMouseover,
         "enablePartialMatch": newEnablePartialMatch,
         "enableCaseInsensitive": newEnableCaseInsensitive,
+        "enableURLBlacklist": newEnableURLBlacklist,
+        "enableURLWhitelist": newEnableURLWhitelist,
         "keyboardShortcut": newKeyboardShortcut
       };
 

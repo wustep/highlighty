@@ -12,6 +12,7 @@ $(function() {
 
   let bodyHighlighted = false;
   let urlBlacklisted = false;
+  let urlWhitelisted = false;
   let phrasesToHighlight = [];    // Array of arrays of phrases, where index represents the phrase list number.
 
   const MUTATION_TIMER = 2000;    // Number of miliseconds between updating body after DOM change
@@ -107,15 +108,16 @@ $(function() {
   function processHighlights(manualTrigger=false) {
     log("processHighlights");
     chrome.storage.local.get((options) => {
-      if (!manualTrigger && urlBlacklisted) {
+      if (!manualTrigger && !isAllowedURL(options)) {
         chrome.runtime.sendMessage({blockedHighlighter: true});
       } else { // Let a manualTrigger override blacklist and go directly to highlight mode.
         // Deal with badges, notifying background.js.
         if (!options.enableAutoHighlight) {
           chrome.runtime.sendMessage({manualHighlighter: !bodyHighlighted, tab: true});
         } else if (manualTrigger) {
-          let newAutoHighlighter = (urlBlacklisted) ? true : !options.autoHighlighter;
+          let newAutoHighlighter = (isAllowedURL(options)) ? true : !options.autoHighlighter;
           urlBlacklisted = false;
+          urlWhitelisted = false;
           chrome.storage.local.set({"autoHighlighter": newAutoHighlighter});
           chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter});
         }
@@ -132,6 +134,13 @@ $(function() {
     });
   }
 
+  function isAllowedURL(options) {
+    console.log(options);
+    const allowed = ((!options.enableURLBlacklist || !urlBlacklisted) && (!options.enableURLWhitelist || urlWhitelisted));
+    log("isAllowed = " + allowed);
+    return allowed;
+  }
+
   chrome.storage.local.get((options) => {
     if (options.enableAutoHighlight && options.autoHighlighter) {
       if (options.blacklist.length) {
@@ -142,6 +151,15 @@ $(function() {
           }
         }
       }
+      if (options.whitelist.length) {
+        for (let url of options.whitelist) {
+          if (window.location.href.indexOf(url) !== -1) {
+            urlWhitelisted = true;
+            break;
+          }
+        }
+      }
+      log(`URL: whitelist(${urlWhitelisted}) blacklist(${urlBlacklisted})`);
       processHighlights();
     }
   });
@@ -161,7 +179,7 @@ $(function() {
   });
 
   chrome.storage.local.get((options) => {
-    if (options.enableAutoHighlightUpdates && !urlBlacklisted) {
+    if (options.enableAutoHighlightUpdates && isAllowedURL(options)) {
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function(mutations, observer) {
         if (mutationTime) {
