@@ -16,6 +16,10 @@
   vertical-align: bottom;
 }
 
+#Settings__AutoHighlight {
+  display: none;
+}
+
 /* Phrase & black lists */
 
 #PhraseList--invisible {

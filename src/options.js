@@ -12,6 +12,7 @@ $(function() {
     addExistingListStyles(options);
     addExistingLists(options);
 
+    setupAutoHighlightHandler();
     setupBlacklistAddHandler();
     setupBlacklistDeleteHandler();
     setupAddPhraseListHandler();
@@ -29,6 +30,16 @@ $(function() {
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
+  }
+
+  function setupAutoHighlightHandler() {
+    $("#Settings__enableAutoHighlight").on('click', function() {
+      if (this.checked) {
+        $("#Settings__AutoHighlight").show();
+      } else {
+        $("#Settings__AutoHighlight").hide();
+      }
+    });
   }
 
   function addExistingBlacklist(options) {
