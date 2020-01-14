@@ -42,6 +42,7 @@ span.tag.PhraseList__phrase, span.tag.Blacklist__url {
 
 span.Blacklist__url {
   background-color: #ff3860;
+  color: white;
 }
 
 /* Color picker */
