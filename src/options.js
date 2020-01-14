@@ -29,8 +29,8 @@ $(function() {
     $("#Settings__enablePartialMatch").attr('checked', options.enablePartialMatch);
     $("#Settings__enableCaseInsensitive").attr('checked', options.enableCaseInsensitive);
     $("#Settings__keyboardShortcut").val(options.keyboardShortcut);
-    $("#Settings__enableBlacklist").val(options.enableURLBlacklist);
-    $("#Settings__enableWhitelist").val(options.enableURLWhitelist);
+    $("#Settings__enableURLBlacklist").attr('checked', options.enableURLBlacklist);
+    $("#Settings__enableURLWhitelist").attr('checked', options.enableURLWhitelist);
     showHideAutoHighlightSettings();
   }
 
@@ -189,11 +189,11 @@ $(function() {
         });
       }
     });
-    $("#Settings").on("click", "#Settings__enableBlacklist", (e) => {
-      $("#Settings__enableWhitelist").prop('checked', false);
+    $("#Settings").on("click", "#Settings__enableURLBlacklist", (e) => {
+      $("#Settings__enableURLWhitelist").prop('checked', false);
     });
-    $("#Settings").on("click", "#Settings__enableWhitelist", (e) => {
-      $("#Settings__enableBlacklist").prop('checked', false);
+    $("#Settings").on("click", "#Settings__enableURLWhitelist", (e) => {
+      $("#Settings__enableURLBlacklist").prop('checked', false);
     });
   }
 
@@ -481,8 +481,8 @@ $(function() {
       let newEnablePartialMatch = $("#Settings__enablePartialMatch").is(":checked");
       let newEnableCaseInsensitive = $("#Settings__enableCaseInsensitive").is(":checked");
       let newKeyboardShortcut = $("#Settings__keyboardShortcut").val();
-      let newEnableURLBlacklist = $("#Settings__enableBlacklist").is(":checked");
-      let newEnableURLWhitelist = $("#Settings__enableWhitelist").is(":checked");
+      let newEnableURLBlacklist = $("#Settings__enableURLBlacklist").is(":checked");
+      let newEnableURLWhitelist = $("#Settings__enableURLWhitelist").is(":checked");
 
       let newOptions = {
         "enableAutoHighlight": newEnableAutoHighlight,
