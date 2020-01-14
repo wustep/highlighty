@@ -175,7 +175,7 @@ $(function() {
         });
       }
     });
-     $("#Settings").on("click", ".Whitelist__url__delete", (e) => {
+    $("#Settings").on("click", ".Whitelist__url__delete", (e) => {
       let $url = $(e.target).parent();
       if (window.confirm("Are you sure you want to delete: " + $url.text() + "?")) {
         chrome.storage.local.get((options) => {
@@ -186,6 +186,12 @@ $(function() {
           );
         });
       }
+    });
+    $("#Settings").on("click", "#Settings__enableBlacklist", (e) => {
+      $("#Settings__enableWhitelist").prop('checked', false);
+    });
+    $("#Settings").on("click", "#Settings__enableWhitelist", (e) => {
+      $("#Settings__enableBlacklist").prop('checked', false);
     });
   }
 
