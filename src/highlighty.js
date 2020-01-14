@@ -115,9 +115,9 @@ $(function() {
         if (!options.enableAutoHighlight) {
           chrome.runtime.sendMessage({manualHighlighter: !bodyHighlighted, tab: true});
         } else if (manualTrigger) {
-          let newAutoHighlighter = (isAllowedURL(options)) ? true : !options.autoHighlighter;
+          let newAutoHighlighter = (!isAllowedURL(options)) ? true : !options.autoHighlighter;
           urlBlacklisted = false;
-          urlWhitelisted = false;
+          urlWhitelisted = true;
           chrome.storage.local.set({"autoHighlighter": newAutoHighlighter});
           chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter});
         }
