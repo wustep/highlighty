@@ -47,35 +47,39 @@
               <label for="Settings__enableBlacklist" class="label is-pulled-left">
                 Enable URL Blacklist:
               </label>
-            </div><br>
+            </div>
             <p>
               Any URLs containing these phrases here will not be highlighted by auto-highlight mode unless manually triggered, e.g. <i>"example.com"</i>.
             </p><br>
             <form>
               <div class="columns">
                 <div class="column is-three-fifths" id="Blacklist__newURL">
-                  <div class="field has-addons">
-                    <div class="control is-expanded">
-                      <input class="input" type="text" placeholder="Add a new URL to blacklist" id="Blacklist__urlInput">
+                    <div class="field has-addons">
+                      <div class="control is-expanded">
+                        <input class="input" type="text" placeholder="Add a new URL to blacklist" id="Blacklist__urlInput">
+                      </div>
+                      <div class="control">
+                        <button type="submit" class="button is-danger" id="Blacklist__add"> + </button>
+                      </div>
                     </div>
-                    <div class="control">
-                      <button type="submit" class="button is-danger" id="Blacklist__add"> + </button>
-                    </div>
-                  </div>
+                  </form>
                 </div>
               </div>
-              <div class="field is-grouped">
-                <input id="Settings__whitelist" type="checkbox" class="switch is-info" checked="checked">
-                <label for="Settings__enableWhitelist" class="label is-pulled-left">
-                  Enable URL Whitelist:
-                </label>
-              </div><br>
-              <p>
-                Any URLs containing these phrases here will be highlighted by auto-highlight mode unless manually triggered, e.g. <i>"example.com"</i>.
-              </p><br>
-              <form>
-                <div class="columns">
-                  <div class="column is-three-fifths" id="Whitelist__newURL">
+            </form>
+            <div id="Blacklist__urls">
+            </div><hr/>
+            <div class="field is-grouped">
+              <input id="Settings__whitelist" type="checkbox" class="switch is-info" checked="checked">
+              <label for="Settings__enableWhitelist" class="label is-pulled-left">
+                Enable URL Whitelist:
+              </label>
+            </div>
+            <p>
+              Any URLs containing these phrases here will be highlighted by auto-highlight mode unless manually triggered, e.g. <i>"example.com"</i>.
+            </p><br>
+            <form>
+              <div class="columns">
+                <div class="column is-three-fifths" id="Whitelist__newURL">
                     <div class="field has-addons">
                       <div class="control is-expanded">
                         <input class="input" type="text" placeholder="Add a new URL to whitelist" id="Whitelist__urlInput">
@@ -84,10 +88,11 @@
                         <button type="submit" class="button is-primary" id="Whitelist__add"> + </button>
                       </div>
                     </div>
-                  </div>
+                  </form>
                 </div>
+              </div>
             </form>
-            <div id="Blacklist__urls">
+            <div id="Whitelist__urls">
             </div>
           </div>
           <div class="field is-grouped">

@@ -10,6 +10,7 @@ const defaultOptions = {
     }
   ],
   blacklist: [],
+  whitelist: [],
   baseStyles: "display: inline; border-radius: 0.3rem; padding: 0.1rem; font-weight: normal; box-shadow: inset 0 -0.1rem 0 rgba(20,20,20,0.40);",
   autoHighlighter: true, /* If enableAutoHighlight, represents whether autoHighlighter is active */
   enableAutoHighlight: false, /* Defaulting to false for now until auto-highlight update algorithm is improved */
@@ -17,6 +18,8 @@ const defaultOptions = {
   enableTitleMouseover: true,
   enablePartialMatch: true,
   enableCaseInsensitive: true,
+  enableURLBlacklist: false,
+  enableURLWhitelist: false,
   keyboardShortcut: 117
 };
 

@@ -6,6 +6,10 @@
   padding: 3rem 1.5rem; /* from: 3rem 1.5rem 6rem */
 }
 
+.delete /* X icon */ {
+  vertical-align: middle /* from: top */;
+}
+
 /* Primary settings */
 
 #Settings, #Blacklist {
@@ -20,7 +24,7 @@
   display: none;
 }
 
-/* Phrase & black lists */
+/* Phrase & URL lists */
 
 #PhraseList--invisible {
   display: none;
@@ -34,18 +38,24 @@ span.PhraseList__title {
   font-weight: 400;
 }
 
-span.tag.PhraseList__phrase, span.tag.Blacklist__url {
+span.tag.PhraseList__phrase, span.tag.Blacklist__url, span.tag.Whitelist__url {
   margin-right: 0.5rem;
   margin-bottom: 0.4rem;
   padding: 0.5rem;
 }
 
-.PhraseList__newPhrase, #Blacklist__newURL {
+.PhraseList__newPhrase, #Blacklist__newURL, #Whitelist__newURL {
+  padding-top: 0;
   margin-bottom: 1.0rem;
 }
 
 span.Blacklist__url {
   background-color: #ff3860;
+  color: white;
+}
+
+span.Whitelist__url {
+  background-color: #00d1b2;
   color: white;
 }
 

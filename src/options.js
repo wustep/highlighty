@@ -8,13 +8,12 @@ $(function() {
     removeExistingListStyles();
     setPrimarySettings(options);
 
-    addExistingBlacklist(options);
+    addExistingURLLists(options);
     addExistingListStyles(options);
     addExistingLists(options);
 
     setupAutoHighlightHandler();
-    setupBlacklistAddHandler();
-    setupBlacklistDeleteHandler();
+    setupURLListHandlers();
     setupAddPhraseListHandler();
     setupImportExportModals();
   }
@@ -47,10 +46,15 @@ $(function() {
     });
   }
 
-  function addExistingBlacklist(options) {
+  function addExistingURLLists(options) {
     if (options.blacklist.length) {
       for (let url of options.blacklist) {
         addBlacklistURLElement(url);
+      }
+    }
+    if (options.whitelist.length) {
+      for (let url of options.blacklist) {
+        addWhitelistURLElement(url);
       }
     }
   }
@@ -60,6 +64,15 @@ $(function() {
       `<span class="tag is-medium Blacklist__url">` +
           url +
           `<button class="delete is-small Blacklist__url__delete"></button>` +
+      `</span>`
+    );
+  }
+
+  function addWhitelistURLElement(url) {
+    $("#Whitelist__urls").append(
+      `<span class="tag is-medium Whitelist__url">` +
+          url +
+          `<button class="delete is-small Whitelist__url__delete"></button>` +
       `</span>`
     );
   }
@@ -109,7 +122,7 @@ $(function() {
     );
   }
 
-  function setupBlacklistAddHandler() {
+  function setupURLListHandlers() {
     $("#Blacklist__add").on("click", (e) => {
       e.preventDefault();
       chrome.storage.local.get((options) => {
@@ -130,9 +143,26 @@ $(function() {
         }
       });
     });
-  }
-
-  function setupBlacklistDeleteHandler() {
+    $("#Whitelist__add").on("click", (e) => {
+      e.preventDefault();
+      chrome.storage.local.get((options) => {
+        let newURL = $("#Whitelist__urlInput").val();
+        if (newURL.length > 0) {
+          chrome.storage.local.get((options) => {
+            if (options.whitelist.includes(newURL)) {
+              $("#Whitelist__urlInput").val("");
+              alert("URL was already in list!");
+            } else {
+              $("#Whitelist__urlInput").val("");
+              options.whitelist.push(newURL.trim());
+              chrome.storage.local.set({"whitelist": options.whitelist},
+                () => { addWhitelistURLElement(newURL); }
+              );
+            }
+          });
+        }
+      });
+    });
     $("#Settings").on("click", ".Blacklist__url__delete", (e) => {
       let $url = $(e.target).parent();
       if (window.confirm("Are you sure you want to delete: " + $url.text() + "?")) {
@@ -140,6 +170,18 @@ $(function() {
           let urlIndex = options.blacklist.indexOf($url.text());
           options.blacklist.splice(urlIndex, 1);
           chrome.storage.local.set({"blacklist": options.blacklist},
+            () => { $url.remove(); }
+          );
+        });
+      }
+    });
+     $("#Settings").on("click", ".Whitelist__url__delete", (e) => {
+      let $url = $(e.target).parent();
+      if (window.confirm("Are you sure you want to delete: " + $url.text() + "?")) {
+        chrome.storage.local.get((options) => {
+          let urlIndex = options.whitelist.indexOf($url.text());
+          options.whitelist.splice(urlIndex, 1);
+          chrome.storage.local.set({"whitelist": options.whitelist},
             () => { $url.remove(); }
           );
         });
