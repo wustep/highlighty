@@ -117,7 +117,7 @@ $(function() {
   }
 
   function setupBlacklistDeleteHandler() {
-    $("#Blacklist").on("click", ".Blacklist__url__delete", (e) => {
+    $("#Settings").on("click", ".Blacklist__url__delete", (e) => {
       let $url = $(e.target).parent();
       if (window.confirm("Are you sure you want to delete: " + $url.text() + "?")) {
         chrome.storage.local.get((options) => {
