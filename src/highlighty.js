@@ -15,8 +15,10 @@ $(function() {
   let urlWhitelisted = false;
   let phrasesToHighlight = [];    // Array of arrays of phrases, where index represents the phrase list number.
 
-  const MUTATION_TIMER = 2000;    // Number of miliseconds between updating body after DOM change
-  let mutationTime = true;        // Whether body should be updated after DOM change
+  const MUTATION_TIMER = 3000;    // Number of miliseconds between updating body after DOM change
+  let mutationTime = true;        // Whether to auto-highlight immediately after DOM change
+  let mutationDelayTime = true;  // Whether to auto-highlight after a delay due to subsequent DOM changes.
+
   let developerMode = !('update_url' in chrome.runtime.getManifest());       // Whether to log messages to track perf
 
   function log(stuff) {
@@ -123,9 +125,9 @@ $(function() {
         }
         // Deal with appropriate (un)highlighting.
         if (!bodyHighlighted) {
-            removeHighlightStyles();
-            setupHighlighter(options);
-            highlightPhrases(options);
+          removeHighlightStyles();
+          setupHighlighter(options);
+          highlightPhrases(options);
         } else {
           bodyHighlighted = false;
           removeHighlights();
@@ -135,10 +137,7 @@ $(function() {
   }
 
   function isAllowedURL(options) {
-    console.log(options);
-    const allowed = ((!options.enableURLBlacklist || !urlBlacklisted) && (!options.enableURLWhitelist || urlWhitelisted));
-    log("isAllowed = " + allowed);
-    return allowed;
+    return !((options.enableURLBlacklist && urlBlacklisted) || (options.enableURLWhitelist && !urlWhitelisted));
   }
 
   chrome.storage.local.get((options) => {
@@ -178,24 +177,43 @@ $(function() {
     }
   });
 
-  chrome.storage.local.get((options) => {
-    if (options.enableAutoHighlightUpdates && isAllowedURL(options)) {
-      MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-      var observer = new MutationObserver(function(mutations, observer) {
-        if (mutationTime) {
-          mutationTime = false;
-          setTimeout(() => { mutationTime = true; }, MUTATION_TIMER);
-          chrome.storage.local.get((options) => {
-            if (options.enableAutoHighlight && options.autoHighlighter) {
-              highlightPhrases(options);
-            }
-          });
+  function autoHighlightIfReady() {
+    log("autoHighlightIfReady");
+    if (mutationTime) {
+      log("autoHighlightIfReady: ready");
+      mutationTime = false;
+      setTimeout(() => {
+        mutationTime = true;
+      }, MUTATION_TIMER);
+      chrome.storage.local.get((options) => {
+        if (options.enableAutoHighlight && options.autoHighlighter) {
+          highlightPhrases(options);
         }
       });
-      observer.observe(document, {
-        subtree: true,
-        childList: true
-      });
     }
+  }
+
+  chrome.storage.local.get((options) => {
+    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    var observer = new MutationObserver(function(mutations, observer) {
+      if (options.enableAutoHighlight
+          && options.enableAutoHighlightUpdates
+          && isAllowedURL(options)) {
+        if (mutationTime) {
+          autoHighlightIfReady();
+        } else {
+          if (mutationDelayTime) {
+            setTimeout(() => {
+              mutationDelayTime = false;
+              autoHighlightIfReady();
+            }, MUTATION_TIMER);
+          }
+        }
+      }
+    });
+    observer.observe(document, {
+      subtree: true,
+      childList: true
+    });
  });
 });
