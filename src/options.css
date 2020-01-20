@@ -49,6 +49,7 @@ span.PhraseList__title {
 }
 
 span.tag.PhraseList__phrase, span.tag.Blacklist__url, span.tag.Whitelist__url {
+  display: inline-flex;
   margin-right: 0.5rem;
   margin-bottom: 0.4rem;
   padding: 0.5rem;
