@@ -7,7 +7,7 @@
 
 function Hilitor() {
   let hiliteTag = "MARK";
-  let skipTags = new RegExp("^(?:" + hiliteTag + "|SCRIPT|FORM|SPAN)$");
+  let skipTags = new RegExp("^(?:" + hiliteTag + "|FORM|SCRIPT|SPAN|TEXTAREA)$");
   let matchRegExp = "";
   let openLeft = false;
   let openRight = false;
