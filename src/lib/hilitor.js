@@ -10,8 +10,14 @@ function Hilitor() {
   let skipTags = new RegExp("^(?:" + hiliteTag + "|FORM|SCRIPT|SPAN|TEXTAREA)$");
   let matchRegExp = "";
   let partialMatch = false;
+  let caseSensitive = false;
 
-  function setRegex(input, caseSensitive) {
+  function setRegexFromPhrases(phrases) {
+    let input = "";
+    for (phrase of phrases) {
+        phrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        input += phrase + "|";
+    }
     input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', "g"), "");
     if (input) {
       let regex = "(" + input + ")";
@@ -23,15 +29,6 @@ function Hilitor() {
       return matchRegExp;
     }
     return false;
-  };
-
-  function setRegexFromPhrases(phrases, caseSensitive) {
-    let input = "";
-    for (phrase of phrases) {
-        phrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        input += phrase + "|";
-    }
-    setRegex(input, caseSensitive);
   }
 
   // Recursively apply word highlighting
@@ -67,7 +64,10 @@ function Hilitor() {
     if (options.partialMatch) {
       partialMatch = true;
     }
-    setRegexFromPhrases(phrases, !!options.caseSensitive);
+    if (options.caseSensitive) {
+      caseSensitive = true;
+    }
+    setRegexFromPhrases(phrases);
     hiliteWords(options.targetNode ? options.targetNode : document.body, options.classes ? options.classes : "");
   }
 }
