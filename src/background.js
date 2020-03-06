@@ -15,7 +15,7 @@ const defaultOptions = {
   autoHighlighter: false, /* If enableAutoHighlight, represents whether autoHighlighter is active */
   enableAutoHighlight: true,
   enableAutoHighlightUpdates: true,
-  enableTitleMouseover: true,
+  enableTitleMouseover: false,
   enablePartialMatch: false,
   enableCaseInsensitive: true,
   enableURLBlacklist: false,
