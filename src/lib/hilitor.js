@@ -9,36 +9,14 @@ function Hilitor() {
   let hiliteTag = "MARK";
   let skipTags = new RegExp("^(?:" + hiliteTag + "|FORM|SCRIPT|SPAN|TEXTAREA)$");
   let matchRegExp = "";
-  let openLeft = false;
-  let openRight = false;
-
-  function setMatchType(type) {
-    switch (type) {
-      case "left":
-        this.openLeft = false;
-        this.openRight = true;
-        break;
-      case "right":
-        this.openLeft = true;
-        this.openRight = false;
-        break;
-      case "open":
-        this.openLeft = this.openRight = true;
-        break;
-      default:
-        this.openLeft = this.openRight = false;
-    }
-  };
+  let partialMatch = false;
 
   function setRegex(input, caseSensitive) {
     input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', "g"), "");
     if (input) {
       let regex = "(" + input + ")";
-      if (!this.openLeft) {
-        regex = "\\b" + regex;
-      }
-      if (!this.openRight) {
-        regex = regex + "\\b";
+      if (!partialMatch) {
+        regex = "\\b" + regex + "\\b|\\s" + regex + "\\s";
       }
       let flags = (caseSensitive) ? "" : "i";
       matchRegExp = new RegExp(regex, flags);
@@ -87,9 +65,7 @@ function Hilitor() {
    */
   this.applyPhrases = function(phrases, options = {}) {
     if (options.partialMatch) {
-      setMatchType("open");
-    } else {
-      setMatchType("closed");
+      partialMatch = true;
     }
     setRegexFromPhrases(phrases, !!options.caseSensitive);
     hiliteWords(options.targetNode ? options.targetNode : document.body, options.classes ? options.classes : "");
