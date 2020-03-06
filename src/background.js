@@ -16,7 +16,7 @@ const defaultOptions = {
   enableAutoHighlight: true,
   enableAutoHighlightUpdates: true,
   enableTitleMouseover: true,
-  enablePartialMatch: true,
+  enablePartialMatch: false,
   enableCaseInsensitive: true,
   enableURLBlacklist: false,
   enableURLWhitelist: false,
