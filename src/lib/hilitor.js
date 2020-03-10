@@ -22,7 +22,7 @@ function Hilitor() {
     if (input) {
       let regex = "(" + input + ")";
       if (!partialMatch) {
-        regex = "\\b" + regex + "\\b|\\s" + regex + "\\s";
+        regex = "\\b" + regex + "\\b";
       }
       let flags = (caseSensitive) ? "" : "i";
       matchRegExp = new RegExp(regex, flags);
