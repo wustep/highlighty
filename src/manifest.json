@@ -22,6 +22,7 @@
   ],
 
   "browser_action": {
+    "default_popup": "popup.html",
     "default_title": "Highlight phrases!",
     "default_icon": {
       "16": "img/16pxBlue.png",

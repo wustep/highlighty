@@ -1,0 +1,12 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "nodeDbg",
+      "name": "highlighty.js",
+      "project": "highlighty.js",
+      "projectTarget": ""
+    }
+  ]
+}
