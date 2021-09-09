@@ -1,3 +1,1 @@
-document.getElementById("tabButton").onclick = function () {
-    location.href = "options.html";
-};
+location.href = "options.html";
