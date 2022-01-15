@@ -13,7 +13,7 @@
 /* Primary settings */
 
 #Settings,
-#Blacklist {
+#Denylist {
   margin-bottom: 2rem;
 }
 
@@ -63,8 +63,8 @@ span.PhraseList__title {
 }
 
 span.tag.PhraseList__phrase,
-span.tag.Blacklist__url,
-span.tag.Whitelist__url {
+span.tag.Denylist__url,
+span.tag.Allowlist__url {
   display: inline-flex;
   margin-right: 0.5rem;
   margin-bottom: 0.4rem;
@@ -72,18 +72,18 @@ span.tag.Whitelist__url {
 }
 
 .PhraseList__newPhrase,
-#Blacklist__newURL,
-#Whitelist__newURL {
+#Denylist__newURL,
+#Allowlist__newURL {
   padding-top: 0;
   margin-bottom: 1rem;
 }
 
-span.Blacklist__url {
+span.Denylist__url {
   background-color: #ff3860;
   color: white;
 }
 
-span.Whitelist__url {
+span.Allowlist__url {
   background-color: #00d1b2;
   color: white;
 }

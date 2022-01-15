@@ -28,8 +28,8 @@ $(function () {
     $('#Settings__enablePartialMatch').attr('checked', options.enablePartialMatch);
     $('#Settings__enableCaseInsensitive').attr('checked', options.enableCaseInsensitive);
     $('#Settings__keyboardShortcut').val(options.keyboardShortcut);
-    $('#Settings__enableURLBlacklist').attr('checked', options.enableURLBlacklist);
-    $('#Settings__enableURLWhitelist').attr('checked', options.enableURLWhitelist);
+    $('#Settings__enableURLDenylist').attr('checked', options.enableURLDenylist);
+    $('#Settings__enableURLAllowlist').attr('checked', options.enableURLAllowlist);
     showHideAutoHighlightSettings();
   }
 
@@ -48,38 +48,38 @@ $(function () {
   }
 
   function addExistingURLLists(options) {
-    if (options.blacklist.length) {
-      for (let url of options.blacklist) {
-        addBlacklistURLElement(url);
+    if (options.denylist.length) {
+      for (let url of options.denylist) {
+        addDenylistURLElement(url);
       }
     }
-    if (options.whitelist.length) {
-      for (let url of options.whitelist) {
-        addWhitelistURLElement(url);
+    if (options.allowlist.length) {
+      for (let url of options.allowlist) {
+        addAllowlistURLElement(url);
       }
     }
   }
 
-  function addBlacklistURLElement(url) {
-    $('#Blacklist__urls').append(
-      `<span class="tag is-medium Blacklist__url">` +
+  function addDenylistURLElement(url) {
+    $('#Denylist__urls').append(
+      `<span class="tag is-medium Denylist__url">` +
         url +
-        `<button class="delete is-small Blacklist__url__delete"></button>` +
+        `<button class="delete is-small Denylist__url__delete"></button>` +
         `</span>`,
     );
   }
 
-  function addWhitelistURLElement(url) {
-    $('#Whitelist__urls').append(
-      `<span class="tag is-medium Whitelist__url">` +
+  function addAllowlistURLElement(url) {
+    $('#Allowlist__urls').append(
+      `<span class="tag is-medium Allowlist__url">` +
         url +
-        `<button class="delete is-small Whitelist__url__delete"></button>` +
+        `<button class="delete is-small Allowlist__url__delete"></button>` +
         `</span>`,
     );
   }
 
   function addExistingListStyles(options) {
-    let highlighterStyles = `<style id="${HL_STYLE_ID}">span.PhraseList__phrase, span.Blacklist__url { ${options.baseStyles} }\r\n`;
+    let highlighterStyles = `<style id="${HL_STYLE_ID}">span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) {
         // Skip deleted lists!
@@ -132,75 +132,75 @@ $(function () {
   }
 
   function setupURLListHandlers() {
-    $('#Blacklist__add').on('click', (e) => {
+    $('#Denylist__add').on('click', (e) => {
       e.preventDefault();
       chrome.storage.local.get((options) => {
-        let newURL = $('#Blacklist__urlInput').val();
+        let newURL = $('#Denylist__urlInput').val();
         if (newURL.length > 0) {
           chrome.storage.local.get((options) => {
-            if (options.blacklist.includes(newURL)) {
-              $('#Blacklist__urlInput').val('');
+            if (options.denylist.includes(newURL)) {
+              $('#Denylist__urlInput').val('');
               alert('URL was already in list!');
             } else {
-              $('#Blacklist__urlInput').val('');
-              options.blacklist.push(newURL.trim());
-              chrome.storage.local.set({ blacklist: options.blacklist }, () => {
-                addBlacklistURLElement(newURL);
+              $('#Denylist__urlInput').val('');
+              options.denylist.push(newURL.trim());
+              chrome.storage.local.set({ denylist: options.denylist }, () => {
+                addDenylistURLElement(newURL);
               });
             }
           });
         }
       });
     });
-    $('#Whitelist__add').on('click', (e) => {
+    $('#Allowlist__add').on('click', (e) => {
       e.preventDefault();
       chrome.storage.local.get((options) => {
-        let newURL = $('#Whitelist__urlInput').val();
+        let newURL = $('#Allowlist__urlInput').val();
         if (newURL.length > 0) {
           chrome.storage.local.get((options) => {
-            if (options.whitelist.includes(newURL)) {
-              $('#Whitelist__urlInput').val('');
+            if (options.allowlist.includes(newURL)) {
+              $('#Allowlist__urlInput').val('');
               alert('URL was already in list!');
             } else {
-              $('#Whitelist__urlInput').val('');
-              options.whitelist.push(newURL.trim());
-              chrome.storage.local.set({ whitelist: options.whitelist }, () => {
-                addWhitelistURLElement(newURL);
+              $('#Allowlist__urlInput').val('');
+              options.allowlist.push(newURL.trim());
+              chrome.storage.local.set({ allowlist: options.allowlist }, () => {
+                addAllowlistURLElement(newURL);
               });
             }
           });
         }
       });
     });
-    $('#Settings').on('click', '.Blacklist__url__delete', (e) => {
+    $('#Settings').on('click', '.Denylist__url__delete', (e) => {
       let $url = $(e.target).parent();
       if (window.confirm('Are you sure you want to remove: ' + $url.text() + '?')) {
         chrome.storage.local.get((options) => {
-          let urlIndex = options.blacklist.indexOf($url.text());
-          options.blacklist.splice(urlIndex, 1);
-          chrome.storage.local.set({ blacklist: options.blacklist }, () => {
+          let urlIndex = options.denylist.indexOf($url.text());
+          options.denylist.splice(urlIndex, 1);
+          chrome.storage.local.set({ denylist: options.denylist }, () => {
             $url.remove();
           });
         });
       }
     });
-    $('#Settings').on('click', '.Whitelist__url__delete', (e) => {
+    $('#Settings').on('click', '.Allowlist__url__delete', (e) => {
       let $url = $(e.target).parent();
       if (window.confirm('Are you sure you want to remove: ' + $url.text() + '?')) {
         chrome.storage.local.get((options) => {
-          let urlIndex = options.whitelist.indexOf($url.text());
-          options.whitelist.splice(urlIndex, 1);
-          chrome.storage.local.set({ whitelist: options.whitelist }, () => {
+          let urlIndex = options.allowlist.indexOf($url.text());
+          options.allowlist.splice(urlIndex, 1);
+          chrome.storage.local.set({ allowlist: options.allowlist }, () => {
             $url.remove();
           });
         });
       }
     });
-    $('#Settings').on('click', '#Settings__enableURLBlacklist', (e) => {
-      $('#Settings__enableURLWhitelist').prop('checked', false);
+    $('#Settings').on('click', '#Settings__enableURLDenylist', (e) => {
+      $('#Settings__enableURLAllowlist').prop('checked', false);
     });
-    $('#Settings').on('click', '#Settings__enableURLWhitelist', (e) => {
-      $('#Settings__enableURLBlacklist').prop('checked', false);
+    $('#Settings').on('click', '#Settings__enableURLAllowlist', (e) => {
+      $('#Settings__enableURLDenylist').prop('checked', false);
     });
   }
 
@@ -538,8 +538,8 @@ $(function () {
       let newEnablePartialMatch = $('#Settings__enablePartialMatch').is(':checked');
       let newEnableCaseInsensitive = $('#Settings__enableCaseInsensitive').is(':checked');
       let newKeyboardShortcut = $('#Settings__keyboardShortcut').val();
-      let newEnableURLBlacklist = $('#Settings__enableURLBlacklist').is(':checked');
-      let newEnableURLWhitelist = $('#Settings__enableURLWhitelist').is(':checked');
+      let newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
+      let newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
 
       let newOptions = {
         enableAutoHighlight: newEnableAutoHighlight,
@@ -547,8 +547,8 @@ $(function () {
         enableTitleMouseover: newEnableTitleMouseover,
         enablePartialMatch: newEnablePartialMatch,
         enableCaseInsensitive: newEnableCaseInsensitive,
-        enableURLBlacklist: newEnableURLBlacklist,
-        enableURLWhitelist: newEnableURLWhitelist,
+        enableURLDenylist: newEnableURLDenylist,
+        enableURLAllowlist: newEnableURLAllowlist,
         keyboardShortcut: newKeyboardShortcut,
       };
 

@@ -9,8 +9,8 @@ const defaultOptions = {
       textColor: 'white',
     },
   ],
-  blacklist: [],
-  whitelist: [],
+  allowlist: [],
+  denylist: [],
   baseStyles:
     'display: inline; border-radius: 0.3rem; padding: 0.1rem; font-weight: normal; box-shadow: inset 0 -0.1rem 0 rgba(20,20,20,0.40);',
   autoHighlighter: false /* If enableAutoHighlight, represents whether autoHighlighter is active */,
@@ -19,9 +19,16 @@ const defaultOptions = {
   enableTitleMouseover: false,
   enablePartialMatch: false,
   enableCaseInsensitive: true,
-  enableURLBlacklist: false,
-  enableURLWhitelist: false,
+  enableURLDenylist: false,
+  enableURLAllowlist: false,
   keyboardShortcut: 117,
+};
+
+const migratedOptionsMap = {
+  whitelist: 'allowlist',
+  blacklist: 'denylist',
+  enableURLWhitelist: 'enableURLAllowlist',
+  enableURLBlacklist: 'enableURLDenylist',
 };
 
 chrome.runtime.onInstalled.addListener((details) => {
@@ -30,15 +37,26 @@ chrome.runtime.onInstalled.addListener((details) => {
       chrome.runtime.openOptionsPage();
     });
   } else {
-    /*
-      When user updates, set new, missing options to their default.
-      This ensures updates are not breaking for new options.
-      Developers should still be cautious of modifying the structure of existing options.
-    */
     chrome.storage.local.get((currentOptions) => {
-      for (let option of Object.keys(defaultOptions)) {
-        if (!(option in currentOptions)) {
-          chrome.storage.local.set(option, defaultOptions[option]);
+      /*
+       * When user updates, set new, missing options to their default.
+       * This ensures updates are not breaking for new options.
+       * Developers should still be cautious of modifying the structure of existing options.
+       */
+      for (const defaultOptionName of Object.keys(defaultOptions)) {
+        if (!(defaultOptionName in currentOptions)) {
+          chrome.storage.local.set(option, defaultOptions[defaultOptionName]);
+        }
+      }
+      /**
+       * If we've renamed any options, let's migrate their values to their new name.
+       */
+      for (const oldOptionName of Object.keys(migratedOptionsMap)) {
+        if (oldOptionName in currentOptions) {
+          chrome.storage.local.set({
+            [migratedOptionsMap[oldOptionName]]: currentOptions[oldOptionName],
+          });
+          chrome.storage.local.remove(oldOptionName);
         }
       }
     });

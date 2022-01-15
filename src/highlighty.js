@@ -11,8 +11,8 @@ $(function () {
   const HL_STYLE_ID = 'Highlighty__styles'; // Style block containing highlighter styles
 
   let bodyHighlighted = false;
-  let urlBlacklisted = false;
-  let urlWhitelisted = false;
+  let urlDenylisted = false;
+  let urlAllowlisted = false;
   let phrasesToHighlight = []; // Array of arrays of phrases, where index represents the phrase list number.
 
   const MUTATION_TIMER = 3000; // Number of miliseconds between updating body after DOM change
@@ -125,14 +125,14 @@ $(function () {
       if (!manualTrigger && !isAllowedURL(options)) {
         chrome.runtime.sendMessage({ blockedHighlighter: true });
       } else {
-        // Let a manualTrigger override blacklist and go directly to highlight mode.
+        // Let a manualTrigger override denylist and go directly to highlight mode.
         // Deal with badges, notifying background.js.
         if (!options.enableAutoHighlight) {
           chrome.runtime.sendMessage({ manualHighlighter: !bodyHighlighted, tab: true });
         } else if (manualTrigger) {
           let newAutoHighlighter = !isAllowedURL(options) ? true : !options.autoHighlighter;
-          urlBlacklisted = false;
-          urlWhitelisted = true;
+          urlDenylisted = false;
+          urlAllowlisted = true;
           chrome.storage.local.set({ autoHighlighter: newAutoHighlighter });
           chrome.runtime.sendMessage({ autoHighlighter: newAutoHighlighter });
         }
@@ -151,30 +151,30 @@ $(function () {
 
   function isAllowedURL(options) {
     return !(
-      (options.enableURLBlacklist && urlBlacklisted) ||
-      (options.enableURLWhitelist && !urlWhitelisted)
+      (options.enableURLDenylist && urlDenylisted) ||
+      (options.enableURLAllowlist && !urlAllowlisted)
     );
   }
 
   chrome.storage.local.get((options) => {
     if (options.enableAutoHighlight && options.autoHighlighter) {
-      if (options.blacklist.length) {
-        for (let url of options.blacklist) {
+      if (options.denylist.length) {
+        for (let url of options.denylist) {
           if (window.location.href.indexOf(url) !== -1) {
-            urlBlacklisted = true;
+            urlDenylisted = true;
             break;
           }
         }
       }
-      if (options.whitelist.length) {
-        for (let url of options.whitelist) {
+      if (options.allowlist.length) {
+        for (let url of options.allowlist) {
           if (window.location.href.indexOf(url) !== -1) {
-            urlWhitelisted = true;
+            urlAllowlisted = true;
             break;
           }
         }
       }
-      log(`URL: whitelist(${urlWhitelisted}) blacklist(${urlBlacklisted})`);
+      log(`URL: allowlist(${urlAllowlisted}) denylist(${urlDenylisted})`);
       processHighlights();
     }
   });
