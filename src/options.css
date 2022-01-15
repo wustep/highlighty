@@ -12,11 +12,12 @@
 
 /* Primary settings */
 
-#Settings, #Blacklist {
+#Settings,
+#Blacklist {
   margin-bottom: 2rem;
 }
 
-#Settings input[type=checkbox] {
+#Settings input[type='checkbox'] {
   vertical-align: bottom;
 }
 
@@ -26,11 +27,11 @@
 
 #Settings label {
   -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Old versions of Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently
                                   supported by Chrome, Opera and Firefox */
 }
 
@@ -48,16 +49,20 @@ span.PhraseList__title {
   font-weight: 400;
 }
 
-span.tag.PhraseList__phrase, span.tag.Blacklist__url, span.tag.Whitelist__url {
+span.tag.PhraseList__phrase,
+span.tag.Blacklist__url,
+span.tag.Whitelist__url {
   display: inline-flex;
   margin-right: 0.5rem;
   margin-bottom: 0.4rem;
   padding: 0.5rem;
 }
 
-.PhraseList__newPhrase, #Blacklist__newURL, #Whitelist__newURL {
+.PhraseList__newPhrase,
+#Blacklist__newURL,
+#Whitelist__newURL {
   padding-top: 0;
-  margin-bottom: 1.0rem;
+  margin-bottom: 1rem;
 }
 
 span.Blacklist__url {
@@ -72,6 +77,6 @@ span.Whitelist__url {
 
 /* Color picker */
 #NewPhraseList input {
-  font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-      "Fira Sans", "Droid Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

@@ -1,32 +1,41 @@
 /* Highlighty.js | by Stephen Wu */
 
-$(function() {
-
-  if (window.top != window.self) { // Don't run on frames or iframes
+$(function () {
+  if (window.top != window.self) {
+    // Don't run on frames or iframes
     return;
   }
 
-  const HL_PREFIX_CLASS = "Highlighty__phrase--"; // Phrases will have class prefixed with their list numbe
-  const HL_BASE_CLASS = "Highlighty__phrase";     // Phrases will all have this class
-  const HL_STYLE_ID = "Highlighty__styles";       // Style block containing highlighter styles
+  const HL_PREFIX_CLASS = 'Highlighty__phrase--'; // Phrases will have class prefixed with their list numbe
+  const HL_BASE_CLASS = 'Highlighty__phrase'; // Phrases will all have this class
+  const HL_STYLE_ID = 'Highlighty__styles'; // Style block containing highlighter styles
 
   let bodyHighlighted = false;
   let urlBlacklisted = false;
   let urlWhitelisted = false;
-  let phrasesToHighlight = [];    // Array of arrays of phrases, where index represents the phrase list number.
+  let phrasesToHighlight = []; // Array of arrays of phrases, where index represents the phrase list number.
 
-  const MUTATION_TIMER = 3000;    // Number of miliseconds between updating body after DOM change
-  let mutationTime = true;        // Whether to auto-highlight immediately after DOM change
-  let mutationDelayTime = true;  // Whether to auto-highlight after a delay due to subsequent DOM changes.
+  const MUTATION_TIMER = 3000; // Number of miliseconds between updating body after DOM change
+  let mutationTime = true; // Whether to auto-highlight immediately after DOM change
+  let mutationDelayTime = true; // Whether to auto-highlight after a delay due to subsequent DOM changes.
 
-  let developerMode = !('update_url' in chrome.runtime.getManifest());       // Whether to log messages to track perf
+  let developerMode = !('update_url' in chrome.runtime.getManifest()); // Whether to log messages to track perf
 
   function log(stuff) {
     if (developerMode) {
       const now = new Date();
-      const logPrefix = "[Highlighty] [" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "." + now.getMilliseconds() + "]";
-      if (typeof stuff === "string") {
-        console.log(logPrefix + " " + stuff);
+      const logPrefix =
+        '[Highlighty] [' +
+        now.getHours() +
+        ':' +
+        now.getMinutes() +
+        ':' +
+        now.getSeconds() +
+        '.' +
+        now.getMilliseconds() +
+        ']';
+      if (typeof stuff === 'string') {
+        console.log(logPrefix + ' ' + stuff);
       } else {
         console.log(logPrefix);
         console.log(stuff);
@@ -37,23 +46,26 @@ $(function() {
   // Setup phrase list and append proper styles
   // We don't re-setup the highlighter on incremental auto-updates but we do on manual triggers
   function setupHighlighter(options) {
-    log("setupHighligher start");
+    log('setupHighligher start');
     phrasesToHighlight = [];
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
     for (i in options.highlighter) {
-      if (Object.keys(options.highlighter[i]).length) { // Skip deleted lists!
-        let highlighterColor = options.highlighter[i].color || "black";
-        let textColor = options.highlighter[i].textColor || "white";
-        highlighterStyles += `.${HL_PREFIX_CLASS + i} { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
+      if (Object.keys(options.highlighter[i]).length) {
+        // Skip deleted lists!
+        let highlighterColor = options.highlighter[i].color || 'black';
+        let textColor = options.highlighter[i].textColor || 'white';
+        highlighterStyles += `.${
+          HL_PREFIX_CLASS + i
+        } { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
         for (phrase of options.highlighter[i].phrases) {
           addHighlightPhrase(phrase, i);
         }
       }
     }
-    highlighterStyles += "</style>";
-    $("head").append(highlighterStyles);
+    highlighterStyles += '</style>';
+    $('head').append(highlighterStyles);
     log(phrasesToHighlight);
-    log("setupHighligher end");
+    log('setupHighligher end');
   }
 
   // Add phrase to highlight list given phrase and its list index
@@ -68,32 +80,32 @@ $(function() {
 
   // Highlight phrases in body
   function highlightPhrases(options) {
-    log("highlightPhrases start");
+    log('highlightPhrases start');
     for (let phraseListIndex in phrasesToHighlight) {
-      log("highlightPhrases " + phraseListIndex)
+      log('highlightPhrases ' + phraseListIndex);
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
       let hilitor = new Hilitor();
       hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
         classes: markClasses,
         caseSensitive: !options.enableCaseInsensitive,
-        partialMatch: options.enablePartialMatch
+        partialMatch: options.enablePartialMatch,
       });
     }
     if (options.enableTitleMouseover) {
-      log("enableTitleMousever start");
+      log('enableTitleMousever start');
       for (let i = 0; i < options.highlighter.length; i++) {
-        if ("title" in options.highlighter[i]) {
-          $("." + HL_PREFIX_CLASS + i).attr("title", options.highlighter[i].title);
+        if ('title' in options.highlighter[i]) {
+          $('.' + HL_PREFIX_CLASS + i).attr('title', options.highlighter[i].title);
         }
       }
-      log("enableTitleMousever end");
+      log('enableTitleMousever end');
     }
     bodyHighlighted = true;
-    log("highlightPhrases end");
+    log('highlightPhrases end');
   }
 
   function removeHighlightStyles() {
-    $("#" + HL_STYLE_ID).remove();
+    $('#' + HL_STYLE_ID).remove();
   }
 
   // Remove all highlights (from Hilitor code!)
@@ -107,21 +119,22 @@ $(function() {
     }
   }
 
-  function processHighlights(manualTrigger=false) {
-    log("processHighlights");
+  function processHighlights(manualTrigger = false) {
+    log('processHighlights');
     chrome.storage.local.get((options) => {
       if (!manualTrigger && !isAllowedURL(options)) {
-        chrome.runtime.sendMessage({blockedHighlighter: true});
-      } else { // Let a manualTrigger override blacklist and go directly to highlight mode.
+        chrome.runtime.sendMessage({ blockedHighlighter: true });
+      } else {
+        // Let a manualTrigger override blacklist and go directly to highlight mode.
         // Deal with badges, notifying background.js.
         if (!options.enableAutoHighlight) {
-          chrome.runtime.sendMessage({manualHighlighter: !bodyHighlighted, tab: true});
+          chrome.runtime.sendMessage({ manualHighlighter: !bodyHighlighted, tab: true });
         } else if (manualTrigger) {
-          let newAutoHighlighter = (!isAllowedURL(options)) ? true : !options.autoHighlighter;
+          let newAutoHighlighter = !isAllowedURL(options) ? true : !options.autoHighlighter;
           urlBlacklisted = false;
           urlWhitelisted = true;
-          chrome.storage.local.set({"autoHighlighter": newAutoHighlighter});
-          chrome.runtime.sendMessage({autoHighlighter: newAutoHighlighter});
+          chrome.storage.local.set({ autoHighlighter: newAutoHighlighter });
+          chrome.runtime.sendMessage({ autoHighlighter: newAutoHighlighter });
         }
         // Deal with appropriate (un)highlighting.
         if (!bodyHighlighted) {
@@ -137,7 +150,10 @@ $(function() {
   }
 
   function isAllowedURL(options) {
-    return !((options.enableURLBlacklist && urlBlacklisted) || (options.enableURLWhitelist && !urlWhitelisted));
+    return !(
+      (options.enableURLBlacklist && urlBlacklisted) ||
+      (options.enableURLWhitelist && !urlWhitelisted)
+    );
   }
 
   chrome.storage.local.get((options) => {
@@ -172,15 +188,15 @@ $(function() {
   });
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message === "highlighty") {
+    if (message === 'highlighty') {
       processHighlights(true);
     }
   });
 
   function autoHighlightIfReady() {
-    log("autoHighlightIfReady");
+    log('autoHighlightIfReady');
     if (mutationTime) {
-      log("autoHighlightIfReady: ready");
+      log('autoHighlightIfReady: ready');
       mutationTime = false;
       setTimeout(() => {
         mutationTime = true;
@@ -195,10 +211,12 @@ $(function() {
 
   chrome.storage.local.get((options) => {
     MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-    var observer = new MutationObserver(function(mutations, observer) {
-      if (options.enableAutoHighlight
-          && options.enableAutoHighlightUpdates
-          && isAllowedURL(options)) {
+    var observer = new MutationObserver(function (mutations, observer) {
+      if (
+        options.enableAutoHighlight &&
+        options.enableAutoHighlightUpdates &&
+        isAllowedURL(options)
+      ) {
         if (mutationTime) {
           autoHighlightIfReady();
         } else {
@@ -213,7 +231,7 @@ $(function() {
     });
     observer.observe(document, {
       subtree: true,
-      childList: true
+      childList: true,
     });
- });
+  });
 });

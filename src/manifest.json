@@ -37,8 +37,5 @@
     "persistent": false
   },
 
-  "permissions": [
-    "activeTab",
-    "storage"
-  ]
+  "permissions": ["activeTab", "storage"]
 }
