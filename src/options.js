@@ -95,7 +95,11 @@ $(function () {
   function addExistingLists(options) {
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) {
-        let $newListDiv = addNewListDiv(options.highlighter[i].title, i);
+        let $newListDiv = addNewListDiv(
+          options.highlighter[i].title,
+          options.highlighter[i].color,
+          i,
+        );
         for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
           addPhraseElement($newListDiv, options.highlighter[i].phrases[j], i);
         }
@@ -103,11 +107,12 @@ $(function () {
     }
   }
 
-  function addNewListDiv(title, index) {
+  function addNewListDiv(title, color, index) {
     $newListDiv = $('#PhraseList--invisible')
       .clone()
       .attr('id', `PhraseList--${index}`)
       .data('index', index);
+    $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
     setupPhraseListHandlers($newListDiv);
     $newListDiv.insertBefore('#NewPhraseList');
@@ -200,7 +205,7 @@ $(function () {
   }
 
   function setupAddPhraseListHandler() {
-    const colorInput = document.querySelector('#NewPhraseList__color');
+    const colorInput = $('#NewPhraseList__color').find()[0];
     const colorPicker = new Picker({
       alpha: false,
       color: '#dbeb',
@@ -221,7 +226,7 @@ $(function () {
             : 'Untitled';
         let listColor = $('#NewPhraseList__color').css('background-color');
         let listTextColor = $('#NewPhraseList__color').css('color');
-        addNewListDiv(listTitle, listIndex);
+        addNewListDiv(listTitle, listColor, listIndex);
         options.highlighter[listIndex] = {
           phrases: [],
           color: listColor,
@@ -250,12 +255,37 @@ $(function () {
   }
 
   function setupPhraseListHandlers($list) {
+    setupPhraseListEditColorHandler($list);
     setupPhraseListEditNameHandler($list);
     setupPhraseListImportHandler($list);
     setupPhraseListExportHandler($list);
     setupPhraseListDeleteHandler($list);
     setupPhraseListAddPhraseHandler($list);
     setupPhraseListDeletePhraseHandler($list);
+  }
+
+  function setupPhraseListEditColorHandler($list) {
+    const currentColor = $list.find('.PhraseList__color').css('background-color');
+    const colorButton = $list.find('.PhraseList__color')[0];
+    const colorPicker = new Picker({
+      alpha: false,
+      color: currentColor,
+      parent: colorButton,
+      popup: 'top',
+      onDone: (newColor) => {
+        colorButton.style['background-color'] = newColor.rgbaString;
+        colorPicker.setOptions({ color: newColor.rgbaString });
+        chrome.storage.local.get((options) => {
+          options.highlighter[$list.data('index')].color = newColor.rgbaString;
+          options.highlighter[$list.data('index')].textColor = getTextColor(newColor._rgba);
+          chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+            /* TODO: [Low] Edit styles smarter here instead of redoing them all? */
+            removeExistingListStyles();
+            addExistingListStyles(options);
+          });
+        });
+      },
+    });
   }
 
   function setupPhraseListEditNameHandler($list) {

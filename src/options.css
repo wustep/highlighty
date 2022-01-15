@@ -45,6 +45,19 @@
   margin-bottom: 0px;
 }
 
+button.PhraseList__color {
+  height: 16px;
+  width: 16px;
+  border-radius: 100%;
+  display: inline-block;
+  vertical-align: middle;
+  border-color: black;
+}
+
+button.PhraseList__color:hover {
+  cursor: pointer;
+}
+
 span.PhraseList__title {
   font-weight: 400;
 }
