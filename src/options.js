@@ -205,7 +205,6 @@ $(function () {
   }
 
   function setupAddPhraseListHandler() {
-    const colorInput = $('#NewPhraseList__color').find()[0];
     const colorInput = $('#NewPhraseList__color')[0];
     const colorPicker = new Picker({
       alpha: false,
@@ -213,8 +212,10 @@ $(function () {
       parent: colorInput,
       popup: 'top',
       onDone: (color) => {
-        colorInput.style['background-color'] = color.rgbaString;
+        colorInput.style['background-color'] = rgbaToHex(color._rgba);
+        console.log(rgbaToHex(color._rgba));
         colorInput.style['color'] = getTextColor(color._rgba);
+        console.log(getTextColor(color._rgba));
       },
     });
     $('#NewPhraseList__add').on('click', (e) => {
@@ -225,8 +226,8 @@ $(function () {
           $('#NewPhraseList__title').val().length > 0
             ? $('#NewPhraseList__title').val()
             : 'Untitled';
-        let listColor = $('#NewPhraseList__color').css('background-color');
-        let listTextColor = $('#NewPhraseList__color').css('color');
+        let listColor = rgbaStringToHex($('#NewPhraseList__color').css('background-color'));
+        let listTextColor = rgbaStringToHex($('#NewPhraseList__color').css('color'));
         addNewListDiv(listTitle, listColor, listIndex);
         options.highlighter[listIndex] = {
           phrases: [],
@@ -240,19 +241,19 @@ $(function () {
           removeExistingListStyles();
           addExistingListStyles(options);
           $('#NewPhraseList__title').val('');
-          $('#NewPhraseList__color').val('');
         });
       });
     });
   }
 
-  // Returns black or white based on the background color provided.
-  // backgroundColor should be Array of [r,g,b]
-  // https://stackoverflow.com/a/1855903
-  function getTextColor(backgroundColor) {
-    const luminance =
-      (0.299 * backgroundColor[0] + 0.587 * backgroundColor[1] + 0.114 * backgroundColor[2]) / 255;
-    return luminance > 0.5 ? 'black' : 'white';
+  /**
+   * Returns black or white based on the background color provided.
+   * backgroundColor should be Array of [r,g,b]
+   * https://stackoverflow.com/a/1855903
+   */
+  function getTextColor(rgb) {
+    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
   }
 
   function setupPhraseListHandlers($list) {
@@ -266,7 +267,7 @@ $(function () {
   }
 
   function setupPhraseListEditColorHandler($list) {
-    const currentColor = $list.find('.PhraseList__color').css('background-color');
+    const currentColor = rgbaStringToHex($list.find('.PhraseList__color').css('background-color'));
     const colorButton = $list.find('.PhraseList__color')[0];
     const colorPicker = new Picker({
       alpha: false,
@@ -274,10 +275,11 @@ $(function () {
       parent: colorButton,
       popup: 'top',
       onDone: (newColor) => {
-        colorButton.style['background-color'] = newColor.rgbaString;
-        colorPicker.setOptions({ color: newColor.rgbaString });
+        const newColorHexString = rgbaToHex(newColor._rgba);
+        colorButton.style['background-color'] = newColorHexString;
+        colorPicker.setOptions({ color: newColorHexString });
         chrome.storage.local.get((options) => {
-          options.highlighter[$list.data('index')].color = newColor.rgbaString;
+          options.highlighter[$list.data('index')].color = newColorHexString;
           options.highlighter[$list.data('index')].textColor = getTextColor(newColor._rgba);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             /* TODO: [Low] Edit styles smarter here instead of redoing them all? */
@@ -566,5 +568,48 @@ $(function () {
 
   function pluralize(count, noun, suffix = 's') {
     return `${count} ${noun}${count !== 1 ? suffix : ''}`;
+  }
+
+  /**
+   * Given rgba array, convert to hex string
+   * e.g. [187, 0, 0, 1], -> "#BB0000"
+   * https://stackoverflow.com/a/49974627
+   */
+  function rgbaToHex(rgba) {
+    let hex = `#${(
+      (1 << 24) +
+      (parseInt(rgba[0], 10) << 16) +
+      (parseInt(rgba[1], 10) << 8) +
+      parseInt(rgba[2], 10)
+    )
+      .toString(16)
+      .slice(1)}`;
+
+    if (rgba[4]) {
+      const alpha = Math.round(0o1 * 255);
+      const hexAlpha = (alpha + 0x10000).toString(16).substr(-2);
+      hex += hexAlpha;
+    }
+    return hex;
+  }
+
+  /**
+   * Same as above, but from string form, e.g. "rgba(0,0,0,0)".
+   *
+   * This is mainly used because jQuery's 'css' by default will pull the rgba string instead of hex.
+   * To maintain consistency for imports & exports merging, we'll just always use the hex string.
+   * https://stackoverflow.com/a/3627747
+   */
+  function rgbaStringToHex(rgba) {
+    return `#${rgba
+      .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
+      .slice(1)
+      .map((n, i) =>
+        (i === 3 ? Math.round(parseFloat(n) * 255) : parseFloat(n))
+          .toString(16)
+          .padStart(2, '0')
+          .replace('NaN', ''),
+      )
+      .join('')}`;
   }
 });
