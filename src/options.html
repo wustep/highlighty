@@ -2,23 +2,19 @@
 <html>
   <head>
     <!-- Highlighty.js | by Stephen Wu -->
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Highlighty Options</title>
-    <link rel="stylesheet" type="text/css" href="lib/bulma.min.css">
-    <link rel="stylesheet" type="text/css" href="lib/bulma.extensions.min.css">
-    <link rel="stylesheet" type="text/css" href="options.css">
+    <link rel="stylesheet" type="text/css" href="lib/bulma.min.css" />
+    <link rel="stylesheet" type="text/css" href="lib/bulma.extensions.min.css" />
+    <link rel="stylesheet" type="text/css" href="options.css" />
   </head>
   <body>
     <section class="hero is-info">
       <div class="hero-body">
         <div class="container">
-          <h1 class="title">
-            Highlighty Options
-          </h1>
-          <h2 class="subtitle">
-            Add phrases to your lists or modify settings below.
-          </h2>
+          <h1 class="title">Highlighty Options</h1>
+          <h2 class="subtitle">Add phrases to your lists or modify settings below.</h2>
           <a href="info.html" class="button is-primary">Info</a>
         </div>
       </div>
@@ -26,94 +22,133 @@
     <section class="section">
       <div class="container" id="Settings">
         <div class="box">
-          <h1 class="title">
-            Settings
-          </h1>
+          <h1 class="title">Settings</h1>
           <div class="field is-grouped">
-            <input id="Settings__enableAutoHighlight" type="checkbox" class="switch is-info" checked="checked">
+            <input
+              id="Settings__enableAutoHighlight"
+              type="checkbox"
+              class="switch is-info"
+              checked="checked"
+            />
             <label for="Settings__enableAutoHighlight" class="label is-pulled-left">
               Enable auto-highlight mode
             </label>
           </div>
           <div id="Settings__AutoHighlight" class="box">
             <div class="field is-grouped">
-              <input id="Settings__enableAutoHighlightUpdates" type="checkbox" class="switch is-info" checked="checked">
+              <input
+                id="Settings__enableAutoHighlightUpdates"
+                type="checkbox"
+                class="switch is-info"
+                checked="checked"
+              />
               <label for="Settings__enableAutoHighlightUpdates" class="label is-pulled-left">
                 Enable catching updates to page on auto-highlight (Suggested)
               </label>
             </div>
             <div class="field is-grouped">
-              <input id="Settings__enableURLAllowlist" type="checkbox" class="switch is-info" checked="checked">
+              <input
+                id="Settings__enableURLAllowlist"
+                type="checkbox"
+                class="switch is-info"
+                checked="checked"
+              />
               <label for="Settings__enableURLAllowlist" class="label is-pulled-left">
                 Enable URL Allowlist:
               </label>
             </div>
             <p>
-              Only URLs containing these phrases will be highlighted by auto-highlight mode unless manually triggered, e.g. <i>"example.com"</i>.
-            </p><br>
+              Only URLs containing these phrases will be highlighted by auto-highlight mode unless
+              manually triggered, e.g. <i>"example.com"</i>.
+            </p>
+            <br />
             <form>
               <div class="columns">
                 <div class="column is-three-fifths" id="Allowlist__newURL">
-                    <div class="field has-addons">
-                      <div class="control is-expanded">
-                        <input class="input" type="text" placeholder="Add a new URL to allowlist" id="Allowlist__urlInput">
-                      </div>
-                      <div class="control">
-                        <button type="submit" class="button is-primary" id="Allowlist__add"> + </button>
-                      </div>
+                  <div class="field has-addons">
+                    <div class="control is-expanded">
+                      <input
+                        class="input"
+                        type="text"
+                        placeholder="Add a new URL to allowlist"
+                        id="Allowlist__urlInput"
+                      />
                     </div>
-                  </form>
+                    <div class="control">
+                      <button type="submit" class="button is-primary" id="Allowlist__add">+</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </form>
-            <div id="Allowlist__urls">
-            </div>
-            <hr/>
+            <div id="Allowlist__urls"></div>
+            <hr />
             <div class="field is-grouped">
-              <input id="Settings__enableURLDenylist" type="checkbox" class="switch is-info">
+              <input id="Settings__enableURLDenylist" type="checkbox" class="switch is-info" />
               <label for="Settings__enableURLDenylist" class="label is-pulled-left">
                 Enable URL Denylist:
               </label>
             </div>
             <p>
-              Only URLs that do not contain these phrases will be highlighted by auto-highlight mode unless manually triggered, e.g. <i>"example.com"</i>.
-            </p><br>
+              Only URLs that do not contain these phrases will be highlighted by auto-highlight mode
+              unless manually triggered, e.g. <i>"example.com"</i>.
+            </p>
+            <br />
             <form>
               <div class="columns">
                 <div class="column is-three-fifths" id="Denylist__newURL">
-                    <div class="field has-addons">
-                      <div class="control is-expanded">
-                        <input class="input" type="text" placeholder="Add a new URL to denylist" id="Denylist__urlInput">
-                      </div>
-                      <div class="control">
-                        <button type="submit" class="button is-danger" id="Denylist__add"> + </button>
-                      </div>
+                  <div class="field has-addons">
+                    <div class="control is-expanded">
+                      <input
+                        class="input"
+                        type="text"
+                        placeholder="Add a new URL to denylist"
+                        id="Denylist__urlInput"
+                      />
                     </div>
-                  </form>
+                    <div class="control">
+                      <button type="submit" class="button is-danger" id="Denylist__add">+</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </form>
-            <div id="Denylist__urls">
-            </div>
+            <div id="Denylist__urls"></div>
           </div>
           <div class="field is-grouped">
-            <input id="Settings__enableTitleMouseover" type="checkbox" class="switch is-info" checked="checked">
+            <input
+              id="Settings__enableTitleMouseover"
+              type="checkbox"
+              class="switch is-info"
+              checked="checked"
+            />
             <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
               Enable mouseover on phrase for list title
             </label>
           </div>
           <div class="field is-grouped">
-            <input id="Settings__enablePartialMatch" type="checkbox" class="switch is-info" checked="checked">
+            <input
+              id="Settings__enablePartialMatch"
+              type="checkbox"
+              class="switch is-info"
+              checked="checked"
+            />
             <label for="Settings__enablePartialMatch" class="label is-pulled-left">
               Enable partial phrase matching (e.g. "Lor" will match on "Lorem")
             </label>
           </div>
           <div class="field is-grouped">
-            <input id="Settings__enableCaseInsensitive" type="checkbox" class="switch is-info" checked="checked">
+            <input
+              id="Settings__enableCaseInsensitive"
+              type="checkbox"
+              class="switch is-info"
+              checked="checked"
+            />
             <label for="Settings__enableCaseInsensitive" class="label is-pulled-left">
               Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
             </label>
-          </div><br>
+          </div>
+          <br />
           <div class="field is-grouped">
             <div class="control">
               <div class="select">
@@ -124,7 +159,9 @@
               </div>
             </div>
             <div class="field-label is-normal">
-              <label for="Settings__keyboardShortcut" class="label is-pulled-left">Keyboard shortcut for extension button</label>
+              <label for="Settings__keyboardShortcut" class="label is-pulled-left"
+                >Keyboard shortcut for extension button</label
+              >
             </div>
           </div>
           <div class="button is-info" id="Settings__save">Save</div>
@@ -138,26 +175,17 @@
             <div class="column is-three-fifths">
               <div class="field is-grouped PhraseList__header">
                 <h1 class="title">
-                  <button class="PhraseList__color" style="background-color: #000000;"> </button>
-                  <span class="PhraseList__title">
-                  </span>
+                  <button class="PhraseList__color" style="background-color: #000000"></button>
+                  <span class="PhraseList__title"> </span>
                 </h1>
               </div>
             </div>
             <div class="column is-two-fifths">
               <div class="buttons is-right PhraseList__actions">
-                <button class="button is-info PhraseList__editName">
-                  Edit Name
-                </button>
-                <button class="button is-link PhraseList__export">
-                  Export
-                </button>
-                <button class="button is-success PhraseList__import">
-                  Import
-                </button>
-                <button class="button is-danger PhraseList__delete">
-                  Delete
-                </button>
+                <button class="button is-info PhraseList__editName">Edit Name</button>
+                <button class="button is-link PhraseList__import">Import</button>
+                <button class="button is-success PhraseList__export">Export</button>
+                <button class="button is-danger PhraseList__delete">Delete</button>
               </div>
             </div>
           </div>
@@ -166,43 +194,61 @@
               <div class="column is-three-fifths PhraseList__newPhrase">
                 <div class="field has-addons">
                   <div class="control is-expanded">
-                    <input class="input PhraseList__newPhrase__phrase" type="text" placeholder="Add a new phrase">
+                    <input
+                      class="input PhraseList__newPhrase__phrase"
+                      type="text"
+                      placeholder="Add a new phrase"
+                    />
                   </div>
                   <div class="control">
-                    <button type="submit" class="button is-success PhraseList__newPhrase__add"> + </button>
+                    <button type="submit" class="button is-success PhraseList__newPhrase__add">
+                      +
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </form>
-          <div class="PhraseList__phrases">
-          </div>
+          <div class="PhraseList__phrases"></div>
         </div>
 
         <div id="NewPhraseList">
           <form>
-            <label class="label">
-              Add new list
-            </label>
+            <label class="label"> Add new list </label>
             <div class="columns">
               <div class="column is-three-fifths">
                 <div class="field has-addons">
                   <div class="control is-expanded">
-                    <input class="input" id="NewPhraseList__title" type="text" placeholder="List title">
+                    <input
+                      class="input"
+                      id="NewPhraseList__title"
+                      type="text"
+                      placeholder="List title"
+                    />
                   </div>
                   <div class="control">
-                    <button class="button" style="background-color: #000000; color: #ffffff;" id="NewPhraseList__color">
+                    <button
+                      class="button"
+                      style="background-color: #000000; color: #ffffff"
+                      id="NewPhraseList__color"
+                    >
                       Color
                     </button>
                   </div>
                   <div class="control">
-                    <button type="submit" class="button is-link" id="NewPhraseList__add"> + </button>
+                    <button type="submit" class="button is-link" id="NewPhraseList__add">+</button>
                   </div>
                 </div>
               </div>
             </div>
-            <p>For colors, use <a href="https://htmlcolorcodes.com">htmlcolorcodes.com</a> to pick colors for now.</p>
-            <p>You can use hex codes like <i style="color: #317570">#317570</i> and some colors like <i style="color: purple">purple</i>.</p>
+            <p>
+              For colors, use <a href="https://htmlcolorcodes.com">htmlcolorcodes.com</a> to pick
+              colors for now.
+            </p>
+            <p>
+              You can use hex codes like <i style="color: #317570">#317570</i> and some colors like
+              <i style="color: purple">purple</i>.
+            </p>
           </form>
         </div>
       </div>
@@ -210,7 +256,8 @@
     <footer class="footer">
       <div class="content has-text-centered">
         <p>
-          <b>Highlighty</b> (Beta) by <a target="_blank" href="https://github.com/wustep">Stephen Wu</a>.
+          <b>Highlighty</b> (Beta) by
+          <a target="_blank" href="https://github.com/wustep">Stephen Wu</a>.
         </p>
       </div>
     </footer>
@@ -219,7 +266,9 @@
       <div class="modal-background"></div>
       <div class="modal-card">
         <header class="modal-card-head">
-          <p class="modal-card-title"><b>Import to: </b> <span id="ImportModal__listName"></span></p>
+          <p class="modal-card-title">
+            <b>Import to: </b> <span id="ImportModal__listName"></span>
+          </p>
           <button id="ImportModal__close" class="delete" aria-label="close"></button>
         </header>
         <section class="modal-card-body">
@@ -243,14 +292,18 @@
       <div class="modal-background"></div>
       <div class="modal-card">
         <header class="modal-card-head">
-          <p class="modal-card-title"><b>Export from: </b> <span id="ExportModal__listName"></span></p>
+          <p class="modal-card-title">
+            <b>Export from: </b> <span id="ExportModal__listName"></span>
+          </p>
           <button id="ExportModal__close" class="delete" aria-label="close"></button>
         </header>
         <section class="modal-card-body">
           <div class="tabs">
             <ul id="ExportModal__tabs">
               <li id="ExportModal__tab--Line-Delimited" class="is-active"><a>Line-Delimited</a></li>
-              <li id="ExportModal__tab--Space-Delimited" class="is-active"><a>Space-Delimited</a></li>
+              <li id="ExportModal__tab--Space-Delimited" class="is-active">
+                <a>Space-Delimited</a>
+              </li>
             </ul>
           </div>
           <textarea id="ExportModal__body" class="textarea" readonly></textarea>
