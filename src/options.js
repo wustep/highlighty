@@ -573,37 +573,11 @@ $(function () {
   /**
    * Given rgba array, convert to hex string
    * e.g. [187, 0, 0, 1], -> "#BB0000"
-   * https://stackoverflow.com/a/49974627
-   */
-  function rgbaToHex(rgba) {
-    let hex = `#${(
-      (1 << 24) +
-      (parseInt(rgba[0], 10) << 16) +
-      (parseInt(rgba[1], 10) << 8) +
-      parseInt(rgba[2], 10)
-    )
-      .toString(16)
-      .slice(1)}`;
-
-    if (rgba[4]) {
-      const alpha = Math.round(0o1 * 255);
-      const hexAlpha = (alpha + 0x10000).toString(16).substr(-2);
-      hex += hexAlpha;
-    }
-    return hex;
-  }
-
-  /**
-   * Same as above, but from string form, e.g. "rgba(0,0,0,0)".
-   *
-   * This is mainly used because jQuery's 'css' by default will pull the rgba string instead of hex.
-   * To maintain consistency for imports & exports merging, we'll just always use the hex string.
    * https://stackoverflow.com/a/3627747
    */
-  function rgbaStringToHex(rgba) {
-    return `#${rgba
-      .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
-      .slice(1)
+  function rgbaToHex(rgba) {
+    const hex = `#${rgba
+      .filter((v, i) => i <= 3 || v == 1.0)
       .map((n, i) =>
         (i === 3 ? Math.round(parseFloat(n) * 255) : parseFloat(n))
           .toString(16)
@@ -611,5 +585,20 @@ $(function () {
           .replace('NaN', ''),
       )
       .join('')}`;
+    return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
+  }
+
+  /**
+   * Same as above, but from string form, e.g. "rgba(0,0,0,0)".
+   *
+   * This is used mainly used because jQuery's 'css' function by default will pull the rgba string instead of hex.
+   * To maintain consistency for imports & exports merging, we'll just always use the hex string.
+   * https://stackoverflow.com/a/3627747
+   */
+  function rgbaStringToHex(rgbaString) {
+    const rgba = rgbaString
+      .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
+      .slice(1);
+    return rgbaToHex(rgba);
   }
 });
