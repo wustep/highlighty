@@ -213,9 +213,7 @@ $(function () {
       popup: 'top',
       onDone: (color) => {
         colorInput.style['background-color'] = rgbaToHex(color._rgba);
-        console.log(rgbaToHex(color._rgba));
         colorInput.style['color'] = getTextColor(color._rgba);
-        console.log(getTextColor(color._rgba));
       },
     });
     $('#NewPhraseList__add').on('click', (e) => {
