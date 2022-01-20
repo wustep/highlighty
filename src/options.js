@@ -206,6 +206,7 @@ $(function () {
 
   function setupAddPhraseListHandler() {
     const colorInput = $('#NewPhraseList__color').find()[0];
+    const colorInput = $('#NewPhraseList__color')[0];
     const colorPicker = new Picker({
       alpha: false,
       color: '#dbeb',
