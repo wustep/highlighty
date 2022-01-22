@@ -409,12 +409,45 @@ $(function () {
     });
   }
 
+  function setupBulkExportModal() {
+    $('#BulkExport').on('click', (e) => {
+      $('#BulkExportModal').addClass('is-active');
+      chrome.storage.local.get((options) => {
+        let highlighterExport = [];
+        let phraseCount = 0;
+        let phraseListCount = 0;
+        Object.values(options.highlighter).forEach((phraseList) => {
+          if (Object.keys(phraseList).length > 0) {
+            phraseListCount++;
+            phraseCount += phraseList.phrases.length;
+            highlighterExport.push({
+              title: phraseList.title,
+              color: phraseList.color,
+              phrases: phraseList.phrases,
+            });
+          }
+        });
+        $('#BulkExportModal__body').val(JSON.stringify(highlighterExport, null, 2));
+        $('#BulkExportModal__phraseListCount').text(phraseListCount);
+        $('#BulkExportModal__phraseCount').text(phraseCount);
+        $('#BulkExportModal').focus();
+      });
+    });
+
+    $('#BulkExportModal__copy').on('click', () => {
+      $('#BulkExportModal__body').select();
+      document.execCommand('copy');
+    });
+  }
+
   function setupImportExportModals() {
     setupImportExportTabHandlers();
     setupImportExportCloseHandlers();
     setupImportExportPhraseCountHandler();
     setupImportSubmitButton();
     setupExportCopyButton();
+
+    setupBulkExportModal();
   }
 
   function setupImportExportTabHandlers() {
@@ -435,6 +468,9 @@ $(function () {
     });
     $('#ExportModal__cancel, #ExportModal__close').on('click', (e) => {
       $('#ExportModal').removeClass('is-active');
+    });
+    $('#BulkExportModal__cancel, #BulkExportModal__close').on('click', (e) => {
+      $('#BulkExportModal').removeClass('is-active');
     });
   }
 

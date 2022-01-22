@@ -251,6 +251,10 @@
             </p>
           </form>
         </div>
+        <div id="BulkImportExport">
+          <button type="button" class="button is-link" id="BulkImport">Bulk Import</button>
+          <button type="button" class="button is-success" id="BulkExport">Bulk Export</button>
+        </div>
       </div>
     </section>
     <footer class="footer">
@@ -312,6 +316,28 @@
           <button id="ExportModal__copy" class="button is-link">Copy</button>
           <button id="ExportModal__cancel" class="button">Close</button>
           <span>Phrases found: <span id="ExportModal__phraseCount">0</span></span>
+        </footer>
+      </div>
+    </div>
+    <!-- Modal: Bulk Export -->
+    <div class="modal" id="BulkExportModal">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Bulk Export</p>
+          <button id="BulkExportModal__close" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <div id="BulkExportModal__listSelectionSection"></div>
+          <div id="BulkExportModal__bodySection">
+            <textarea id="BulkExportModal__body" class="textarea" readonly></textarea>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <button id="BulkExportModal__copy" class="button is-link">Copy</button>
+          <button id="BulkExportModal__cancel" class="button">Close</button>
+          <span>Lists: <span id="BulkExportModal__phraseListCount">0</span>
+          <span>Phrases: <span id="BulkExportModal__phraseCount">0</span>
         </footer>
       </div>
     </div>
