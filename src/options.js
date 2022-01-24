@@ -9,12 +9,12 @@ $(function () {
     removeExistingLists();
     removeExistingListStyles();
 
-    addExistingURLLists(options);
     addExistingLists(options.highlighter);
     addExistingListStyles(options);
 
     // These handlers should only be ran once.
     if (fresh) {
+      addExistingURLLists(options);
       setPrimarySettings(options);
       setupAutoHighlightHandler();
       setupURLListHandlers();
