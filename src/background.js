@@ -5,8 +5,8 @@ const defaultOptions = {
     {
       phrases: ['Hello there', 'welcome to', 'Highlighty!'],
       title: 'Highlighty',
-      color: 'purple',
-      textColor: 'white',
+      color: '#800080',
+      textColor: '#ffffff',
     },
   ],
   allowlist: [],
@@ -59,6 +59,25 @@ chrome.runtime.onInstalled.addListener((details) => {
           chrome.storage.local.remove(oldOptionName);
         }
       }
+      /**
+       * Convert any non-hex colors to hex.
+       */
+      currentOptions.highlighter.forEach((list) => {
+        // We used purple as a default list color in the past.
+        if (list.color === 'purple') {
+          list.color = '#800080';
+        } else if (list.color.startsWith('rgb')) {
+          list.color = rgbaStringToHex(list.color);
+        }
+        if (list.textColor.toLowerCase() === 'white') {
+          list.textColor = '#ffffff';
+        } else if (list.textColor.toLowerCase() === 'black') {
+          list.textColor = '#000000';
+        } else if (list.textColor.startsWith('rgb')) {
+          list.textColor = rgbaStringToHex(list.textColor);
+        }
+        chrome.storage.local.set({ highlighter: currentOptions.highlighter });
+      });
     });
   }
 });
@@ -114,4 +133,26 @@ function setBrowserIcon(color, tab = false) {
     iconObject.tabId = tab;
   }
   chrome.browserAction.setIcon(iconObject);
+}
+
+/** rgbaToHex and rgbaStringToHex functions -- keep in sync with options.js **/
+function rgbaToHex(rgba) {
+  const hex = `#${rgba
+    .map((n, i) =>
+      (i === 3 ? Math.round(parseFloat(n) * 255) : parseFloat(n))
+        .toString(16)
+        .padStart(2, '0')
+        .replace('NaN', ''),
+    )
+    .join('')}`;
+  return hexClean(hex);
+}
+function rgbaStringToHex(rgbaString) {
+  const rgba = rgbaString
+    .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
+    .slice(1);
+  return rgbaToHex(rgba);
+}
+function hexClean(hex) {
+  return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
 }
