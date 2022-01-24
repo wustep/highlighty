@@ -208,12 +208,12 @@ $(function () {
     const colorInput = $('#NewPhraseList__color')[0];
     const colorPicker = new Picker({
       alpha: false,
-      color: '#dbeb',
+      color: '#BB0000',
       parent: colorInput,
       popup: 'top',
       onDone: (color) => {
-        colorInput.style['background-color'] = rgbaToHex(color._rgba);
-        colorInput.style['color'] = getTextColor(color._rgba);
+        colorInput.style['background-color'] = hexClean(color.hex);
+        colorInput.style['color'] = getTextColor(color.rgba);
       },
     });
     $('#NewPhraseList__add').on('click', (e) => {
@@ -265,7 +265,7 @@ $(function () {
   }
 
   function setupPhraseListEditColorHandler($list) {
-    const currentColor = rgbaStringToHex($list.find('.PhraseList__color').css('background-color'));
+    const currentColor = rgbaStringToHex($list.find('.PhraseList__color').css('backgroundColor'));
     const colorButton = $list.find('.PhraseList__color')[0];
     const colorPicker = new Picker({
       alpha: false,
@@ -273,7 +273,7 @@ $(function () {
       parent: colorButton,
       popup: 'top',
       onDone: (newColor) => {
-        const newColorHexString = rgbaToHex(newColor._rgba);
+        const newColorHexString = hexClean(newColor.hex);
         colorButton.style['background-color'] = newColorHexString;
         colorPicker.setOptions({ color: newColorHexString });
         chrome.storage.local.get((options) => {
@@ -420,9 +420,14 @@ $(function () {
           if (Object.keys(phraseList).length > 0) {
             phraseListCount++;
             phraseCount += phraseList.phrases.length;
+
+            // Always export "hex" versions for consistency. In previous versions, we may stored rgba colors by mistake.
+            const phraseListColor = phraseList.color.startsWith('rgb')
+              ? rgbaStringToHex(phraseList.color)
+              : phraseList.color;
             highlighterExport.push({
               title: phraseList.title,
-              color: phraseList.color,
+              color: phraseListColor,
               phrases: phraseList.phrases,
             });
           }
@@ -619,7 +624,6 @@ $(function () {
    */
   function rgbaToHex(rgba) {
     const hex = `#${rgba
-      .filter((v, i) => i <= 3 || v == 1.0)
       .map((n, i) =>
         (i === 3 ? Math.round(parseFloat(n) * 255) : parseFloat(n))
           .toString(16)
@@ -627,7 +631,7 @@ $(function () {
           .replace('NaN', ''),
       )
       .join('')}`;
-    return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
+    return hexClean(hex);
   }
 
   /**
@@ -642,5 +646,14 @@ $(function () {
       .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
       .slice(1);
     return rgbaToHex(rgba);
+  }
+
+  /**
+   * Given a hex string color, e.g. #ffffff00, remove the opacity if-and-only-if it is "ff" (1.0).
+   *
+   * This makes the export a tad cleaner and easier to work with.
+   */
+  function hexClean(hex) {
+    return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
   }
 });
