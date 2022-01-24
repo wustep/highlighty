@@ -427,8 +427,8 @@ $(function () {
         $('#BulkExportModal').focus();
 
         const saveFileBlob = new Blob([highlightyExportText], { type: 'text/plain;charset=utf-8' });
-        $('#BulkExportModal__save').attr('href', URL.createObjectURL(saveFileBlob));
-        $('#BulkExportModal__save').attr(
+        $('#BulkExportModal__download').attr('href', URL.createObjectURL(saveFileBlob));
+        $('#BulkExportModal__download').attr(
           'download',
           'HighlightyExport' + new Date().toISOString().split('T')[0] + '.txt',
         );
@@ -619,8 +619,6 @@ $(function () {
    * https://stackoverflow.com/a/21646821
    */
   function hexToRgbArray(hexString) {
-    const hex = hexString.toUpperCase();
-    var h = '0123456789ABCDEF';
     var r = h.indexOf(hex[1]) * 16 + h.indexOf(hex[2]);
     var g = h.indexOf(hex[3]) * 16 + h.indexOf(hex[4]);
     var b = h.indexOf(hex[5]) * 16 + h.indexOf(hex[6]);
