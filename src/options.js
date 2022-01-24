@@ -1,6 +1,10 @@
 /* Highlighty.js | by Stephen Wu */
 
 $(function () {
+  /**
+   * Set up or reset the options page handlers and lists components.
+   * If fresh is false, then don't run the one-time handlers setup meant for a fresh load.
+   */
   function setupOptionsPage(options, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
@@ -9,6 +13,7 @@ $(function () {
     addExistingLists(options.highlighter);
     addExistingListStyles(options);
 
+    // These handlers should only be ran once.
     if (fresh) {
       setPrimarySettings(options);
       setupAutoHighlightHandler();
@@ -19,6 +24,7 @@ $(function () {
   }
 
   function removeExistingLists() {
+    // This will also remove all associated handlers in the phrase list
     $('.PhraseList').not('#PhraseList--invisible').remove();
   }
 
@@ -434,7 +440,7 @@ $(function () {
       chrome.storage.local.set({ highlighter: newHighlighter }, () => {
         // Rather than making some changes, re-doing the whole settings page is just easier
         chrome.storage.local.get((options) => {
-          setupOptionsPage(options, true);
+          setupOptionsPage(options, false);
         });
       });
       $('#BulkImportModal').removeClass('is-active');
