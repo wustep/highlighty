@@ -3,22 +3,34 @@
 $(function () {
   const HL_STYLE_ID = 'HighlighterStyles'; // Style block containing highlighter styles
 
-  function setupOptionsPage(options) {
+  function setupOptionsPage(options, fresh = true) {
+    removeExistingLists();
     removeExistingListStyles();
-    setPrimarySettings(options);
 
     addExistingURLLists(options);
+    addExistingLists(options.highlighter);
     addExistingListStyles(options);
-    addExistingLists(options);
 
-    setupAutoHighlightHandler();
-    setupURLListHandlers();
-    setupAddPhraseListHandler();
-    setupImportExportModals();
+    if (fresh) {
+      setPrimarySettings(options);
+      setupAutoHighlightHandler();
+      setupURLListHandlers();
+      setupAddPhraseListHandler();
+      setupImportExportModals();
+    }
+  }
+
+  function removeExistingLists() {
+    $('.PhraseList').not('#PhraseList--invisible').remove();
   }
 
   function removeExistingListStyles() {
     $(`.${HL_STYLE_ID}`).remove();
+  }
+
+  function redoAllListStyles(options) {
+    removeExistingListStyles();
+    addExistingListStyles(options);
   }
 
   function setPrimarySettings(options) {
@@ -92,42 +104,55 @@ $(function () {
     $('head').append(highlighterStyles);
   }
 
-  function addExistingLists(options) {
-    for (let i = 0; i < options.highlighter.length; i++) {
-      if (Object.keys(options.highlighter[i]).length) {
+  function addExistingLists(highlighter, isImportPreview = false) {
+    for (let i = 0; i < highlighter.length; i++) {
+      if (Object.keys(highlighter[i]).length) {
         let $newListDiv = addNewListDiv(
-          options.highlighter[i].title,
-          options.highlighter[i].color,
+          highlighter[i].title,
+          highlighter[i].color,
           i,
+          isImportPreview,
         );
-        for (let j = 0; j < options.highlighter[i].phrases.length; j++) {
-          addPhraseElement($newListDiv, options.highlighter[i].phrases[j], i);
+        for (let j = 0; j < highlighter[i].phrases.length; j++) {
+          if (isImportPreview) {
+            addPreviewPhraseElement($newListDiv, highlighter[i].phrases[j], highlighter[i].color);
+          } else {
+            addPhraseElement($newListDiv, highlighter[i].phrases[j], i);
+          }
         }
       }
     }
   }
 
-  function addNewListDiv(title, color, index) {
-    $newListDiv = $('#PhraseList--invisible')
+  function addNewListDiv(title, color, index, isImportPreview = false) {
+    $newListDiv = $(!isImportPreview ? '#PhraseList--invisible' : '#PhraseListPreview--invisible')
       .clone()
       .attr('id', `PhraseList--${index}`)
       .data('index', index);
     $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
-    setupPhraseListHandlers($newListDiv);
-    $newListDiv.insertBefore('#NewPhraseList');
+    if (isImportPreview) {
+      $('#BulkImportPreviewModal__preview').append($newListDiv);
+    } else {
+      setupPhraseListHandlers($newListDiv);
+      $newListDiv.insertBefore('#NewPhraseList');
+    }
     return $newListDiv;
   }
 
   function addPhraseElement($listDiv, phrase, listIndex) {
+    $listDiv.find('.PhraseList__phrases').append(
+      `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}" data-list="${listIndex}">${phrase}
+          <button class="delete is-small PhraseList__phrase__delete"></button>
+        </span>`,
+    );
+  }
+  function addPreviewPhraseElement($listDiv, phrase, color) {
+    const textColor = getTextColor(color);
     $listDiv
       .find('.PhraseList__phrases')
       .append(
-        `<span class="tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}"` +
-          ` data-list="${listIndex}">` +
-          phrase +
-          `<button class="delete is-small PhraseList__phrase__delete"></button>` +
-          `</span>`,
+        `<span class="tag is-medium PhraseList__phrase" style="background-color:${color};color:${textColor}">${phrase}</span>`,
       );
   }
 
@@ -234,10 +259,7 @@ $(function () {
           title: listTitle,
         };
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-          /* TODO: [Low] Add styles smarter here instead of redoing them all
-               We redo them all in case of an index taking the spot of an old deleted list */
-          removeExistingListStyles();
-          addExistingListStyles(options);
+          redoAllListStyles(options);
           $('#NewPhraseList__title').val('');
         });
       });
@@ -255,7 +277,7 @@ $(function () {
   }
 
   function setupPhraseListEditColorHandler($list) {
-    const currentColor = rgbaStringToHex($list.find('.PhraseList__color').css('backgroundColor'));
+    const currentColor = rgbaStringToHex($list.find('.PhraseList__color').css('background-color'));
     const colorButton = $list.find('.PhraseList__color')[0];
     const colorPicker = new Picker({
       alpha: false,
@@ -270,9 +292,7 @@ $(function () {
           options.highlighter[$list.data('index')].color = newColorHexString;
           options.highlighter[$list.data('index')].textColor = getTextColor(newColorHexString);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-            /* TODO: [Low] Edit styles smarter here instead of redoing them all? */
-            removeExistingListStyles();
-            addExistingListStyles(options);
+            redoAllListStyles(options);
           });
         });
       },
@@ -399,6 +419,143 @@ $(function () {
     });
   }
 
+  /**
+   * Given an object represent a preview of the new highlighter list settings after the import,
+   * set up the bulk preview modal.
+   */
+  function setupBulkImportPreviewModal(newHighlighter) {
+    $('#BulkImportPreviewModal__preview').html('');
+    $('#BulkImportPreviewModal__phraseListCount').text(newHighlighter.length);
+    $('#BulkImportPreviewModal__phraseCount').text(
+      newHighlighter.reduce((prev, curr) => prev + curr.phrases.length, 0),
+    );
+    addExistingLists(newHighlighter, true);
+    $('#BulkImportPreviewModal').addClass('is-active');
+    $('#BulkImportPreviewModal__import').on('click', (e) => {
+      chrome.storage.local.set({ highlighter: newHighlighter }, () => {
+        // Rather than making some changes, re-doing the whole settings page is just easier
+        chrome.storage.local.get((options) => {
+          setupOptionsPage(options, true);
+        });
+      });
+      $('#BulkImportModal').removeClass('is-active');
+      $('#BulkImportPreviewModal').removeClass('is-active');
+      $('#BulkImportModal__body').val('');
+    });
+  }
+
+  function setupBulkImportModal() {
+    $('#BulkImport').on('click', (e) => {
+      $('#BulkImportModal').addClass('is-active');
+    });
+
+    $('#BulkImportModal__typesSelect').change((e) => {
+      $('#BulkImportModal__typesInfo > div').hide();
+      const importType = e.target.value;
+      const importName = $.trim($(`#BulkImportModal__typesSelect--${importType}`).text());
+      $(`#BulkImportModal__typesInfo--${importType}`).show();
+      $('#BulkImportPreviewModal__optionName').text(importName);
+    });
+
+    $('#BulkImportModal__previewImport').on('click', (e) => {
+      const importType = $('#BulkImportModal__typesSelect').val();
+      const importBody = $('#BulkImportModal__body').val();
+      try {
+        // Validate the contents of the import text.
+        const importBodyParsed = JSON.parse(importBody);
+        const newImportLists = [];
+        if (!Array.isArray(importBodyParsed) || importBodyParsed.length === 0) {
+          throw new Error(
+            `Imported contents must be a non-empty array representing phrase lists. Check the Bulk Export tool for an example.`,
+          );
+        }
+        importBodyParsed.forEach((phraseList, i) => {
+          const phraseListKeys = Object.keys(phraseList);
+          if (!phraseListKeys.includes('title') || typeof phraseList['title'] !== 'string') {
+            throw new Error(`List ${i} must have proper "title" string property`);
+          }
+          if (
+            !phraseListKeys.includes('color') ||
+            typeof phraseList['color'] !== 'string' ||
+            !phraseList['color'].match(/#[a-f\d]{3}(?:[a-f\d]?|(?:[a-f\d]{3}(?:[a-f\d]{2})?)?)\b/)
+          ) {
+            throw new Error(
+              `List ${i} must have proper "color" property with hexidecimal color string, e.g. "#ffffff"`,
+            );
+          }
+          if (!phraseListKeys.includes('phrases') || !Array.isArray(phraseList['phrases'])) {
+            throw new Error(
+              `List ${i} must have proper "phrases" property with array of phrases, e.g. ["Hello", "world"]`,
+            );
+          }
+          for (phrase of phraseList['phrases']) {
+            if (typeof phrase !== 'string') {
+              throw new Error(`List ${i}'s phrases must be all strings, e.g. ["Hello", "world"].`);
+            }
+          }
+          newImportLists.push({
+            color: phraseList['color'],
+            phrases: phraseList['phrases'],
+            textColor: getTextColor(phraseList['color']),
+            title: phraseList['title'],
+          });
+        });
+
+        // Set up the new highlighter object as preview, then setup & open the modal
+        // Note that because chrome.storage.local.get is async, we have to put the modal set up inside that call.
+        let newHighlighter = [];
+        if (importType === 'ImportAsNew') {
+          chrome.storage.local.get((options) => {
+            newHighlighter = options.highlighter
+              .concat(newImportLists)
+              .filter((list) => Object.keys(list).length > 0);
+            setupBulkImportPreviewModal(newHighlighter);
+          });
+        } else if (importType === 'ImportAndMerge') {
+          chrome.storage.local.get((options) => {
+            // Create a copy of existing lists to be able to merge with.
+            const existingLists = Object.assign(options.highlighter).filter(
+              (list) => Object.keys(list).length > 0,
+            );
+            const newListsToAppend = [];
+            newImportLists.forEach((newList) => {
+              const existingListsWithSameName = existingLists.filter(
+                (list) => list.title === newList.title,
+              );
+              if (existingListsWithSameName.length > 0) {
+                const existingListToMerge = existingListsWithSameName[0];
+                existingListToMerge.phrases = arrayMerge(
+                  existingListToMerge.phrases,
+                  newList.phrases,
+                );
+                existingListToMerge.color = newList.color;
+              } else {
+                newListsToAppend.push(newList);
+              }
+              newHighlighter = existingLists.concat(newListsToAppend);
+              setupBulkImportPreviewModal(newHighlighter);
+            });
+          });
+        } else if (importType === 'Replace') {
+          newHighlighter = [].concat(newImportLists);
+          setupBulkImportPreviewModal(newHighlighter);
+        } else {
+          alert(
+            `Invalid import type: ${importType}. Please report this bug via the Contact form on Info!`,
+          );
+        }
+      } catch (e) {
+        if ($.trim(importBody).length === 0) {
+          alert('Nothing to import!');
+        } else {
+          alert(
+            `Invalid import text! Please ensure your import was formatted properly from the Bulk Export tool.\r\n\r\Debug Error: ${e.message}\r\n\r\nIf you think this is a bug, please report via the contact form on the Info page!`,
+          );
+        }
+      }
+    });
+  }
+
   function setupBulkExportModal() {
     $('#BulkExport').on('click', (e) => {
       $('#BulkExportModal').addClass('is-active');
@@ -415,6 +572,7 @@ $(function () {
             const phraseListColor = phraseList.color.startsWith('rgb')
               ? rgbaStringToHex(phraseList.color)
               : phraseList.color;
+
             highlighterExport.push({
               title: phraseList.title,
               color: phraseListColor,
@@ -450,6 +608,7 @@ $(function () {
     setupImportSubmitButton();
     setupExportCopyButton();
 
+    setupBulkImportModal();
     setupBulkExportModal();
   }
 
@@ -474,6 +633,12 @@ $(function () {
     });
     $('#BulkExportModal__cancel, #BulkExportModal__close').on('click', (e) => {
       $('#BulkExportModal').removeClass('is-active');
+    });
+    $('#BulkImportModal__cancel, #BulkImportModal__close').on('click', (e) => {
+      $('#BulkImportModal').removeClass('is-active');
+    });
+    $('#BulkImportPreviewModal__cancel, #BulkImportPreviewModal__close').on('click', (e) => {
+      $('#BulkImportPreviewModal').removeClass('is-active');
     });
   }
 
@@ -669,3 +834,11 @@ $(function () {
     return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
   }
 });
+
+/**
+ * Merge two arrays without duplicates:
+ * https://stackoverflow.com/a/23080662
+ * */
+function arrayMerge(array1, array2) {
+  return array1.concat(array2.filter((item) => array1.indexOf(item) < 0));
+}

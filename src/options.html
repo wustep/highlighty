@@ -170,7 +170,7 @@
 
       <div class="container" id="PhraseLists">
         <h2 class="title">Lists</h2>
-        <div class="box" class="PhraseList" id="PhraseList--invisible">
+        <div class="box PhraseList" id="PhraseList--invisible">
           <div class="columns">
             <div class="column is-three-fifths">
               <div class="field is-grouped PhraseList__header">
@@ -319,6 +319,107 @@
         </footer>
       </div>
     </div>
+    <!-- Modal: Bulk Import -->
+    <div class="modal" id="BulkImportModal">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Bulk Import</p>
+          <button id="BulkImportModal__close" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <div class="field">
+            <label class="label">Import Type</label>
+            <div class="control">
+              <div class="select">
+                <select id="BulkImportModal__typesSelect">
+                  <option id="BulkImportModal__typesSelect--ImportAsNew" value="ImportAsNew">
+                    Import as new lists
+                  </option>
+                  <option id="BulkImportModal__typesSelect--ImportAndMerge" value="ImportAndMerge">
+                    Import and merge lists
+                  </option>
+                  <option id="BulkImportModal__typesSelect--Replace" value="Replace">
+                    Replace existing lists
+                  </option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="BulkImportModal__typesInfo">
+            <div id="BulkImportModal__typesInfo--ImportAsNew">
+              <article class="message is-info">
+                <div class="message-body">
+                  With this <b>Import</b> option, all your existing lists will be unchanged. All
+                  imported lists will be added as new lists.
+                </div>
+              </article>
+            </div>
+            <div id="BulkImportModal__typesInfo--ImportAndMerge" style="display: none">
+              <article class="message is-warning">
+                <div class="message-body">
+                  With this <b>Import and merge</b> option, all imported lists will either appear as
+                  new lists or be merged with existing lists with the same exact name if a match
+                  exists.<br />
+                  If you have multiple lists with the same name, only your first list will be merged
+                  with the new lists. List colors of merged lists will also be changed to the color
+                  specified in the import, if different.
+                </div>
+              </article>
+            </div>
+            <div id="BulkImportModal__typesInfo--Replace" style="display: none">
+              <article class="message is-danger">
+                <div class="message-body">
+                  With the <b>Replace</b> option, all your existing phrase lists will be deleted and
+                  replaced with the imported lists.
+                </div>
+              </article>
+            </div>
+          </div>
+          <textarea id="BulkImportModal__body" class="textarea"></textarea>
+        </section>
+        <footer class="modal-card-foot">
+          <button id="BulkImportModal__previewImport" class="button is-link">Preview Import</button>
+          <button id="BulkImportModal__cancel" class="button">Cancel</button>
+        </footer>
+      </div>
+    </div>
+    <!-- Modal-on-Modal: Bulk Import Preview-->
+    <div class="box" class="PhraseList" id="PhraseListPreview--invisible">
+      <h2 class="title is-4">
+        <button class="PhraseList__color" style="background-color: #000000"></button>
+        <span class="PhraseList__title"></span>
+      </h2>
+      <div class="PhraseList__phrases"></div>
+    </div>
+
+    <div class="modal" id="BulkImportPreviewModal">
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title">Bulk Import: Preview</p>
+          <button id="BulkImportPreviewModal__close" class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+          <article class="message is-info">
+            <div class="message-body">
+              After importing with the
+              <b><span id="BulkImportPreviewModal__optionName">Import</span></b> option, all your
+              lists will look like the result below. If this looks right, and you're certain you
+              want to proceed with the import, click the "Import" button.<br />You will end up with
+              <span id="BulkImportPreviewModal__phraseListCount">0</span> lists with
+              <span id="BulkImportPreviewModal__phraseCount">0</span> phrases in total after the
+              import.
+            </div>
+          </article>
+          <div id="BulkImportPreviewModal__preview"></div>
+        </section>
+        <footer class="modal-card-foot">
+          <button id="BulkImportPreviewModal__import" class="button is-link">Import</button>
+          <button id="BulkImportPreviewModal__cancel" class="button">Cancel</button>
+        </footer>
+      </div>
+    </div>
     <!-- Modal: Bulk Export -->
     <div class="modal" id="BulkExportModal">
       <div class="modal-background"></div>
@@ -330,8 +431,6 @@
         <section class="modal-card-body">
           <article class="message is-info">
             <div class="message-body">
-              To export all of your phrase lists, hit the "Copy" or "Save" button below! Then you
-              can use the "Bulk Import" tool to import the phrases in the future or to another
               To export all of your phrase lists, hit the "Copy" or "Download" button below! Then
               you can use the "Bulk Import" tool to import the phrases in the future or to another
               installation.

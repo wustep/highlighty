@@ -37,7 +37,8 @@
 
 /* Phrase & URL lists */
 
-#PhraseList--invisible {
+#PhraseList--invisible,
+#PhraseListPreview--invisible {
   display: none;
 }
 
@@ -92,6 +93,11 @@ span.Allowlist__url {
   padding-top: 1rem;
 }
 
+#BulkImportModal__typesInfo {
+  padding-bottom: 1rem;
+}
+
+#BulkImportModal__body,
 #BulkExportModal__body {
   height: 15em;
   font-size: 0.8em;
