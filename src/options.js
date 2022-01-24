@@ -1,8 +1,6 @@
 /* Highlighty.js | by Stephen Wu */
 
 $(function () {
-  const HL_STYLE_ID = 'HighlighterStyles'; // Style block containing highlighter styles
-
   function setupOptionsPage(options, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
@@ -25,7 +23,7 @@ $(function () {
   }
 
   function removeExistingListStyles() {
-    $(`.${HL_STYLE_ID}`).remove();
+    $(`.HighlighterStyles`).remove();
   }
 
   function redoAllListStyles(options) {
@@ -91,7 +89,7 @@ $(function () {
   }
 
   function addExistingListStyles(options) {
-    let highlighterStyles = `<style id="${HL_STYLE_ID}">span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
+    let highlighterStyles = `<style id="HighlighterStyles">span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) {
         // Skip deleted lists!
