@@ -213,6 +213,7 @@ $(function () {
       popup: 'top',
       onDone: (color) => {
         colorInput.style['background-color'] = hexClean(color.hex);
+        colorInput.style['color'] = getTextColor(color.hex);
       },
     });
     $('#NewPhraseList__add').on('click', (e) => {
@@ -267,6 +268,7 @@ $(function () {
         colorPicker.setOptions({ color: newColorHexString });
         chrome.storage.local.get((options) => {
           options.highlighter[$list.data('index')].color = newColorHexString;
+          options.highlighter[$list.data('index')].textColor = getTextColor(newColorHexString);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             /* TODO: [Low] Edit styles smarter here instead of redoing them all? */
             removeExistingListStyles();
@@ -619,6 +621,8 @@ $(function () {
    * https://stackoverflow.com/a/21646821
    */
   function hexToRgbArray(hexString) {
+    const hex = hexString.toLowerCase();
+    var h = '0123456789abcdef';
     var r = h.indexOf(hex[1]) * 16 + h.indexOf(hex[2]);
     var g = h.indexOf(hex[3]) * 16 + h.indexOf(hex[4]);
     var b = h.indexOf(hex[5]) * 16 + h.indexOf(hex[6]);
