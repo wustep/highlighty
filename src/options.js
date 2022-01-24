@@ -431,6 +431,7 @@ $(function () {
     );
     addExistingLists(newHighlighter, true);
     $('#BulkImportPreviewModal').addClass('is-active');
+    $('#BulkImportPreviewModal__import').off('click');
     $('#BulkImportPreviewModal__import').on('click', (e) => {
       chrome.storage.local.set({ highlighter: newHighlighter }, () => {
         // Rather than making some changes, re-doing the whole settings page is just easier
