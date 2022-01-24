@@ -328,6 +328,13 @@
           <button id="BulkExportModal__close" class="delete" aria-label="close"></button>
         </header>
         <section class="modal-card-body">
+          <article class="message is-info">
+            <div class="message-body">
+              To export all of your phrase lists, hit the "Copy" or "Save" button below! Then you
+              can use the "Bulk Import" tool to import the phrases in the future or to another
+              installation.
+            </div>
+          </article>
           <div id="BulkExportModal__listSelectionSection"></div>
           <div id="BulkExportModal__bodySection">
             <textarea id="BulkExportModal__body" class="textarea" readonly></textarea>
@@ -335,9 +342,11 @@
         </section>
         <footer class="modal-card-foot">
           <button id="BulkExportModal__copy" class="button is-link">Copy</button>
+          <a id="BulkExportModal__save" class="button is-info">Save</a>
           <button id="BulkExportModal__cancel" class="button">Close</button>
-          <span>Lists: <span id="BulkExportModal__phraseListCount">0</span>
-          <span>Phrases: <span id="BulkExportModal__phraseCount">0</span>
+          <div>Lists: <span id="BulkExportModal__phraseListCount">0</span></div>
+          &nbsp;
+          <div>Phrases: <span id="BulkExportModal__phraseCount">0</span></div>
         </footer>
       </div>
     </div>

@@ -427,10 +427,18 @@ $(function () {
             });
           }
         });
-        $('#BulkExportModal__body').val(JSON.stringify(highlighterExport, null, 2));
+        const highlightyExportText = JSON.stringify(highlighterExport, null, 2);
+        $('#BulkExportModal__body').val(highlightyExportText);
         $('#BulkExportModal__phraseListCount').text(phraseListCount);
         $('#BulkExportModal__phraseCount').text(phraseCount);
         $('#BulkExportModal').focus();
+
+        const saveFileBlob = new Blob([highlightyExportText], { type: 'text/plain;charset=utf-8' });
+        $('#BulkExportModal__save').attr('href', URL.createObjectURL(saveFileBlob));
+        $('#BulkExportModal__save').attr(
+          'download',
+          'HighlightyExport' + new Date().toISOString().split('T')[0] + '.txt',
+        );
       });
     });
 
