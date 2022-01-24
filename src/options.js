@@ -572,15 +572,9 @@ $(function () {
           if (Object.keys(phraseList).length > 0) {
             phraseListCount++;
             phraseCount += phraseList.phrases.length;
-
-            // Always export "hex" versions for consistency. In previous versions, we may stored rgba colors by mistake.
-            const phraseListColor = phraseList.color.startsWith('rgb')
-              ? rgbaStringToHex(phraseList.color)
-              : phraseList.color;
-
             highlighterExport.push({
               title: phraseList.title,
-              color: phraseListColor,
+              color: phraseList.color,
               phrases: phraseList.phrases,
             });
           }
@@ -799,6 +793,7 @@ $(function () {
     return [r, g, b];
   }
 
+  /** rgbaToHex, rgbaStringToHex, hexClean functions -- keep in sync with background.js **/
   /**
    * Given rgba array, convert to hex string
    * e.g. [187, 0, 0, 1], -> "#BB0000"
