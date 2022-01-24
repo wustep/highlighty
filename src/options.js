@@ -213,7 +213,6 @@ $(function () {
       popup: 'top',
       onDone: (color) => {
         colorInput.style['background-color'] = hexClean(color.hex);
-        colorInput.style['color'] = getTextColor(color.rgba);
       },
     });
     $('#NewPhraseList__add').on('click', (e) => {
@@ -244,16 +243,6 @@ $(function () {
     });
   }
 
-  /**
-   * Returns black or white based on the background color provided.
-   * backgroundColor should be Array of [r,g,b]
-   * https://stackoverflow.com/a/1855903
-   */
-  function getTextColor(rgb) {
-    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
-    return luminance > 0.5 ? '#000000' : '#ffffff';
-  }
-
   function setupPhraseListHandlers($list) {
     setupPhraseListEditColorHandler($list);
     setupPhraseListEditNameHandler($list);
@@ -278,7 +267,6 @@ $(function () {
         colorPicker.setOptions({ color: newColorHexString });
         chrome.storage.local.get((options) => {
           options.highlighter[$list.data('index')].color = newColorHexString;
-          options.highlighter[$list.data('index')].textColor = getTextColor(newColor._rgba);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             /* TODO: [Low] Edit styles smarter here instead of redoing them all? */
             removeExistingListStyles();
@@ -615,6 +603,28 @@ $(function () {
 
   function pluralize(count, noun, suffix = 's') {
     return `${count} ${noun}${count !== 1 ? suffix : ''}`;
+  }
+
+  /**
+   * Returns either black or white -- whichever would look better as a text color on the hex background color provided.
+   * https://stackoverflow.com/a/1855903
+   */
+  function getTextColor(hex) {
+    const rgb = hexToRgbArray(hex);
+    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+  }
+  /**
+   * Given hex string, convert to rgb array
+   * https://stackoverflow.com/a/21646821
+   */
+  function hexToRgbArray(hexString) {
+    const hex = hexString.toUpperCase();
+    var h = '0123456789ABCDEF';
+    var r = h.indexOf(hex[1]) * 16 + h.indexOf(hex[2]);
+    var g = h.indexOf(hex[3]) * 16 + h.indexOf(hex[4]);
+    var b = h.indexOf(hex[5]) * 16 + h.indexOf(hex[6]);
+    return [r, g, b];
   }
 
   /**
