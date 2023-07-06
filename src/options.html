@@ -170,6 +170,22 @@
 
       <div class="container" id="PhraseLists">
         <h2 class="title">Lists</h2>
+        <div class="field is-grouped">
+            <div class="control">
+              <div class="select">
+                <select id="Settings__Sorted">
+                  <option value="-1">Not Sorted</option>
+                  <option value="117">A-Z</option>
+                  <option value="120">Z-A</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-label is-normal">
+              <label for="Settings__Sorted" class="label is-pulled-left"
+                >Sorted List</label
+              >
+            </div>
+          </div>
         <div class="box PhraseList" id="PhraseList--invisible">
           <div class="columns">
             <div class="column is-three-fifths">
@@ -186,6 +202,10 @@
                 <button class="button is-link PhraseList__import">Import</button>
                 <button class="button is-success PhraseList__export">Export</button>
                 <button class="button is-danger PhraseList__delete">Delete</button>
+              </div>
+              <div class="buttons has-addons is-right">
+                <button class="button is-success">On</button>
+                <button class="button">Off</button>
               </div>
             </div>
           </div>
