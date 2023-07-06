@@ -360,7 +360,8 @@ $(function () {
     let $phrases = $list.find('.PhraseList__phrases');
     $phrases.on('click', '.PhraseList__phrase__delete', (e) => {
       let $phrase = $(e.target).parent();
-      if (window.confirm('Are you sure you want to delete: ' + $phrase.text() + '?')) {
+      let confirmationMessage = 'Are you sure you want to delete: ' + $phrase.text().trim() + '?';
+      if (window.confirm(confirmationMessage)) {
         chrome.storage.local.get((options) => {
           let phraseIndex = options.highlighter[listIndex].phrases.indexOf($phrase.text());
           options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
