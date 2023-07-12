@@ -22,6 +22,7 @@ const defaultOptions = {
   enableURLDenylist: false,
   enableURLAllowlist: false,
   keyboardShortcut: 117,
+  sorting: "Not Sorted"
 };
 
 const migratedOptionsMap = {

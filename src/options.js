@@ -6,12 +6,6 @@ $(function () {
    * If fresh is false, then don't run the one-time handlers setup meant for a fresh load.
    */
   function setupOptionsPage(options, fresh = true) {
-    removeExistingLists();
-    removeExistingListStyles();
-
-    addExistingLists(options.highlighter);
-    addExistingListStyles(options);
-
     // These handlers should only be ran once.
     if (fresh) {
       addExistingURLLists(options);
@@ -21,6 +15,14 @@ $(function () {
       setupAddPhraseListHandler();
       setupImportExportModals();
     }
+    
+    removeExistingLists();
+    removeExistingListStyles();
+
+    addExistingLists(options);
+    addExistingListStyles(options);
+
+    
   }
 
   function removeExistingLists() {
@@ -46,6 +48,7 @@ $(function () {
     $('#Settings__keyboardShortcut').val(options.keyboardShortcut);
     $('#Settings__enableURLDenylist').attr('checked', options.enableURLDenylist);
     $('#Settings__enableURLAllowlist').attr('checked', options.enableURLAllowlist);
+    $('#Settings__sorting').val(options.sorting);
     showHideAutoHighlightSettings();
   }
 
@@ -108,7 +111,8 @@ $(function () {
     $('head').append(highlighterStyles);
   }
 
-  function addExistingLists(highlighter, isImportPreview = false) {
+  function addExistingLists(options, isImportPreview = false) {
+    var highlighter = options.highlighter
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
         let $newListDiv = addNewListDiv(
@@ -117,15 +121,45 @@ $(function () {
           i,
           isImportPreview,
         );
-        for (let j = 0; j < highlighter[i].phrases.length; j++) {
+        const sortedList = sortPhrases(options.highlighter[i].phrases);
+        for (let j = 0; j < sortedList.length; j++) {
           if (isImportPreview) {
-            addPreviewPhraseElement($newListDiv, highlighter[i].phrases[j], highlighter[i].color);
+            addPreviewPhraseElement($newListDiv, sortedList[j], highlighter[i].color);
           } else {
-            addPhraseElement($newListDiv, highlighter[i].phrases[j], i);
+            addPhraseElement($newListDiv, sortedList[j], i);
           }
         }
       }
     }
+  }
+  
+  //alphabetically sorts a list of strings
+  function alphSort(list){
+    list.sort((a, b) => {
+      const phraseA = a.toLowerCase();
+      const phraseB = b.toLowerCase();
+      if (phraseA < phraseB) {return -1;}
+      if (phraseA > phraseB) {return 1;}
+      return 0;
+    });
+    return list;
+  }
+
+  //determines sorting of given list of phrases
+  function sortPhrases(phrases){
+    var list = [];
+    //populate list to sort, leaving options unsorted
+    for (const element of phrases){
+      list.push(element);
+    }
+    var order = $('#Settings__sorting').val();
+    if(order != "Not Sorted"){
+      list = alphSort(list);
+      if(order === "Z-A"){
+        list.reverse();
+      }
+    }
+    return list;
   }
 
   function addNewListDiv(title, color, index, isImportPreview = false) {
@@ -744,6 +778,7 @@ $(function () {
       let newKeyboardShortcut = $('#Settings__keyboardShortcut').val();
       let newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
       let newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
+      let newSorting = $('#Settings__sorting').val();
 
       let newOptions = {
         enableAutoHighlight: newEnableAutoHighlight,
@@ -754,8 +789,9 @@ $(function () {
         enableURLDenylist: newEnableURLDenylist,
         enableURLAllowlist: newEnableURLAllowlist,
         keyboardShortcut: newKeyboardShortcut,
+        sorting: newSorting,
       };
-
+      
       if (newEnableAutoHighlight !== options.newEnableAutoHighlight) {
         newOptions.autoHighlighter = true; // No harm in setting this to true either way.
         setHighlightBadge(newOptions);
@@ -764,6 +800,7 @@ $(function () {
       chrome.storage.local.set(newOptions, () => {
         alert('Settings saved!');
       });
+      setupOptionsPage(options, false);
     });
   });
 
