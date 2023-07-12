@@ -10,7 +10,7 @@ $(function () {
     removeExistingListStyles();
 
     addExistingLists(options.highlighter);
-    addExistingListStyles(options);
+    redoAllListStyles(options);
 
     // These handlers should only be ran once.
     if (fresh) {
@@ -29,7 +29,7 @@ $(function () {
   }
 
   function removeExistingListStyles() {
-    $(`.HighlighterStyles`).remove();
+    $('#HighlighterStyles').remove();
   }
 
   function redoAllListStyles(options) {
@@ -97,10 +97,9 @@ $(function () {
   function addExistingListStyles(options) {
     let highlighterStyles = `<style id="HighlighterStyles">span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
-      // Destructuring assignment for color, textColor
       const { color: highlighterColor = 'black', textColor = 'white' } = options.highlighter[i];
-      // Only true for non-empty lists, skipping empty lists
-      if (options.highlighter[i]) {
+      // Skip empty lists!
+      if (Object.keys(options.highlighter[i]).length) {
         $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
           backgroundColor: highlighterColor,
           color: textColor
@@ -155,14 +154,22 @@ $(function () {
           <button class="delete is-small PhraseList__phrase__delete"></button>
         </span>`,
     );
-    updatePhraseCount($listDiv, 1); // Increments the phrase count
+    incrementPhraseCount($listDiv);
   }
 
-  function updatePhraseCount($listDiv, countChange) {
+  function incrementPhraseCount($listDiv) {
     const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
     // Defaults to 0 if data-count attribute not set
     let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
-    phraseCount += countChange;
+    phraseCount++;
+    $phraseCount.data('count', phraseCount);
+    $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
+  }
+
+  function decrementPhraseCount($listDiv) {
+    const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
+    let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
+    phraseCount--;
     $phraseCount.data('count', phraseCount);
     $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
   }
@@ -383,7 +390,7 @@ $(function () {
           options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             $phrases.find($phrase).remove();
-            updatePhraseCount($list, -1); // Decrements the phrase count
+            decrementPhraseCount($list);
           });
         });
       }
