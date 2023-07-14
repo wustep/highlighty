@@ -29,7 +29,7 @@ $(function () {
   }
 
   function removeExistingListStyles() {
-    $(`.HighlighterStyles`).remove();
+    $('#HighlighterStyles').remove();
   }
 
   function redoAllListStyles(options) {
@@ -97,10 +97,13 @@ $(function () {
   function addExistingListStyles(options) {
     let highlighterStyles = `<style id="HighlighterStyles">span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
+      const { color: highlighterColor = 'black', textColor = 'white' } = options.highlighter[i];
+      // Skip empty lists!
       if (Object.keys(options.highlighter[i]).length) {
-        // Skip deleted lists!
-        let highlighterColor = options.highlighter[i].color || 'black';
-        let textColor = options.highlighter[i].textColor || 'white';
+        $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
+          backgroundColor: highlighterColor,
+          color: textColor
+        });
         highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
       }
     }
@@ -135,6 +138,7 @@ $(function () {
       .data('index', index);
     $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
+    $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
     if (isImportPreview) {
       $('#BulkImportPreviewModal__preview').append($newListDiv);
     } else {
@@ -150,7 +154,26 @@ $(function () {
           <button class="delete is-small PhraseList__phrase__delete"></button>
         </span>`,
     );
+    incrementPhraseCount($listDiv);
   }
+
+  function incrementPhraseCount($listDiv) {
+    const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
+    // Defaults to 0 if data-count attribute not set
+    let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
+    phraseCount++;
+    $phraseCount.data('count', phraseCount);
+    $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
+  }
+
+  function decrementPhraseCount($listDiv) {
+    const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
+    let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
+    phraseCount--;
+    $phraseCount.data('count', phraseCount);
+    $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
+  }
+  
   function addPreviewPhraseElement($listDiv, phrase, color) {
     const textColor = getTextColor(color);
     $listDiv
@@ -367,6 +390,7 @@ $(function () {
           options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             $phrases.find($phrase).remove();
+            decrementPhraseCount($list);
           });
         });
       }
