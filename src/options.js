@@ -10,7 +10,7 @@ $(function () {
     removeExistingListStyles();
 
     addExistingLists(options.highlighter);
-    redoAllListStyles(options);
+    addExistingListStyles(options);
 
     // These handlers should only be ran once.
     if (fresh) {
