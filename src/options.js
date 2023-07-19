@@ -114,6 +114,7 @@ $(function () {
   function addExistingLists(highlighter, isImportPreview = false) {
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
+        $('#PhraseList__toggle').attr('checked', highlighter[i].toggle);
         let $newListDiv = addNewListDiv(
           highlighter[i].title,
           highlighter[i].color,
@@ -284,6 +285,7 @@ $(function () {
           color: listColor,
           textColor: listTextColor,
           title: listTitle,
+          toggle: true,
         };
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -301,6 +303,7 @@ $(function () {
     setupPhraseListDeleteHandler($list);
     setupPhraseListAddPhraseHandler($list);
     setupPhraseListDeletePhraseHandler($list);
+    setupPhraseListToggleHandler($list);
   }
 
   function setupPhraseListEditColorHandler($list) {
@@ -339,6 +342,17 @@ $(function () {
           });
         });
       }
+    });
+  }
+
+  function setupPhraseListToggleHandler($list){
+    $list.on('click', '.PhraseList__toggle', () => {
+      let newToggle = $('#PhraseList__toggle').is(':checked');
+      let listIndex = $list.data('index');
+      chrome.storage.local.get((options) => {
+        options.highlighter[listIndex].toggle = newToggle;
+        chrome.storage.local.set({highlighter: options.highlighter });
+      });
     });
   }
 
@@ -528,6 +542,7 @@ $(function () {
             phrases: phraseList['phrases'],
             textColor: getTextColor(phraseList['color']),
             title: phraseList['title'],
+            toggle: phraseList['toggle'],
           });
         });
 
@@ -601,6 +616,7 @@ $(function () {
               title: phraseList.title,
               color: phraseList.color,
               phrases: phraseList.phrases,
+              toggle: phraseList.toggle,
             });
           }
         });

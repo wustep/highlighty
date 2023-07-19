@@ -82,14 +82,17 @@ $(function () {
   function highlightPhrases(options) {
     log('highlightPhrases start');
     for (let phraseListIndex in phrasesToHighlight) {
-      log('highlightPhrases ' + phraseListIndex);
+      log('highlightPhrases ' + phraseListIndex + ' toggle:' + options.highlighter[phraseListIndex].toggle);//the added toggle here is undefined
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
       let hilitor = new Hilitor();
-      hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
-        classes: markClasses,
-        caseSensitive: !options.enableCaseInsensitive,
-        partialMatch: options.enablePartialMatch,
-      });
+      let toggle = options.highlighter[phraseListIndex].toggle;
+      if(toggle){
+        hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
+          classes: markClasses,
+          caseSensitive: !options.enableCaseInsensitive,
+          partialMatch: options.enablePartialMatch,
+        });
+      }
     }
     if (options.enableTitleMouseover) {
       log('enableTitleMousever start');
