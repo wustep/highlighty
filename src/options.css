@@ -37,6 +37,10 @@
 
 /* Phrase & URL lists */
 
+#PhraseLists__search {
+  margin-bottom: 1.5rem;
+}
+
 #PhraseList--invisible,
 #PhraseListPreview--invisible {
   display: none;
