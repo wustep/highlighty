@@ -152,7 +152,7 @@ $(function () {
     }
     const order = options.sorting;
     console.log(order);
-    if(order != "Not Sorted"){
+    if(order != "None"){
       list = alphSort(list);
       if(order === "Z-A"){
         list.reverse();
