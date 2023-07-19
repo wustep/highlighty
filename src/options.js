@@ -795,7 +795,7 @@ $(function () {
         setHighlightBadge(newOptions);
       }
 
-      chrome.storage.local.set(newOptions, function() {
+      chrome.storage.local.set(newOptions, () => {
         alert('Settings saved!');
         setupOptionsPage(newOptions, false);
       });
