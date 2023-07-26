@@ -21,7 +21,7 @@ const defaultOptions = {
   enableCaseInsensitive: true,
   enableURLDenylist: false,
   enableURLAllowlist: false,
-  keyboardShortcut: 117,
+  keyboardShortcut: 'F6',
 };
 
 const migratedOptionsMap = {

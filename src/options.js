@@ -8,6 +8,7 @@ $(function () {
   function setupOptionsPage(options, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
+    setupKeyboardShortcutHandler(options.keyboardShortcut);
 
     addExistingLists(options.highlighter);
     addExistingListStyles(options);
@@ -61,6 +62,70 @@ $(function () {
     $('#Settings__enableAutoHighlight').on('click', function () {
       showHideAutoHighlightSettings();
     });
+  }
+
+  function checkForShortcutConflicts(shortcut) {
+    const browserShortcuts = [
+      // Add browser shortcuts you want to check for conflicts here
+      'alt + f', 'alt + e', 'F6'
+    ];
+
+    const conflicts = browserShortcuts.filter((browserShortcut) =>
+      browserShortcut.toLowerCase() === shortcut.toLowerCase()
+    );
+    return conflicts.length > 0;
+  }
+
+  function setupKeyboardShortcutHandler(savedShortcut) {
+    const keyboardShortcutHelper = $('#keyboardShortcutHelper')
+    const keyboardShortcutInput = $('#Settings__keyboardShortcut');
+
+    function updateShortcutInput(shortcutString) {
+      keyboardShortcutInput.val(shortcutString);
+      keyboardShortcutHelper.text(shortcutString);
+      keyboardShortcutInput.width(keyboardShortcutHelper.width());
+    }
+
+    $(document).ready(() => {
+      updateShortcutInput(savedShortcut);
+    });
+
+    keyboardShortcutInput.on('focus', () => {
+      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'true');
+      document.addEventListener('keydown', handleKeyDown);
+    });
+
+    keyboardShortcutInput.on('blur', () => {
+      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
+      document.removeEventListener('keydown', handleKeyDown);
+    });
+  
+    function handleKeyDown(e) {
+      if (e.key === 'Enter') {
+        keyboardShortcutInput.blur();
+        return;
+      }
+      if (e.key === 'Escape') {
+        $('#Settings__keyboardShortcut').val('');
+        updateShortcutInput('');
+        return;
+      }
+      const specialKeys = {   
+        ' ': 'space',
+      };
+      const pressedKeys = [];
+      if (e.ctrlKey) pressedKeys.push('ctrl');
+      if (e.shiftKey) pressedKeys.push('shift');
+      if (e.altKey) pressedKeys.push('alt');
+      if (e.metaKey) pressedKeys.push('meta');
+      let  keyStr = ["Control", "Shift", "Alt", "Meta,"].includes(e.key) ? '' : specialKeys[e.key] || e.key;
+      if (keyStr.length < 2) {
+        keyStr = keyStr.toLowerCase();
+      }
+      if (keyStr) pressedKeys.push(keyStr);
+      let pressedKeysString = pressedKeys.join(' + ').trim();
+      updateShortcutInput(pressedKeysString);
+    }
   }
 
   function addExistingURLLists(options) {
