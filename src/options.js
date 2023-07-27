@@ -64,18 +64,6 @@ $(function () {
     });
   }
 
-  function checkForShortcutConflicts(shortcut) {
-    const browserShortcuts = [
-      // Add browser shortcuts you want to check for conflicts here
-      'alt + f', 'alt + e', 'F6'
-    ];
-
-    const conflicts = browserShortcuts.filter((browserShortcut) =>
-      browserShortcut.toLowerCase() === shortcut.toLowerCase()
-    );
-    return conflicts.length > 0;
-  }
-
   function setupKeyboardShortcutHandler(savedShortcut) {
     const keyboardShortcutHelper = $('#keyboardShortcutHelper')
     const keyboardShortcutInput = $('#Settings__keyboardShortcut');
@@ -119,6 +107,7 @@ $(function () {
       if (e.altKey) pressedKeys.push('alt');
       if (e.metaKey) pressedKeys.push('meta');
       let  keyStr = ["Control", "Shift", "Alt", "Meta,"].includes(e.key) ? '' : specialKeys[e.key] || e.key;
+      // Function keys remain capitalized
       if (keyStr.length < 2) {
         keyStr = keyStr.toLowerCase();
       }
