@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
 
   "name": "Highlighty",
   "short_name": "highlighty",
@@ -21,7 +21,7 @@
     }
   ],
 
-  "browser_action": {
+  "action": {
     "default_title": "Highlight phrases!",
     "default_icon": {
       "16": "img/16pxBlue.png",
@@ -33,9 +33,8 @@
   "options_page": "options.html",
 
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js"
   },
 
-  "permissions": ["activeTab", "storage"]
+  "permissions": ["activeTab", "storage", "background"]
 }
