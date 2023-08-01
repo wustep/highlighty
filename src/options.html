@@ -175,9 +175,17 @@
             <div class="column is-three-fifths">
               <div class="field is-grouped PhraseList__header">
                 <h1 class="title">
-                  <button class="PhraseList__color" style="background-color: #000000"></button>
+                  <input
+                    id="PhraseList__toggle"
+                    type="checkbox"
+                    class="switch is-outlined is-medium is-info PhraseList__input"
+                    checked="checked"
+                  />
+                  <label class = "PhraseList__label" for="PhraseList__toggle">
+                  </label>
                   <span class="PhraseList__title"> </span>
                   <span class="tag PhraseList__phraseCount"> </span>
+                  <button class="PhraseList__color" style="background-color: #000000"></button>
                 </h1>
               </div>
             </div>
@@ -209,17 +217,7 @@
                 </div>
               </div>
               <div class="column is-2 is-offset-3">
-                <div class="field is-grouped">
-                  <input
-                    id="PhraseList__toggle"
-                    type="checkbox"
-                    class="switch is-outlined is-right is-medium"
-                    checked="checked"
-                  />
-                  <label for="PhraseList__toggle">
-                    Toggle
-                  </label>
-                </div>
+                
               </div>
             </div>
           </form>

@@ -114,7 +114,7 @@ $(function () {
   function addExistingLists(highlighter, isImportPreview = false) {
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
-        $('#PhraseList__toggle').attr('checked', highlighter[i].toggle);
+        $('#PhraseList__toggle').attr('checked', highlighter[i].toggled);
         let $newListDiv = addNewListDiv(
           highlighter[i].title,
           highlighter[i].color,
@@ -140,8 +140,8 @@ $(function () {
     $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
     $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
-    $newListDiv.find('.PhraseList__toggle').attr('id', `PhraseList--toggle--${index}`);
-    $newListDiv.find('.PhraseList__toggle').attr('from', `PhraseList--togggle--${index}`);
+    $newListDiv.find('.PhraseList__input').attr('id', `PhraseList--toggle--${index}`);
+    $newListDiv.find('.PhraseList__label').attr('for', `PhraseList--toggle--${index}`);
     if (isImportPreview) {
       $('#BulkImportPreviewModal__preview').append($newListDiv);
     } else {
@@ -348,11 +348,13 @@ $(function () {
   }
 
   function setupPhraseListToggleHandler($list){
-    $list.on('click', '.PhraseList__toggle', () => {
-      let newToggle = $('#PhraseList__toggle').is(':checked');
+    $list.on('click', '.PhraseList__input', () => {
       let listIndex = $list.data('index');
+      let newToggled = $(`#PhraseList--toggle--${listIndex}`).is(':checked');
+      console.log(newToggled);
       chrome.storage.local.get((options) => {
-        options.highlighter[listIndex].toggle = newToggle;
+        console.log(options.highlighter[listIndex].toggled);
+        options.highlighter[listIndex].toggled = newToggled;
         chrome.storage.local.set({highlighter: options.highlighter });
       });
     });

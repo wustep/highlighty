@@ -82,11 +82,11 @@ $(function () {
   function highlightPhrases(options) {
     log('highlightPhrases start');
     for (let phraseListIndex in phrasesToHighlight) {
-      log('highlightPhrases ' + phraseListIndex + ' toggle:' + options.highlighter[phraseListIndex].toggle);//the added toggle here is undefined
+      log('highlightPhrases ' + phraseListIndex + ' toggled:' + options.highlighter[phraseListIndex].toggled);//the added toggle here is undefined
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
       let hilitor = new Hilitor();
-      let toggle = options.highlighter[phraseListIndex].toggle;
-      if(toggle){
+      let toggled = options.highlighter[phraseListIndex].toggled;
+      if(toggled){
         hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
           classes: markClasses,
           caseSensitive: !options.enableCaseInsensitive,
