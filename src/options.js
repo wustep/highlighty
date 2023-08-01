@@ -120,11 +120,11 @@ $(function () {
         );
         const sortedList = sortPhrases(options, i);
         //move to for - of loop
-        for (let j = 0; j < sortedList.length; j++) {
+        for (let phrase of sortedList) {
           if (isImportPreview) {
-            addPreviewPhraseElement($newListDiv, sortedList[j], highlighter[i].color);
+            addPreviewPhraseElement($newListDiv, phrase, highlighter[i].color);
           } else {
-            addPhraseElement($newListDiv, sortedList[j], i);
+            addPhraseElement($newListDiv, phrase, i);
           }
         }
       }
