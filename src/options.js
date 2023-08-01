@@ -119,6 +119,7 @@ $(function () {
           isImportPreview,
         );
         const sortedList = sortPhrases(options, i);
+        //move to for - of loop
         for (let j = 0; j < sortedList.length; j++) {
           if (isImportPreview) {
             addPreviewPhraseElement($newListDiv, sortedList[j], highlighter[i].color);
