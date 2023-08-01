@@ -287,7 +287,7 @@ $(function () {
           color: listColor,
           textColor: listTextColor,
           title: listTitle,
-          toggle: true,
+          toggled: true,
         };
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -351,9 +351,7 @@ $(function () {
     $list.on('click', '.PhraseList__input', () => {
       let listIndex = $list.data('index');
       let newToggled = $(`#PhraseList--toggle--${listIndex}`).is(':checked');
-      console.log(newToggled);
       chrome.storage.local.get((options) => {
-        console.log(options.highlighter[listIndex].toggled);
         options.highlighter[listIndex].toggled = newToggled;
         chrome.storage.local.set({highlighter: options.highlighter });
       });
@@ -546,7 +544,7 @@ $(function () {
             phrases: phraseList['phrases'],
             textColor: getTextColor(phraseList['color']),
             title: phraseList['title'],
-            toggle: phraseList['toggle'],
+            toggled: phraseList['toggled'],
           });
         });
 
@@ -620,7 +618,7 @@ $(function () {
               title: phraseList.title,
               color: phraseList.color,
               phrases: phraseList.phrases,
-              toggle: phraseList.toggle,
+              toggled: phraseList.toggled,
             });
           }
         });
