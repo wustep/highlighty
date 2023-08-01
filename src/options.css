@@ -42,10 +42,6 @@
   display: none;
 }
 
-switch.PhraseList__toggle{
-  display: none;
-}
-
 .PhraseList__header {
   margin-bottom: 0px;
 }

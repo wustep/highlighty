@@ -140,6 +140,8 @@ $(function () {
     $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
     $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
+    $newListDiv.find('.PhraseList__toggle').attr('id', `PhraseList--toggle--${index}`);
+    $newListDiv.find('.PhraseList__toggle').attr('from', `PhraseList--togggle--${index}`);
     if (isImportPreview) {
       $('#BulkImportPreviewModal__preview').append($newListDiv);
     } else {
