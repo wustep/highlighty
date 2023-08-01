@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./built",
+        "outDir": "./dist",
         "allowJs": true,
         "target": "es5",
         "noEmitOnError": false,
@@ -9,7 +9,4 @@
     "include": [
         "./src/**/*"
     ],
-    "types": [
-        "chrome"
-    ]
 }
