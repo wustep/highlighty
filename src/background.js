@@ -45,7 +45,7 @@ chrome.runtime.onInstalled.addListener((details) => {
        */
       for (const defaultOptionName of Object.keys(defaultOptions)) {
         if (!(defaultOptionName in currentOptions)) {
-          chrome.storage.local.set(option, defaultOptions[defaultOptionName]);
+          chrome.storage.local.set({ [defaultOptionName]: defaultOptions[defaultOptionName] });
         }
       }
       /**
@@ -76,8 +76,8 @@ chrome.runtime.onInstalled.addListener((details) => {
         } else if (list.textColor.startsWith('rgb')) {
           list.textColor = rgbaStringToHex(list.textColor);
         }
-        chrome.storage.local.set({ highlighter: currentOptions.highlighter });
       });
+      chrome.storage.local.set({ highlighter: currentOptions.highlighter });
     });
   }
 });
