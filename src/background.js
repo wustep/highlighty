@@ -82,7 +82,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-chrome.browserAction.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, 'highlighty');
 });
 
