@@ -14,6 +14,7 @@ $(function () {
 
     // These handlers should only be ran once.
     if (fresh) {
+      setupSearchPhraseListsHandler();
       addExistingURLLists(options);
       setPrimarySettings(options);
       setupAutoHighlightHandler();
@@ -55,6 +56,21 @@ $(function () {
     } else {
       $('#Settings__AutoHighlight').hide();
     }
+  }
+
+  function setupSearchPhraseListsHandler() {
+    $('#PhraseLists__search').on('keyup', function () {
+      $('.PhraseList__phrase').each(function () {
+        let $phrase = $(this);
+        let phraseText = $phrase.text().toLowerCase();
+        let searchText = $('#PhraseLists__search').val().toLowerCase();
+        if (phraseText.indexOf(searchText) === -1) {
+          $phrase.hide();
+        } else {
+          $phrase.show();
+        }
+      });
+    });
   }
 
   function setupAutoHighlightHandler() {
