@@ -65,13 +65,16 @@ $(function () {
   }
 
   function setupKeyboardShortcutHandler(savedShortcut) {
-    const keyboardShortcutHelper = $('#keyboardShortcutHelper')
     const keyboardShortcutInput = $('#Settings__keyboardShortcut');
 
     function updateShortcutInput(shortcutString) {
       keyboardShortcutInput.val(shortcutString);
-      keyboardShortcutHelper.text(shortcutString);
-      keyboardShortcutInput.width(keyboardShortcutHelper.width());
+      keyboardShortcutInput.width((shortcutString.length + 6) * 5);
+    }
+
+    function stopRecording() {
+      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
+      document.removeEventListener('keydown', handleKeyDown);
     }
 
     $(document).ready(() => {
@@ -84,21 +87,20 @@ $(function () {
     });
 
     keyboardShortcutInput.on('blur', () => {
-      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
-      document.removeEventListener('keydown', handleKeyDown);
+      stopRecording();
     });
-  
+
     function handleKeyDown(e) {
       if (e.key === 'Enter') {
         keyboardShortcutInput.blur();
         return;
       }
       if (e.key === 'Escape') {
-        $('#Settings__keyboardShortcut').val('');
+        keyboardShortcutInput.blur();
         updateShortcutInput('');
         return;
       }
-      const specialKeys = {   
+      const specialKeys = {
         ' ': 'space',
       };
       const pressedKeys = [];
@@ -106,7 +108,9 @@ $(function () {
       if (e.shiftKey) pressedKeys.push('shift');
       if (e.altKey) pressedKeys.push('alt');
       if (e.metaKey) pressedKeys.push('meta');
-      let  keyStr = ["Control", "Shift", "Alt", "Meta,"].includes(e.key) ? '' : specialKeys[e.key] || e.key;
+      let keyStr = ['Control', 'Shift', 'Alt', 'Meta,'].includes(e.key)
+        ? ''
+        : specialKeys[e.key] || e.key;
       // Function keys remain capitalized
       if (keyStr.length < 2) {
         keyStr = keyStr.toLowerCase();
@@ -156,7 +160,7 @@ $(function () {
       if (Object.keys(options.highlighter[i]).length) {
         $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
           backgroundColor: highlighterColor,
-          color: textColor
+          color: textColor,
         });
         highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
       }
@@ -227,7 +231,7 @@ $(function () {
     $phraseCount.data('count', phraseCount);
     $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
   }
-  
+
   function addPreviewPhraseElement($listDiv, phrase, color) {
     const textColor = getTextColor(color);
     $listDiv

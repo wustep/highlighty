@@ -21,6 +21,10 @@ const defaultOptions = {
   enableCaseInsensitive: true,
   enableURLDenylist: false,
   enableURLAllowlist: false,
+  /**
+   * Keyboard shortcut string to activate highlighter.
+   * e.g. "ctrl + shift + F5"
+   */
   keyboardShortcut: 'F6',
 };
 

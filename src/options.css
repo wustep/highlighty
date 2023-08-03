@@ -40,13 +40,7 @@
   min-width: 6ch;
 }
 
-.keyboard-helper {
-  visibility: hidden;
-  white-space: pre;
-  position: absolute;
-}
-
-#Settings__keyboardShortcut[data-recording="true"] {
+#Settings__keyboardShortcut[data-recording='true'] {
   outline-color: #bb0000;
 }
 
