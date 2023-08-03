@@ -102,7 +102,7 @@ $(function () {
       if (Object.keys(options.highlighter[i]).length) {
         $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
           backgroundColor: highlighterColor,
-          color: textColor
+          color: textColor,
         });
         highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
       }
@@ -112,6 +112,7 @@ $(function () {
   }
 
   function addExistingLists(highlighter, isImportPreview = false) {
+    console.log(highlighter);
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
         let $newListDiv = addNewListDiv(
@@ -173,7 +174,7 @@ $(function () {
     $phraseCount.data('count', phraseCount);
     $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
   }
-  
+
   function addPreviewPhraseElement($listDiv, phrase, color) {
     const textColor = getTextColor(color);
     $listDiv
