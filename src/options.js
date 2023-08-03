@@ -102,7 +102,7 @@ $(function () {
       if (Object.keys(options.highlighter[i]).length) {
         $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
           backgroundColor: highlighterColor,
-          color: textColor
+          color: textColor,
         });
         highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
       }
@@ -140,8 +140,8 @@ $(function () {
     $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
     $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
-    $newListDiv.find('.PhraseList__input').attr('id', `PhraseList--toggle--${index}`);
-    $newListDiv.find('.PhraseList__label').attr('for', `PhraseList--toggle--${index}`);
+    $newListDiv.find('.PhraseList__toggle').attr('id', `PhraseList--toggle--${index}`);
+    $newListDiv.find('.PhraseList__toggleLabel').attr('for', `PhraseList--toggle--${index}`);
     if (isImportPreview) {
       $('#BulkImportPreviewModal__preview').append($newListDiv);
     } else {
@@ -176,7 +176,7 @@ $(function () {
     $phraseCount.data('count', phraseCount);
     $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
   }
-  
+
   function addPreviewPhraseElement($listDiv, phrase, color) {
     const textColor = getTextColor(color);
     $listDiv
@@ -347,13 +347,13 @@ $(function () {
     });
   }
 
-  function setupPhraseListToggleHandler($list){
-    $list.on('click', '.PhraseList__input', () => {
+  function setupPhraseListToggleHandler($list) {
+    $list.on('click', '.PhraseList__toggle', () => {
       let listIndex = $list.data('index');
       let newToggled = $(`#PhraseList--toggle--${listIndex}`).is(':checked');
       chrome.storage.local.get((options) => {
         options.highlighter[listIndex].toggled = newToggled;
-        chrome.storage.local.set({highlighter: options.highlighter });
+        chrome.storage.local.set({ highlighter: options.highlighter });
       });
     });
   }
