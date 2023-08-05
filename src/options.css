@@ -35,6 +35,15 @@
                                   supported by Chrome, Opera and Firefox */
 }
 
+#Settings__keyboardShortcut {
+  text-align: center;
+  min-width: 6ch;
+}
+
+#Settings__keyboardShortcut[data-recording='true'] {
+  outline-color: #bb0000;
+}
+
 /* Phrase & URL lists */
 
 #PhraseList--invisible,

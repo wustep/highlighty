@@ -151,17 +151,14 @@
           <br />
           <div class="field is-grouped">
             <div class="control">
-              <div class="select">
-                <select id="Settings__keyboardShortcut">
-                  <option value="-1">None</option>
-                  <option value="117">F6</option>
-                </select>
+              <div class="input">
+                <input type="text" id="Settings__keyboardShortcut" data-recording="false" readonly placeholder="none"></input>
               </div>
             </div>
             <div class="field-label is-normal">
-              <label for="Settings__keyboardShortcut" class="label is-pulled-left"
-                >Keyboard shortcut for extension button</label
-              >
+              <label for="Settings__keyboardShortcut" class="label is-pulled-left">
+                Keyboard shortcut for extension button
+              </label>
             </div>
           </div>
           <div class="button is-info" id="Settings__save">Save</div>
