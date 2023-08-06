@@ -21,7 +21,11 @@ const defaultOptions = {
   enableCaseInsensitive: true,
   enableURLDenylist: false,
   enableURLAllowlist: false,
-  keyboardShortcut: 117,
+  /**
+   * Keyboard shortcut string to activate highlighter.
+   * e.g. "ctrl + shift + F5"
+   */
+  keyboardShortcut: 'F6',
 };
 
 const migratedOptionsMap = {
@@ -45,7 +49,7 @@ chrome.runtime.onInstalled.addListener((details) => {
        */
       for (const defaultOptionName of Object.keys(defaultOptions)) {
         if (!(defaultOptionName in currentOptions)) {
-          chrome.storage.local.set(option, defaultOptions[defaultOptionName]);
+          chrome.storage.local.set({ [defaultOptionName]: defaultOptions[defaultOptionName] });
         }
       }
       /**
@@ -76,13 +80,23 @@ chrome.runtime.onInstalled.addListener((details) => {
         } else if (list.textColor.startsWith('rgb')) {
           list.textColor = rgbaStringToHex(list.textColor);
         }
-        chrome.storage.local.set({ highlighter: currentOptions.highlighter });
       });
+      chrome.storage.local.set({ highlighter: currentOptions.highlighter });
+
+      /**
+       * Convert legacy keyboard shortcut options to their updated equivalents.
+       */
+      if (currentOptions.keyboardShortcut === -1) {
+        currentOptions.keyboardShortcut = '';
+      } else if (currentOptions.keyboardShortcut === 117) {
+        currentOptions.keyboardShortcut = 'F6';
+      }
+      chrome.storage.local.set({ keyboardShortcut: currentOptions.keyboardShortcut });
     });
   }
 });
 
-chrome.browserAction.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, 'highlighty');
 });
 

@@ -8,6 +8,7 @@ $(function () {
   function setupOptionsPage(options, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
+    setupKeyboardShortcutHandler(options.keyboardShortcut);
 
     addExistingLists(options.highlighter);
     addExistingListStyles(options);
@@ -63,6 +64,63 @@ $(function () {
     });
   }
 
+  function setupKeyboardShortcutHandler(savedShortcut) {
+    const keyboardShortcutInput = $('#Settings__keyboardShortcut');
+
+    function updateShortcutInput(shortcutString) {
+      keyboardShortcutInput.val(shortcutString);
+      keyboardShortcutInput.width((shortcutString.length + 6) * 5);
+    }
+
+    function stopRecording() {
+      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
+      document.removeEventListener('keydown', handleKeyDown);
+    }
+
+    $(document).ready(() => {
+      updateShortcutInput(savedShortcut);
+    });
+
+    keyboardShortcutInput.on('focus', () => {
+      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'true');
+      document.addEventListener('keydown', handleKeyDown);
+    });
+
+    keyboardShortcutInput.on('blur', () => {
+      stopRecording();
+    });
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter') {
+        keyboardShortcutInput.blur();
+        return;
+      }
+      if (e.key === 'Escape') {
+        keyboardShortcutInput.blur();
+        updateShortcutInput('');
+        return;
+      }
+      const specialKeys = {
+        ' ': 'space',
+      };
+      const pressedKeys = [];
+      if (e.ctrlKey) pressedKeys.push('ctrl');
+      if (e.shiftKey) pressedKeys.push('shift');
+      if (e.altKey) pressedKeys.push('alt');
+      if (e.metaKey) pressedKeys.push('meta');
+      let keyStr = ['Control', 'Shift', 'Alt', 'Meta,'].includes(e.key)
+        ? ''
+        : specialKeys[e.key] || e.key;
+      // Function keys remain capitalized
+      if (keyStr.length < 2) {
+        keyStr = keyStr.toLowerCase();
+      }
+      if (keyStr) pressedKeys.push(keyStr);
+      let pressedKeysString = pressedKeys.join(' + ').trim();
+      updateShortcutInput(pressedKeysString);
+    }
+  }
+
   function addExistingURLLists(options) {
     if (options.denylist.length) {
       for (let url of options.denylist) {
@@ -102,7 +160,7 @@ $(function () {
       if (Object.keys(options.highlighter[i]).length) {
         $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
           backgroundColor: highlighterColor,
-          color: textColor
+          color: textColor,
         });
         highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
       }
@@ -173,7 +231,7 @@ $(function () {
     $phraseCount.data('count', phraseCount);
     $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
   }
-  
+
   function addPreviewPhraseElement($listDiv, phrase, color) {
     const textColor = getTextColor(color);
     $listDiv
