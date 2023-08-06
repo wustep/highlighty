@@ -545,6 +545,30 @@ $(function () {
       $('#BulkImportPreviewModal__optionName').text(importName);
     });
 
+    $('.file-input').on('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const allowedExtensions = ['txt', 'json'];
+      const fileName = file.name;
+      const fileExtension = fileName.split('.').pop().toLowerCase();
+
+      if (!allowedExtensions.includes(fileExtension)) {
+        alert('Please upload a file with .txt or .json extension.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const contents = e.target.result;
+        $('#BulkImport__file').removeClass('is-normal');
+        $('#BulkImport__file').addClass('has-name');
+        $('.file-name').text(fileName).show();
+        $('#BulkImportModal__body').val(contents);
+      };
+      reader.readAsText(file);
+    });
+
     $('#BulkImportModal__previewImport').on('click', (e) => {
       const importType = $('#BulkImportModal__typesSelect').val();
       const importBody = $('#BulkImportModal__body').val();
@@ -717,6 +741,10 @@ $(function () {
       $('#BulkExportModal').removeClass('is-active');
     });
     $('#BulkImportModal__cancel, #BulkImportModal__close').on('click', (e) => {
+      $('.file-input').val('');
+      $('.file-name').text('').hide();
+      $('#BulkImport__file').removeClass('has-name');
+      $('#BulkImport__file').addClass('is-normal');
       $('#BulkImportModal').removeClass('is-active');
     });
     $('#BulkImportPreviewModal__cancel, #BulkImportPreviewModal__close').on('click', (e) => {
