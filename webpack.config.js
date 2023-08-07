@@ -4,7 +4,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: {
-        background: path.join(__dirname, "src", "background.js"),
+        background: path.join(__dirname, "src", "background.ts"),
         highlighty: path.join(__dirname, "src", "highlighty.js"),
         options: path.join(__dirname, "src", "options.js"),
     },

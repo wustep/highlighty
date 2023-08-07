@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@types/chrome": "^0.0.242",
+    "@types/jquery": "^3.5.16",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.8.1",
     "html-webpack-plugin": "^5.5.3",
