@@ -2,7 +2,9 @@
   "devDependencies": {
     "@types/chrome": "^0.0.242",
     "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.8.1",
     "html-webpack-plugin": "^5.5.3",
+    "style-loader": "^3.3.3",
     "ts-loader": "^9.4.4",
     "typescript": "^5.1.6",
     "webpack-cli": "^5.1.4",
@@ -12,5 +14,4 @@
     "build": "webpack --mode=production",
     "watch": "webpack --mode=development --watch"
   }
-  
 }

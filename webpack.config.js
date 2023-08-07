@@ -8,6 +8,7 @@ module.exports = {
         highlighty: path.join(__dirname, "src", "highlighty.js"),
         options: path.join(__dirname, "src", "options.js"),
     },
+    devtool: 'inline-source-map',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: '[name].js',
@@ -18,11 +19,7 @@ module.exports = {
                 test: /\.ts$/,
                 use: 'ts-loader',
                 exclude: /node_modules/,
-            },
-            {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader'],
-            },
+            }
         ],
     },
     resolve: {
@@ -40,8 +37,9 @@ module.exports = {
         new CopyWebpackPlugin({
             patterns: [
                 { from: 'src/manifest.json', to: 'manifest.json' },
+                { from: 'src/options.css', to: 'options.css' },
                 { from: 'src/img', to: 'img' },
-                { from: 'src/lib', to: 'lib' },
+                { from: 'src/lib', to: 'lib' }
             ],
         }),
     ],
