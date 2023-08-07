@@ -29,10 +29,12 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './src/info.html',
             filename: 'info.html',
+            inject: false
         }),
         new HtmlWebpackPlugin({
             template: './src/options.html',
             filename: 'options.html',
+            inject: false
         }),
         new CopyWebpackPlugin({
             patterns: [
