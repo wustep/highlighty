@@ -1,6 +1,29 @@
 /* Highlighty.js | by Stephen Wu */
 
-const defaultOptions = {
+interface HighlighterSettings {
+  phrases: Array<string>;
+  title: string;
+  color: string;
+  textColor: string;
+}
+
+interface Options {
+  highlighter: Array<HighlighterSettings>;
+  allowlist: Array<string>;
+  denylist: Array<string>;
+  baseStyles: string;
+  autoHighlighter: boolean;
+  enableAutoHighlight: boolean;
+  enableAutoHighlightUpdates: boolean;
+  enableTitleMouseover: boolean;
+  enablePartialMatch: boolean;
+  enableCaseInsensitive: boolean;
+  enableURLDenylist: boolean;
+  enableURLAllowlist: boolean;
+  keyboardShortcut: string;
+}
+
+const defaultOptions: Options = {
   highlighter: [
     {
       phrases: ['Hello there', 'welcome to', 'Highlighty!'],
@@ -47,7 +70,7 @@ chrome.runtime.onInstalled.addListener((details) => {
        * This ensures updates are not breaking for new options.
        * Developers should still be cautious of modifying the structure of existing options.
        */
-      for (const defaultOptionName of Object.keys(defaultOptions)) {
+      for (const defaultOptionName of Object.keys(defaultOptions) as Array<keyof Options>) {
         if (!(defaultOptionName in currentOptions)) {
           chrome.storage.local.set({ [defaultOptionName]: defaultOptions[defaultOptionName] });
         }
@@ -55,7 +78,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       /**
        * If we've renamed any options, let's migrate their values to their new name.
        */
-      for (const oldOptionName of Object.keys(migratedOptionsMap)) {
+      for (const oldOptionName of Object.keys(migratedOptionsMap) as Array<keyof typeof migratedOptionsMap>) {
         if (oldOptionName in currentOptions) {
           chrome.storage.local.set({
             [migratedOptionsMap[oldOptionName]]: currentOptions[oldOptionName],
@@ -66,7 +89,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       /**
        * Convert any non-hex colors to hex.
        */
-      currentOptions.highlighter.forEach((list) => {
+      currentOptions.highlighter.forEach((list: HighlighterSettings) => {
         // We used purple as a default list color in the past.
         if (list.color === 'purple') {
           list.color = '#800080';
@@ -135,8 +158,15 @@ chrome.runtime.onMessage.addListener((request, sender) => {
   }
 });
 
-function setBrowserIcon(color, tab = false) {
-  let iconObject = {
+interface IconObject {
+  path: {
+    [key: string]: string
+  },
+  tabId?: number;
+}
+
+function setBrowserIcon(color: string, tab?: number) {
+  let iconObject: IconObject = {
     path: {
       16: `img/16px${color}.png`,
       24: `img/24px${color}.png`,
@@ -150,7 +180,7 @@ function setBrowserIcon(color, tab = false) {
 }
 
 /** rgbaToHex and rgbaStringToHex functions -- keep in sync with options.js **/
-function rgbaToHex(rgba) {
+function rgbaToHex(rgba: Array<string>) {
   const hex = `#${rgba
     .map((n, i) =>
       (i === 3 ? Math.round(parseFloat(n) * 255) : parseFloat(n))
@@ -161,12 +191,12 @@ function rgbaToHex(rgba) {
     .join('')}`;
   return hexClean(hex);
 }
-function rgbaStringToHex(rgbaString) {
+function rgbaStringToHex(rgbaString: string) {
   const rgba = rgbaString
     .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
     .slice(1);
   return rgbaToHex(rgba);
 }
-function hexClean(hex) {
+function hexClean(hex: string) {
   return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
 }
