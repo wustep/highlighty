@@ -109,7 +109,7 @@ $(function () {
   }
 
   function addExistingLists(options, isImportPreview = false) {
-    let highlighter = options.highlighter
+    let highlighter = options.highlighter;
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
         let $newListDiv = addNewListDiv(
@@ -130,32 +130,36 @@ $(function () {
       }
     }
   }
-  
+
   //alphabetically sorts a list of strings
-  function alphSort(list){
+  function alphSort(list) {
     list.sort((a, b) => {
       const phraseA = a.toLowerCase();
       const phraseB = b.toLowerCase();
-      if (phraseA < phraseB) {return -1;}
-      if (phraseA > phraseB) {return 1;}
+      if (phraseA < phraseB) {
+        return -1;
+      }
+      if (phraseA > phraseB) {
+        return 1;
+      }
       return 0;
     });
     return list;
   }
 
   //determines sorting of given list of phrases
-  function sortPhrases(options, listIndex){
+  function sortPhrases(options, listIndex) {
     let phrases = options.highlighter[listIndex].phrases;
     let list = [];
     //populate list to sort, leaving options unsorted
-    for (const element of phrases){
+    for (const element of phrases) {
       list.push(element);
     }
     const order = options.sorting;
     console.log(order);
-    if(order != "None"){
+    if (order != 'None') {
       list = alphSort(list);
-      if(order === "Z-A"){
+      if (order === 'Z-A') {
         list.reverse();
       }
     }
@@ -790,7 +794,7 @@ $(function () {
       newOptions.enableURLAllowlist = newEnableURLAllowlist;
       newOptions.keyboardShortcut = newKeyboardShortcut;
       newOptions.sorting = newSorting;
-      
+
       if (newEnableAutoHighlight !== options.newEnableAutoHighlight) {
         newOptions.autoHighlighter = true; // No harm in setting this to true either way.
         setHighlightBadge(newOptions);
