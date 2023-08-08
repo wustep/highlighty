@@ -61,7 +61,7 @@ chrome.runtime.onInstalled.addListener((details) => {
         }
       }
       /**
-       * ensure updated structure of highlighter objects
+       * Ensure updated structure of highlighter objects
        */
       for (const highlighterIndex of currentOptions.highlighter) {
         for (const attributeName of Object.keys(defaultOptions.highlighter)) {
