@@ -119,7 +119,6 @@ $(function () {
           isImportPreview,
         );
         const sortedList = sortPhrases(options, i);
-        //move to for - of loop
         for (let phrase of sortedList) {
           if (isImportPreview) {
             addPreviewPhraseElement($newListDiv, phrase, highlighter[i].color);
@@ -131,37 +130,13 @@ $(function () {
     }
   }
 
-  //alphabetically sorts a list of strings
-  function alphSort(list) {
-    list.sort((a, b) => {
-      const phraseA = a.toLowerCase();
-      const phraseB = b.toLowerCase();
-      if (phraseA < phraseB) {
-        return -1;
-      }
-      if (phraseA > phraseB) {
-        return 1;
-      }
-      return 0;
-    });
-    return list;
-  }
-
-  //determines sorting of given list of phrases
   function sortPhrases(options, listIndex) {
-    let phrases = options.highlighter[listIndex].phrases;
-    let list = [];
-    //populate list to sort, leaving options unsorted
-    for (const element of phrases) {
-      list.push(element);
-    }
+    let list = options.highlighter[listIndex].phrases.slice();
     const order = options.sorting;
-    console.log(order);
-    if (order != 'None') {
-      list = alphSort(list);
-      if (order === 'Z-A') {
-        list.reverse();
-      }
+    if (order === 'A-Z') {
+      list = alphabetical(list);
+    } else if (order === 'Z-A') {
+      list = reverseAlphabetical(list);
     }
     return list;
   }
@@ -784,16 +759,18 @@ $(function () {
       let newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
       let newSorting = $('#Settings__sorting').val();
 
-      let newOptions = options;
-      newOptions.enableAutoHighlight = newEnableAutoHighlight;
-      newOptions.enableAutoHighlightUpdates = newEnableAutoHighlightUpdates;
-      newOptions.enableTitleMouseover = newEnableTitleMouseover;
-      newOptions.enablePartialMatch = newEnablePartialMatch;
-      newOptions.enableCaseInsensitive = newEnableCaseInsensitive;
-      newOptions.enableURLDenylist = newEnableURLDenylist;
-      newOptions.enableURLAllowlist = newEnableURLAllowlist;
-      newOptions.keyboardShortcut = newKeyboardShortcut;
-      newOptions.sorting = newSorting;
+      const newOptions = {
+        ...options,
+        enableAutoHighlight: newEnableAutoHighlight,
+        enableAutoHighlightUpdates: newEnableAutoHighlightUpdates,
+        enableTitleMouseover: newEnableTitleMouseover,
+        enablePartialMatch: newEnablePartialMatch,
+        enableCaseInsensitive: newEnableCaseInsensitive,
+        enableURLDenylist: newEnableURLDenylist,
+        enableURLAllowlist: newEnableURLAllowlist,
+        keyboardShortcut: newKeyboardShortcut,
+        sorting: newSorting,
+      };
 
       if (newEnableAutoHighlight !== options.newEnableAutoHighlight) {
         newOptions.autoHighlighter = true; // No harm in setting this to true either way.
@@ -809,6 +786,30 @@ $(function () {
 
   function pluralize(count, noun, suffix = 's') {
     return `${count} ${noun}${count !== 1 ? suffix : ''}`;
+  }
+
+  /**
+   * Alphabetically sorts a list of strings
+   */
+  function alphabetical(list) {
+    list.sort((a, b) => {
+      const A = a.toLowerCase();
+      const B = b.toLowerCase();
+      if (A < B) {
+        return -1;
+      }
+      if (A > B) {
+        return 1;
+      }
+      return 0;
+    });
+    return list;
+  }
+
+  function reverseAlphabetical(list) {
+    let sortedList = alphabetical(list);
+    sortedList.reverse();
+    return sortedList;
   }
 
   /**
