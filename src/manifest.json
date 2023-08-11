@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["lib/jquery.3.3.1.min.js", "lib/hilitor.js", "highlighty.js"]
+      "js": ["lib/jquery.3.3.1.min.js", "lib/hilitor.js", "highlighty.ts"]
     }
   ],
 

@@ -5,7 +5,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = {
     entry: {
         background: path.join(__dirname, "src", "background.ts"),
-        highlighty: path.join(__dirname, "src", "highlighty.js"),
+        highlighty: path.join(__dirname, "src", "highlighty.ts"),
         options: path.join(__dirname, "src", "options.js"),
     },
     devtool: 'inline-source-map',
