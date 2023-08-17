@@ -1,5 +1,7 @@
 /* Highlighty.js | by Stephen Wu */
 
+import { Options } from "./background";
+
 $(function () {
   if (window.top != window.self) {
     // Don't run on frames or iframes
@@ -13,7 +15,7 @@ $(function () {
   let bodyHighlighted = false;
   let urlDenylisted = false;
   let urlAllowlisted = false;
-  let phrasesToHighlight = []; // Array of arrays of phrases, where index represents the phrase list number.
+  let phrasesToHighlight: Array<Array<string>> = []; // Array of arrays of phrases, where index represents the phrase list number.
 
   const MUTATION_TIMER = 3000; // Number of miliseconds between updating body after DOM change
   let mutationTime = true; // Whether to auto-highlight immediately after DOM change
@@ -21,7 +23,7 @@ $(function () {
 
   let developerMode = !('update_url' in chrome.runtime.getManifest()); // Whether to log messages to track perf
 
-  function log(stuff) {
+  function log(stuff: any): void {
     if (developerMode) {
       const now = new Date();
       const logPrefix =
@@ -45,19 +47,18 @@ $(function () {
 
   // Setup phrase list and append proper styles
   // We don't re-setup the highlighter on incremental auto-updates but we do on manual triggers
-  function setupHighlighter(options) {
+  function setupHighlighter(options: Options): void {
     log('setupHighligher start');
     phrasesToHighlight = [];
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
-    for (i in options.highlighter) {
+    for (let i = 0; i < options.highlighter.length; i++) {
       if (Object.keys(options.highlighter[i]).length) {
         // Skip deleted lists!
         let highlighterColor = options.highlighter[i].color || 'black';
         let textColor = options.highlighter[i].textColor || 'white';
-        highlighterStyles += `.${
-          HL_PREFIX_CLASS + i
-        } { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
-        for (phrase of options.highlighter[i].phrases) {
+        highlighterStyles += `.${HL_PREFIX_CLASS + i
+          } { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
+        for (const phrase of options.highlighter[i].phrases) {
           addHighlightPhrase(phrase, i);
         }
       }
@@ -69,7 +70,7 @@ $(function () {
   }
 
   // Add phrase to highlight list given phrase and its list index
-  function addHighlightPhrase(highlightPhrase, listNumber) {
+  function addHighlightPhrase(highlightPhrase: string, listNumber: number): void {
     highlightPhrase = String(highlightPhrase);
     if (phrasesToHighlight[listNumber]) {
       phrasesToHighlight[listNumber].push(highlightPhrase);
@@ -79,7 +80,7 @@ $(function () {
   }
 
   // Highlight phrases in body
-  function highlightPhrases(options) {
+  function highlightPhrases(options: Options): void {
     log('highlightPhrases start');
     for (let phraseListIndex in phrasesToHighlight) {
       log('highlightPhrases ' + phraseListIndex);
@@ -104,14 +105,15 @@ $(function () {
     log('highlightPhrases end');
   }
 
-  function removeHighlightStyles() {
+  function removeHighlightStyles(): void {
     $('#' + HL_STYLE_ID).remove();
   }
 
   // Remove all highlights (from Hilitor code!)
-  function removeHighlights() {
+  function removeHighlights(): void {
     let arr = document.getElementsByClassName(HL_BASE_CLASS);
     // Remove the wrapping Highlighty span.
+    let mark: Element;
     while (arr.length && (mark = arr[0])) {
       let parent = mark.parentNode;
       parent.replaceChild(mark.firstChild, mark);
@@ -119,9 +121,9 @@ $(function () {
     }
   }
 
-  function processHighlights(manualTrigger = false) {
+  function processHighlights(manualTrigger = false): void {
     log('processHighlights');
-    chrome.storage.local.get((options) => {
+    chrome.storage.local.get((options: Options): void => {
       if (!manualTrigger && !isAllowedURL(options)) {
         chrome.runtime.sendMessage({ blockedHighlighter: true });
       } else {
@@ -149,14 +151,14 @@ $(function () {
     });
   }
 
-  function isAllowedURL(options) {
+  function isAllowedURL(options: Options): boolean {
     return !(
       (options.enableURLDenylist && urlDenylisted) ||
       (options.enableURLAllowlist && !urlAllowlisted)
     );
   }
 
-  chrome.storage.local.get((options) => {
+  chrome.storage.local.get((options: Options): void => {
     if (options.enableAutoHighlight && options.autoHighlighter) {
       if (options.denylist.length) {
         for (let url of options.denylist) {
@@ -179,7 +181,7 @@ $(function () {
     }
   });
 
-  chrome.storage.local.get((options) => {
+  chrome.storage.local.get((options: Options): void => {
     if (options.keyboardShortcut && options.keyboardShortcut.trim() !== '') {
       window.addEventListener('keydown', (e) => {
         const specialKeys = {
@@ -205,13 +207,13 @@ $(function () {
     }
   });
 
-  chrome.runtime.onMessage.addListener((message) => {
+  chrome.runtime.onMessage.addListener((message: string): void => {
     if (message === 'highlighty') {
       processHighlights(true);
     }
   });
 
-  function autoHighlightIfReady() {
+  function autoHighlightIfReady(): void {
     log('autoHighlightIfReady');
     if (mutationTime) {
       log('autoHighlightIfReady: ready');
@@ -219,7 +221,7 @@ $(function () {
       setTimeout(() => {
         mutationTime = true;
       }, MUTATION_TIMER);
-      chrome.storage.local.get((options) => {
+      chrome.storage.local.get((options: Options): void => {
         if (options.enableAutoHighlight && options.autoHighlighter) {
           highlightPhrases(options);
         }
@@ -227,7 +229,7 @@ $(function () {
     }
   }
 
-  chrome.storage.local.get((options) => {
+  chrome.storage.local.get((options: Options): void => {
     MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
     var observer = new MutationObserver(function (mutations, observer) {
       if (
