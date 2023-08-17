@@ -7,7 +7,14 @@ interface HighlighterSettings {
   textColor: string;
 }
 
-interface Options {
+interface MigratedOptions {
+  whitelist?: string;
+  blacklist?: string;
+  enableURLWhitelist?: string;
+  enableURLBlacklist?: string;
+}
+
+export interface Options extends MigratedOptions {
   highlighter: Array<HighlighterSettings>;
   allowlist: Array<string>;
   denylist: Array<string>;
@@ -20,7 +27,7 @@ interface Options {
   enableCaseInsensitive: boolean;
   enableURLDenylist: boolean;
   enableURLAllowlist: boolean;
-  keyboardShortcut: string;
+  keyboardShortcut: string | number; // Keep number as a possible type since legacy keyboard shortcut options are being converted to string
 }
 
 const defaultOptions: Options = {
@@ -58,13 +65,13 @@ const migratedOptionsMap = {
   enableURLBlacklist: 'enableURLDenylist',
 };
 
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener((details): void => {
   if (details.reason == 'install') {
-    chrome.storage.local.set(defaultOptions, () => {
+    chrome.storage.local.set(defaultOptions, (): void => {
       chrome.runtime.openOptionsPage();
     });
   } else {
-    chrome.storage.local.get((currentOptions) => {
+    chrome.storage.local.get((currentOptions: Options): void => {
       /*
        * When user updates, set new, missing options to their default.
        * This ensures updates are not breaking for new options.
@@ -81,7 +88,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       for (const oldOptionName of Object.keys(migratedOptionsMap) as Array<keyof typeof migratedOptionsMap>) {
         if (oldOptionName in currentOptions) {
           chrome.storage.local.set({
-            [migratedOptionsMap[oldOptionName]]: currentOptions[oldOptionName],
+            [migratedOptionsMap[oldOptionName]]: currentOptions[oldOptionName], // TODO: left off here. want to revamp and commit this file before finishing up and committing highlighty.ts
           });
           chrome.storage.local.remove(oldOptionName);
         }
@@ -89,7 +96,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       /**
        * Convert any non-hex colors to hex.
        */
-      currentOptions.highlighter.forEach((list: HighlighterSettings) => {
+      currentOptions.highlighter.forEach((list: HighlighterSettings): void => {
         // We used purple as a default list color in the past.
         if (list.color === 'purple') {
           list.color = '#800080';
@@ -119,7 +126,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-chrome.action.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener((tab): void => {
   chrome.tabs.sendMessage(tab.id, 'highlighty');
 });
 
@@ -132,7 +139,7 @@ chrome.action.onClicked.addListener((tab) => {
   {blockedHighlighter: bool}
     - updates the blockedHighlighter badge for tab
 */
-chrome.runtime.onMessage.addListener((request, sender) => {
+chrome.runtime.onMessage.addListener((request, sender): void => {
   /*
     AutoHighlighter Mode:
       Green - on
@@ -165,7 +172,7 @@ interface IconObject {
   tabId?: number;
 }
 
-function setBrowserIcon(color: string, tab?: number) {
+function setBrowserIcon(color: string, tab?: number): void {
   let iconObject: IconObject = {
     path: {
       16: `img/16px${color}.png`,
@@ -180,7 +187,7 @@ function setBrowserIcon(color: string, tab?: number) {
 }
 
 /** rgbaToHex and rgbaStringToHex functions -- keep in sync with options.js **/
-function rgbaToHex(rgba: Array<string>) {
+function rgbaToHex(rgba: Array<string>): string {
   const hex = `#${rgba
     .map((n, i) =>
       (i === 3 ? Math.round(parseFloat(n) * 255) : parseFloat(n))
@@ -191,12 +198,12 @@ function rgbaToHex(rgba: Array<string>) {
     .join('')}`;
   return hexClean(hex);
 }
-function rgbaStringToHex(rgbaString: string) {
+function rgbaStringToHex(rgbaString: string): string {
   const rgba = rgbaString
     .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
     .slice(1);
   return rgbaToHex(rgba);
 }
-function hexClean(hex: string) {
+function hexClean(hex: string): string {
   return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
 }
