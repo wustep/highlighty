@@ -7,7 +7,6 @@ const defaultOptions = {
       title: 'Highlighty',
       color: '#800080',
       textColor: '#ffffff',
-      toggled: true,
     },
   ],
   allowlist: [],

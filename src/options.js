@@ -173,7 +173,6 @@ $(function () {
     let highlighter = options.highlighter;
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
-        $('#PhraseList__toggle').attr('checked', highlighter[i].toggled);
         let $newListDiv = addNewListDiv(
           highlighter[i].title,
           highlighter[i].color,
@@ -211,8 +210,6 @@ $(function () {
     $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
     $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
-    $newListDiv.find('.PhraseList__toggle').attr('id', `PhraseList--toggle--${index}`);
-    $newListDiv.find('.PhraseList__toggleLabel').attr('for', `PhraseList--toggle--${index}`);
     if (isImportPreview) {
       $('#BulkImportPreviewModal__preview').append($newListDiv);
     } else {
@@ -358,7 +355,6 @@ $(function () {
           color: listColor,
           textColor: listTextColor,
           title: listTitle,
-          toggled: true,
         };
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -376,7 +372,6 @@ $(function () {
     setupPhraseListDeleteHandler($list);
     setupPhraseListAddPhraseHandler($list);
     setupPhraseListDeletePhraseHandler($list);
-    setupPhraseListToggleHandler($list);
   }
 
   function setupPhraseListEditColorHandler($list) {
@@ -415,17 +410,6 @@ $(function () {
           });
         });
       }
-    });
-  }
-
-  function setupPhraseListToggleHandler($list) {
-    $list.on('click', '.PhraseList__toggle', () => {
-      let listIndex = $list.data('index');
-      let newToggled = $(`#PhraseList--toggle--${listIndex}`).is(':checked');
-      chrome.storage.local.get((options) => {
-        options.highlighter[listIndex].toggled = newToggled;
-        chrome.storage.local.set({ highlighter: options.highlighter });
-      });
     });
   }
 
@@ -615,7 +599,6 @@ $(function () {
             phrases: phraseList['phrases'],
             textColor: getTextColor(phraseList['color']),
             title: phraseList['title'],
-            toggled: phraseList['toggled'],
           });
         });
 
@@ -689,7 +672,6 @@ $(function () {
               title: phraseList.title,
               color: phraseList.color,
               phrases: phraseList.phrases,
-              toggled: phraseList.toggled,
             });
           }
         });
