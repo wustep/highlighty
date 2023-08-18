@@ -65,6 +65,16 @@ chrome.runtime.onInstalled.addListener((details) => {
         }
       }
       /**
+       * Ensure updated structure of highlighter objects
+       */
+      for (const highlighterIndex of currentOptions.highlighter) {
+        for (const attributeName of Object.keys(defaultOptions.highlighter)) {
+          if (!(attributeName in currentOptions.highlighter[highlighterIndex])) {
+            chrome.storage.local.set({ highlighter: defaultOptions.highlighter });
+          }
+        }
+      }
+      /**
        * Convert any non-hex colors to hex.
        */
       currentOptions.highlighter.forEach((list) => {
