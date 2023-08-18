@@ -82,14 +82,22 @@ $(function () {
   function highlightPhrases(options) {
     log('highlightPhrases start');
     for (let phraseListIndex in phrasesToHighlight) {
-      log('highlightPhrases ' + phraseListIndex);
+      log(
+        'highlightPhrases ' +
+          phraseListIndex +
+          ' toggled:' +
+          options.highlighter[phraseListIndex].toggled,
+      );
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
       let hilitor = new Hilitor();
-      hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
-        classes: markClasses,
-        caseSensitive: !options.enableCaseInsensitive,
-        partialMatch: options.enablePartialMatch,
-      });
+      let toggled = options.highlighter[phraseListIndex].toggled;
+      if (!(toggled === false)) {
+        hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
+          classes: markClasses,
+          caseSensitive: !options.enableCaseInsensitive,
+          partialMatch: options.enablePartialMatch,
+        });
+      }
     }
     if (options.enableTitleMouseover) {
       log('enableTitleMousever start');
