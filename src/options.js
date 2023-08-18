@@ -10,9 +10,8 @@ $(function () {
     removeExistingListStyles();
     setupKeyboardShortcutHandler(options.keyboardShortcut);
 
-    addExistingLists(options.highlighter);
+    addExistingLists(options);
     addExistingListStyles(options);
-
     // These handlers should only be ran once.
     if (fresh) {
       addExistingURLLists(options);
@@ -47,6 +46,7 @@ $(function () {
     $('#Settings__keyboardShortcut').val(options.keyboardShortcut);
     $('#Settings__enableURLDenylist').attr('checked', options.enableURLDenylist);
     $('#Settings__enableURLAllowlist').attr('checked', options.enableURLAllowlist);
+    $('#Settings__sorting').val(options.sorting);
     showHideAutoHighlightSettings();
   }
 
@@ -169,7 +169,8 @@ $(function () {
     $('head').append(highlighterStyles);
   }
 
-  function addExistingLists(highlighter, isImportPreview = false) {
+  function addExistingLists(options, isImportPreview = false) {
+    let highlighter = options.highlighter;
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
         $('#PhraseList__toggle').attr('checked', highlighter[i].toggled);
@@ -179,15 +180,27 @@ $(function () {
           i,
           isImportPreview,
         );
-        for (let j = 0; j < highlighter[i].phrases.length; j++) {
+        const sortedList = sortPhrases(options, i);
+        for (let phrase of sortedList) {
           if (isImportPreview) {
-            addPreviewPhraseElement($newListDiv, highlighter[i].phrases[j], highlighter[i].color);
+            addPreviewPhraseElement($newListDiv, phrase, highlighter[i].color);
           } else {
-            addPhraseElement($newListDiv, highlighter[i].phrases[j], i);
+            addPhraseElement($newListDiv, phrase, i);
           }
         }
       }
     }
+  }
+
+  function sortPhrases(options, listIndex) {
+    let list = options.highlighter[listIndex].phrases.slice();
+    const order = options.sorting;
+    if (order === 'A-Z') {
+      list = alphabetical(list);
+    } else if (order === 'Z-A') {
+      list = reverseAlphabetical(list);
+    }
+    return list;
   }
 
   function addNewListDiv(title, color, index, isImportPreview = false) {
@@ -845,8 +858,10 @@ $(function () {
       let newKeyboardShortcut = $('#Settings__keyboardShortcut').val();
       let newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
       let newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
+      let newSorting = $('#Settings__sorting').val();
 
-      let newOptions = {
+      const newOptions = {
+        ...options,
         enableAutoHighlight: newEnableAutoHighlight,
         enableAutoHighlightUpdates: newEnableAutoHighlightUpdates,
         enableTitleMouseover: newEnableTitleMouseover,
@@ -855,6 +870,7 @@ $(function () {
         enableURLDenylist: newEnableURLDenylist,
         enableURLAllowlist: newEnableURLAllowlist,
         keyboardShortcut: newKeyboardShortcut,
+        sorting: newSorting,
       };
 
       if (newEnableAutoHighlight !== options.newEnableAutoHighlight) {
@@ -864,12 +880,37 @@ $(function () {
 
       chrome.storage.local.set(newOptions, () => {
         alert('Settings saved!');
+        setupOptionsPage(newOptions, false);
       });
     });
   });
 
   function pluralize(count, noun, suffix = 's') {
     return `${count} ${noun}${count !== 1 ? suffix : ''}`;
+  }
+
+  /**
+   * Alphabetically sorts a list of strings
+   */
+  function alphabetical(list) {
+    list.sort((a, b) => {
+      const A = a.toLowerCase();
+      const B = b.toLowerCase();
+      if (A < B) {
+        return -1;
+      }
+      if (A > B) {
+        return 1;
+      }
+      return 0;
+    });
+    return list;
+  }
+
+  function reverseAlphabetical(list) {
+    let sortedList = alphabetical(list);
+    sortedList.reverse();
+    return sortedList;
   }
 
   /**

@@ -148,7 +148,6 @@
               Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
             </label>
           </div>
-          <br />
           <div class="field is-grouped">
             <div class="control">
               <div class="input">
@@ -159,6 +158,25 @@
               <label for="Settings__keyboardShortcut" class="label is-pulled-left">
                 Keyboard shortcut for extension button
               </label>
+            </div>
+          </div>
+          <div class="field is-grouped">
+            <div class="control">
+              <div class="select">
+                <select id="Settings__sorting">
+                  <option value="None">None</option>
+                  <option value="A-Z">A-Z</option>
+                  <option value="Z-A">Z-A</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-label is-normal">
+              <label
+                title="Page highlighting will not use sorting"
+                for="Settings__sorting"
+                class="label is-pulled-left"
+                ><u>Sort phrases</u></label
+              >
             </div>
           </div>
           <div class="button is-info" id="Settings__save">Save</div>

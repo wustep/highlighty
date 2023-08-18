@@ -27,6 +27,7 @@ const defaultOptions = {
    * e.g. "ctrl + shift + F5"
    */
   keyboardShortcut: 'F6',
+  sorting: 'None',
 };
 
 const migratedOptionsMap = {
