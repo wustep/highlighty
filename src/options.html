@@ -150,17 +150,14 @@
           </div>
           <div class="field is-grouped">
             <div class="control">
-              <div class="select">
-                <select id="Settings__keyboardShortcut">
-                  <option value="-1">None</option>
-                  <option value="117">F6</option>
-                </select>
+              <div class="input">
+                <input type="text" id="Settings__keyboardShortcut" data-recording="false" readonly placeholder="none"></input>
               </div>
             </div>
             <div class="field-label is-normal">
-              <label for="Settings__keyboardShortcut" class="label is-pulled-left"
-                >Keyboard shortcut for extension button</label
-              >
+              <label for="Settings__keyboardShortcut" class="label is-pulled-left">
+                Keyboard shortcut for extension button
+              </label>
             </div>
           </div>
           <div class="field is-grouped">
@@ -193,8 +190,16 @@
             <div class="column is-three-fifths">
               <div class="field is-grouped PhraseList__header">
                 <h1 class="title">
-                  <button class="PhraseList__color" style="background-color: #000000"></button>
+                  <input
+                    id="PhraseList__toggle"
+                    type="checkbox"
+                    class="switch is-outlined is-medium is-info PhraseList__toggle"
+                    checked="checked"
+                  />
+                  <label class="PhraseList__toggleLabel" for="PhraseList__toggle"> </label>
                   <span class="PhraseList__title"> </span>
+                  <span class="tag PhraseList__phraseCount"> </span>
+                  <button class="PhraseList__color" style="background-color: #000000"></button>
                 </h1>
               </div>
             </div>
@@ -229,7 +234,6 @@
           </form>
           <div class="PhraseList__phrases"></div>
         </div>
-
         <div id="NewPhraseList">
           <form>
             <label class="label"> Add new list </label>

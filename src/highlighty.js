@@ -82,14 +82,22 @@ $(function () {
   function highlightPhrases(options) {
     log('highlightPhrases start');
     for (let phraseListIndex in phrasesToHighlight) {
-      log('highlightPhrases ' + phraseListIndex);
+      log(
+        'highlightPhrases ' +
+          phraseListIndex +
+          ' toggled:' +
+          options.highlighter[phraseListIndex].toggled,
+      );
       let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
       let hilitor = new Hilitor();
-      hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
-        classes: markClasses,
-        caseSensitive: !options.enableCaseInsensitive,
-        partialMatch: options.enablePartialMatch,
-      });
+      let toggled = options.highlighter[phraseListIndex].toggled;
+      if (!(toggled === false)) {
+        hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
+          classes: markClasses,
+          caseSensitive: !options.enableCaseInsensitive,
+          partialMatch: options.enablePartialMatch,
+        });
+      }
     }
     if (options.enableTitleMouseover) {
       log('enableTitleMousever start');
@@ -180,11 +188,29 @@ $(function () {
   });
 
   chrome.storage.local.get((options) => {
-    $(window).keydown((event) => {
-      if (event.keyCode == options.keyboardShortcut) {
-        processHighlights(true);
-      }
-    });
+    if (options.keyboardShortcut && options.keyboardShortcut.trim() !== '') {
+      window.addEventListener('keydown', (e) => {
+        const specialKeys = {
+          ' ': 'space',
+        };
+        const pressedKeys = [];
+        if (e.ctrlKey) pressedKeys.push('ctrl');
+        if (e.shiftKey) pressedKeys.push('shift');
+        if (e.altKey) pressedKeys.push('alt');
+        if (e.metaKey) pressedKeys.push('meta');
+        let keyStr = ['Control', 'Shift', 'Alt', 'Meta,'].includes(e.key)
+          ? ''
+          : specialKeys[e.key] || e.key;
+        if (keyStr.length < 2) {
+          keyStr = keyStr.toLowerCase();
+        }
+        if (keyStr) pressedKeys.push(keyStr);
+        const pressedKeysString = pressedKeys.join(' + ').trim();
+        if (pressedKeysString === options.keyboardShortcut) {
+          processHighlights(true);
+        }
+      });
+    }
   });
 
   chrome.runtime.onMessage.addListener((message) => {

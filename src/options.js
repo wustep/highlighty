@@ -8,6 +8,7 @@ $(function () {
   function setupOptionsPage(options, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
+    setupKeyboardShortcutHandler(options.keyboardShortcut);
 
     addExistingLists(options);
     addExistingListStyles(options);
@@ -28,7 +29,7 @@ $(function () {
   }
 
   function removeExistingListStyles() {
-    $(`.HighlighterStyles`).remove();
+    $('#HighlighterStyles').remove();
   }
 
   function redoAllListStyles(options) {
@@ -61,6 +62,63 @@ $(function () {
     $('#Settings__enableAutoHighlight').on('click', function () {
       showHideAutoHighlightSettings();
     });
+  }
+
+  function setupKeyboardShortcutHandler(savedShortcut) {
+    const keyboardShortcutInput = $('#Settings__keyboardShortcut');
+
+    function updateShortcutInput(shortcutString) {
+      keyboardShortcutInput.val(shortcutString);
+      keyboardShortcutInput.width((shortcutString.length + 6) * 5);
+    }
+
+    function stopRecording() {
+      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
+      document.removeEventListener('keydown', handleKeyDown);
+    }
+
+    $(document).ready(() => {
+      updateShortcutInput(savedShortcut);
+    });
+
+    keyboardShortcutInput.on('focus', () => {
+      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'true');
+      document.addEventListener('keydown', handleKeyDown);
+    });
+
+    keyboardShortcutInput.on('blur', () => {
+      stopRecording();
+    });
+
+    function handleKeyDown(e) {
+      if (e.key === 'Enter') {
+        keyboardShortcutInput.blur();
+        return;
+      }
+      if (e.key === 'Escape') {
+        keyboardShortcutInput.blur();
+        updateShortcutInput('');
+        return;
+      }
+      const specialKeys = {
+        ' ': 'space',
+      };
+      const pressedKeys = [];
+      if (e.ctrlKey) pressedKeys.push('ctrl');
+      if (e.shiftKey) pressedKeys.push('shift');
+      if (e.altKey) pressedKeys.push('alt');
+      if (e.metaKey) pressedKeys.push('meta');
+      let keyStr = ['Control', 'Shift', 'Alt', 'Meta,'].includes(e.key)
+        ? ''
+        : specialKeys[e.key] || e.key;
+      // Function keys remain capitalized
+      if (keyStr.length < 2) {
+        keyStr = keyStr.toLowerCase();
+      }
+      if (keyStr) pressedKeys.push(keyStr);
+      let pressedKeysString = pressedKeys.join(' + ').trim();
+      updateShortcutInput(pressedKeysString);
+    }
   }
 
   function addExistingURLLists(options) {
@@ -97,10 +155,13 @@ $(function () {
   function addExistingListStyles(options) {
     let highlighterStyles = `<style id="HighlighterStyles">span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
+      const { color: highlighterColor = 'black', textColor = 'white' } = options.highlighter[i];
+      // Skip empty lists!
       if (Object.keys(options.highlighter[i]).length) {
-        // Skip deleted lists!
-        let highlighterColor = options.highlighter[i].color || 'black';
-        let textColor = options.highlighter[i].textColor || 'white';
+        $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
+          backgroundColor: highlighterColor,
+          color: textColor,
+        });
         highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
       }
     }
@@ -112,6 +173,7 @@ $(function () {
     let highlighter = options.highlighter;
     for (let i = 0; i < highlighter.length; i++) {
       if (Object.keys(highlighter[i]).length) {
+        $('#PhraseList__toggle').attr('checked', highlighter[i].toggled);
         let $newListDiv = addNewListDiv(
           highlighter[i].title,
           highlighter[i].color,
@@ -148,6 +210,9 @@ $(function () {
       .data('index', index);
     $newListDiv.find('.PhraseList__color').css('background-color', color);
     $newListDiv.find('.PhraseList__title').text(title);
+    $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
+    $newListDiv.find('.PhraseList__toggle').attr('id', `PhraseList--toggle--${index}`);
+    $newListDiv.find('.PhraseList__toggleLabel').attr('for', `PhraseList--toggle--${index}`);
     if (isImportPreview) {
       $('#BulkImportPreviewModal__preview').append($newListDiv);
     } else {
@@ -163,7 +228,26 @@ $(function () {
           <button class="delete is-small PhraseList__phrase__delete"></button>
         </span>`,
     );
+    incrementPhraseCount($listDiv);
   }
+
+  function incrementPhraseCount($listDiv) {
+    const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
+    // Defaults to 0 if data-count attribute not set
+    let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
+    phraseCount++;
+    $phraseCount.data('count', phraseCount);
+    $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
+  }
+
+  function decrementPhraseCount($listDiv) {
+    const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
+    let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
+    phraseCount--;
+    $phraseCount.data('count', phraseCount);
+    $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
+  }
+
   function addPreviewPhraseElement($listDiv, phrase, color) {
     const textColor = getTextColor(color);
     $listDiv
@@ -274,6 +358,7 @@ $(function () {
           color: listColor,
           textColor: listTextColor,
           title: listTitle,
+          toggled: true,
         };
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -291,6 +376,7 @@ $(function () {
     setupPhraseListDeleteHandler($list);
     setupPhraseListAddPhraseHandler($list);
     setupPhraseListDeletePhraseHandler($list);
+    setupPhraseListToggleHandler($list);
   }
 
   function setupPhraseListEditColorHandler($list) {
@@ -329,6 +415,17 @@ $(function () {
           });
         });
       }
+    });
+  }
+
+  function setupPhraseListToggleHandler($list) {
+    $list.on('click', '.PhraseList__toggle', () => {
+      let listIndex = $list.data('index');
+      let newToggled = $(`#PhraseList--toggle--${listIndex}`).is(':checked');
+      chrome.storage.local.get((options) => {
+        options.highlighter[listIndex].toggled = newToggled;
+        chrome.storage.local.set({ highlighter: options.highlighter });
+      });
     });
   }
 
@@ -373,12 +470,14 @@ $(function () {
     let $phrases = $list.find('.PhraseList__phrases');
     $phrases.on('click', '.PhraseList__phrase__delete', (e) => {
       let $phrase = $(e.target).parent();
-      if (window.confirm('Are you sure you want to delete: ' + $phrase.text() + '?')) {
+      let confirmationMessage = 'Are you sure you want to delete: ' + $phrase.text().trim() + '?';
+      if (window.confirm(confirmationMessage)) {
         chrome.storage.local.get((options) => {
           let phraseIndex = options.highlighter[listIndex].phrases.indexOf($phrase.text());
           options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             $phrases.find($phrase).remove();
+            decrementPhraseCount($list);
           });
         });
       }
@@ -516,6 +615,7 @@ $(function () {
             phrases: phraseList['phrases'],
             textColor: getTextColor(phraseList['color']),
             title: phraseList['title'],
+            toggled: phraseList['toggled'],
           });
         });
 
@@ -589,6 +689,7 @@ $(function () {
               title: phraseList.title,
               color: phraseList.color,
               phrases: phraseList.phrases,
+              toggled: phraseList.toggled,
             });
           }
         });
