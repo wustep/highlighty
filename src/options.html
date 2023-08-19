@@ -336,21 +336,37 @@
           <button id="BulkImportModal__close" class="delete" aria-label="close"></button>
         </header>
         <section class="modal-card-body">
-          <div class="field">
-            <label class="label">Import Type</label>
-            <div class="control">
-              <div class="select">
-                <select id="BulkImportModal__typesSelect">
-                  <option id="BulkImportModal__typesSelect--ImportAsNew" value="ImportAsNew">
-                    Import as new lists
-                  </option>
-                  <option id="BulkImportModal__typesSelect--ImportAndMerge" value="ImportAndMerge">
-                    Import and merge lists
-                  </option>
-                  <option id="BulkImportModal__typesSelect--Replace" value="Replace">
-                    Replace existing lists
-                  </option>
-                </select>
+          <div class="BulkImport__optionsBody">
+            <div class="field">
+              <label class="label">Import Type</label>
+              <div class="control">
+                <div class="select">
+                  <select id="BulkImportModal__typesSelect">
+                    <option id="BulkImportModal__typesSelect--ImportAsNew" value="ImportAsNew">
+                      Import as new lists
+                    </option>
+                    <option id="BulkImportModal__typesSelect--ImportAndMerge" value="ImportAndMerge">
+                      Import and merge lists
+                    </option>
+                    <option id="BulkImportModal__typesSelect--Replace" value="Replace">
+                      Replace existing lists
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Import from File</label>
+              <div id="BulkImport__file" class="file is-normal">
+                <label class="file-label">
+                  <input class="file-input" type="file" accept=".json, .txt" name="resume">
+                  <span class="file-cta">
+                    <span class="file-label">
+                      Choose a file…
+                    </span>
+                  </span>
+                  <span class="file-name" style="display: none"></span>
+                </label>
               </div>
             </div>
           </div>
