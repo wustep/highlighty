@@ -1,6 +1,14 @@
 /* Highlighty.js | by Stephen Wu */
 
 $(function () {
+  const {
+    isAllowedURL,
+    isPhraseListEnabled,
+    normalizeOptions,
+    normalizePhrases,
+    prepareHilitorOptions,
+    shortcutFromKeyboardEvent,
+  } = HighlightyCore;
   if (window.top !== window.self) {
     // Don't run on frames or iframes.
     return;
@@ -34,21 +42,6 @@ $(function () {
     const now = new Date();
     const logPrefix = `[Highlighty] [${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}.${now.getMilliseconds()}]`;
     console.log(logPrefix, stuff);
-  }
-
-  function isPhraseListEnabled(list) {
-    // Lists created before the per-list toggle are enabled by default.
-    return list.enabled !== false && list.toggled !== false;
-  }
-
-  function getValidPhrases(list) {
-    if (!Array.isArray(list.phrases)) {
-      return [];
-    }
-
-    return list.phrases
-      .filter((phrase) => typeof phrase === 'string' && phrase.trim())
-      .map((phrase) => phrase.trim());
   }
 
   function setupHighlighter(options) {
@@ -96,7 +89,7 @@ $(function () {
         return;
       }
 
-      const phrases = getValidPhrases(list);
+      const phrases = normalizePhrases(list.phrases);
       if (!phrases.length) {
         return;
       }
@@ -120,9 +113,8 @@ $(function () {
       const markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
       const hilitor = new Hilitor();
       hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
+        ...prepareHilitorOptions(options),
         classes: markClasses,
-        caseSensitive: !options.enableCaseInsensitive,
-        partialMatch: options.enablePartialMatch,
       });
     }
 
@@ -193,9 +185,8 @@ $(function () {
   function applyQuickSearch(options, phrase) {
     const hilitor = new Hilitor();
     hilitor.applyPhrases([phrase], {
+      ...prepareHilitorOptions(options, { partialMatch: true }),
       classes: `${HL_BASE_CLASS} ${HL_QUICK_CLASS}`,
-      caseSensitive: !options.enableCaseInsensitive,
-      partialMatch: true,
     });
   }
 
@@ -303,20 +294,6 @@ $(function () {
     highlightPhrases(options);
   }
 
-  function urlMatchesAny(urlPhrases) {
-    return Array.isArray(urlPhrases)
-      ? urlPhrases.some(
-          (urlPhrase) => typeof urlPhrase === 'string' && window.location.href.includes(urlPhrase),
-        )
-      : false;
-  }
-
-  function isAllowedURL(options) {
-    const denylisted = options.enableURLDenylist && urlMatchesAny(options.denylist);
-    const allowlisted = urlMatchesAny(options.allowlist);
-    return !(denylisted || (options.enableURLAllowlist && !allowlisted));
-  }
-
   function getActionState(options) {
     if (!options.enableAutoHighlight) {
       return bodyHighlighted ? 'manualOn' : 'manualOff';
@@ -324,7 +301,7 @@ $(function () {
     if (!options.autoHighlighter) {
       return 'autoOff';
     }
-    if (!isAllowedURL(options) && !blockedPageOverride) {
+    if (!isAllowedURL(window.location.href, options) && !blockedPageOverride) {
       return 'blocked';
     }
     return blockedPageOverride ? 'manualOn' : 'autoOn';
@@ -349,7 +326,7 @@ $(function () {
     } else if (!options.autoHighlighter) {
       blockedPageOverride = false;
       clearHighlights();
-    } else if (!isAllowedURL(options)) {
+    } else if (!isAllowedURL(window.location.href, options)) {
       if (!blockedPageOverride) {
         clearHighlights();
       } else {
@@ -383,7 +360,7 @@ $(function () {
       return;
     }
 
-    if (!isAllowedURL(currentOptions)) {
+    if (!isAllowedURL(window.location.href, currentOptions)) {
       blockedPageOverride = !bodyHighlighted;
       if (blockedPageOverride) {
         renderHighlights(currentOptions);
@@ -398,7 +375,7 @@ $(function () {
   }
 
   chrome.storage.local.get((options) => {
-    applyOptionsState(options);
+    applyOptionsState(normalizeOptions(options));
   });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -407,7 +384,7 @@ $(function () {
     }
 
     chrome.storage.local.get((options) => {
-      applyOptionsState(options);
+      applyOptionsState(normalizeOptions(options));
     });
   });
 
@@ -416,22 +393,7 @@ $(function () {
       return;
     }
 
-    const specialKeys = { ' ': 'space' };
-    const pressedKeys = [];
-    if (event.ctrlKey) pressedKeys.push('ctrl');
-    if (event.shiftKey) pressedKeys.push('shift');
-    if (event.altKey) pressedKeys.push('alt');
-    if (event.metaKey) pressedKeys.push('meta');
-
-    let keyString = ['Control', 'Shift', 'Alt', 'Meta'].includes(event.key)
-      ? ''
-      : specialKeys[event.key] || event.key;
-    if (keyString.length < 2) {
-      keyString = keyString.toLowerCase();
-    }
-    if (keyString) pressedKeys.push(keyString);
-
-    if (pressedKeys.join(' + ').trim() === currentOptions.keyboardShortcut) {
+    if (shortcutFromKeyboardEvent(event) === currentOptions.keyboardShortcut) {
       toggleHighlights();
     }
   });
@@ -456,7 +418,7 @@ $(function () {
       bodyHighlighted &&
       currentOptions.enableAutoHighlight &&
       currentOptions.autoHighlighter &&
-      (isAllowedURL(currentOptions) || blockedPageOverride)
+      (isAllowedURL(window.location.href, currentOptions) || blockedPageOverride)
     ) {
       highlightPhrases(currentOptions);
     }
@@ -468,7 +430,7 @@ $(function () {
       !currentOptions?.enableAutoHighlight ||
       !currentOptions.enableAutoHighlightUpdates ||
       !bodyHighlighted ||
-      (!isAllowedURL(currentOptions) && !blockedPageOverride)
+      (!isAllowedURL(window.location.href, currentOptions) && !blockedPageOverride)
     ) {
       return;
     }

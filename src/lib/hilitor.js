@@ -13,19 +13,8 @@ function Hilitor() {
   let caseSensitive = false;
 
   function setRegexFromPhrases(phrases) {
-    const phraseSources = phrases.map((phrase) =>
-      String(phrase).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-    );
-    if (phraseSources.length) {
-      let regex = '(?:' + phraseSources.join('|') + ')';
-      if (!partialMatch) {
-        regex = '\\b' + regex + '\\b';
-      }
-      const flags = caseSensitive ? '' : 'i';
-      matchRegExp = new RegExp(regex, flags);
-      return matchRegExp;
-    }
-    return false;
+    matchRegExp = HighlightyCore.buildPhraseRegExp(phrases, { caseSensitive, partialMatch });
+    return matchRegExp || false;
   }
 
   // Recursively apply word highlighting

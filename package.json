@@ -1,0 +1,25 @@
+{
+  "name": "highlighty",
+  "version": "1.3.0",
+  "private": true,
+  "description": "Web extension to highlight phrases from given lists.",
+  "scripts": {
+    "test": "node --test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && node --check src/background.js && node --check src/highlighty.js && node --check src/options.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wustep/highlighty.git"
+  },
+  "author": "Stephen Wu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wustep/highlighty/issues"
+  },
+  "homepage": "https://github.com/wustep/highlighty#readme",
+  "devDependencies": {
+    "prettier": "^3.9.6"
+  }
+}
