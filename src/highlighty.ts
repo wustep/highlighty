@@ -1,14 +1,29 @@
 /* Highlighty.js | by Stephen Wu */
 
 import { Hilitor } from './hilitor';
+import {
+  buildHighlightAssignments,
+  findHighlightAssignment,
+  type HighlightAssignment,
+} from './modules/highlight-plan';
 import { isEditableTarget, shortcutMatchesEvent } from './modules/keyboard';
 import { prepareHilitorOptions } from './modules/matching';
+import { selectHighlightRoots } from './modules/mutation-roots';
 import { isPhraseListEnabled, normalizePhrases } from './modules/phrase-lists';
 import { normalizeOptions } from './modules/storage';
-import type { HighlightyOptions } from './modules/types';
+import type { HighlightyOptions, PhraseList } from './modules/types';
 import { isAllowedURL, isURLAllowedForPhraseList } from './modules/urls';
 
-$(function () {
+declare global {
+  interface Window {
+    __highlightyLoaded?: boolean;
+  }
+}
+
+function initializeHighlighty() {
+  if (window.__highlightyLoaded) return;
+  window.__highlightyLoaded = true;
+
   if (window.top !== window.self) {
     // Don't run on frames or iframes.
     return;
@@ -21,18 +36,19 @@ $(function () {
   const HL_TOOLBAR_ID = 'Highlighty__toolbar';
   const HL_QUICK_CLASS = 'Highlighty__quick-result';
   const HL_FOCUSED_CLASS = 'Highlighty__focused';
-  const MUTATION_TIMER = 3000;
+  const HL_OVERLAP_PREFIX_CLASS = 'Highlighty__overlap--';
+  const MUTATION_DELAY = 100;
 
   let bodyHighlighted = false;
   let blockedPageOverride = false;
   let currentOptions = null;
-  let phrasesToHighlight = [];
+  let highlightAssignments: HighlightAssignment[] = [];
+  let activeLists = new Map<number, PhraseList>();
   let currentMatchIndex = -1;
   let quickSearchPhrase = '';
-  let mutationTime = true;
-  let mutationDelayPending = false;
   let observer = null;
-  let observerPauseDepth = 0;
+  let mutationTimer: ReturnType<typeof setTimeout> | null = null;
+  let togglePending = false;
 
   const developerMode = !('update_url' in chrome.runtime.getManifest());
 
@@ -46,21 +62,13 @@ $(function () {
     console.log(logPrefix, stuff);
   }
 
-  function withoutObservedMutations(callback) {
-    if (observerPauseDepth === 0) observer?.disconnect();
-    observerPauseDepth++;
-    try {
-      return callback();
-    } finally {
-      observerPauseDepth--;
-      if (observerPauseDepth === 0) {
-        observer?.observe(document, { subtree: true, childList: true });
-      }
-    }
+  function discardObservedMutations() {
+    observer?.takeRecords();
   }
 
   function setupHighlighter(options) {
-    phrasesToHighlight = [];
+    const sources = [];
+    activeLists = new Map();
     let highlighterStyles = `
       .${HL_BASE_CLASS} { ${options.baseStyles} }
       .${HL_TOOLTIP_CLASS} { position: relative; cursor: help; }
@@ -118,44 +126,84 @@ $(function () {
       const textColor = list.textColor || 'white';
       const customStyles = list.styles || '';
       highlighterStyles += `.${HL_PREFIX_CLASS}${listIndex} { background-color: ${highlighterColor}; color: ${textColor}; ${customStyles} }\r\n`;
-      phrasesToHighlight[listIndex] = phrases;
+      activeLists.set(listIndex, list);
+      sources.push({ listIndex, phrases });
     });
+
+    const caseSensitive = !options.enableCaseInsensitive;
+    highlightAssignments = buildHighlightAssignments(sources, caseSensitive);
+    for (const assignment of highlightAssignments.filter(
+      ({ listIndexes }) => listIndexes.length > 1,
+    )) {
+      const lists = assignment.listIndexes.map((index) => activeLists.get(index));
+      const stripeSize = 100 / lists.length;
+      const stripes = lists.flatMap((list, index) => {
+        const start = index * stripeSize;
+        const end = (index + 1) * stripeSize;
+        return [`${list.color} ${start}%`, `${list.color} ${end}%`];
+      });
+      const firstList = lists[0];
+      highlighterStyles += `.${overlapClass(assignment.listIndexes)} { ${firstList.styles || ''} background-color: ${firstList.color}; background-image: linear-gradient(135deg, ${stripes.join(', ')}); color: ${firstList.textColor}; }\r\n`;
+    }
 
     const styleElement = document.createElement('style');
     styleElement.id = HL_STYLE_ID;
     styleElement.textContent = highlighterStyles;
     document.head.appendChild(styleElement);
-    log(phrasesToHighlight);
+    log(highlightAssignments);
   }
 
-  function highlightPhrases(options) {
-    withoutObservedMutations(() => {
-      for (const phraseListIndex in phrasesToHighlight) {
-        const markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
-        const hilitor = new Hilitor();
-        hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
-          ...prepareHilitorOptions(options),
-          classes: markClasses,
-        });
+  function overlapClass(listIndexes: number[]) {
+    return `${HL_OVERLAP_PREFIX_CLASS}${listIndexes.join('-')}`;
+  }
+
+  function decorateSavedMatch(mark: HTMLElement, matchedText: string, options) {
+    const assignment = findHighlightAssignment(
+      matchedText,
+      highlightAssignments,
+      !options.enableCaseInsensitive,
+    );
+    if (!assignment) return;
+
+    if (assignment.listIndexes.length === 1) {
+      const listIndex = assignment.listIndexes[0];
+      mark.classList.add(`${HL_PREFIX_CLASS}${listIndex}`);
+      const title = activeLists.get(listIndex)?.title;
+      if (options.enableTitleMouseover && title) {
+        mark.classList.add(HL_TOOLTIP_CLASS);
+        mark.dataset.highlightyTitle = title;
       }
+      return;
+    }
+
+    mark.classList.add(overlapClass(assignment.listIndexes), HL_TOOLTIP_CLASS);
+    const titles = assignment.listIndexes
+      .map((index) => activeLists.get(index)?.title)
+      .filter(Boolean);
+    mark.dataset.highlightyTitle = `Lists: ${titles.join(', ')}`;
+    mark.setAttribute('aria-label', `${matchedText} — ${mark.dataset.highlightyTitle}`);
+  }
+
+  function highlightPhrases(options, targetNodes: Node[] = [document.body]) {
+    const phrases = highlightAssignments.map(({ phrase }) => phrase);
+    for (const targetNode of targetNodes) {
+      const hilitor = new Hilitor();
+      hilitor.applyPhrases(phrases, {
+        ...prepareHilitorOptions(options),
+        targetNode,
+        classes: HL_BASE_CLASS,
+        decorateMatch: (mark, matchedText) => decorateSavedMatch(mark, matchedText, options),
+      });
 
       if (quickSearchPhrase) {
-        applyQuickSearch(options, quickSearchPhrase);
+        applyQuickSearch(options, quickSearchPhrase, targetNode);
       }
+    }
 
-      if (options.enableTitleMouseover) {
-        options.highlighter.forEach((list, listIndex) => {
-          if (list?.title && isPhraseListEnabled(list)) {
-            $(`.${HL_PREFIX_CLASS}${listIndex}`)
-              .addClass(HL_TOOLTIP_CLASS)
-              .attr('data-highlighty-title', list.title);
-          }
-        });
-      }
-
-      bodyHighlighted = true;
-      setupToolbar(options);
-    });
+    bodyHighlighted = true;
+    setupToolbar(options);
+    updateNavigator();
+    discardObservedMutations();
   }
 
   function getHighlightMarks() {
@@ -205,22 +253,22 @@ $(function () {
     }
   }
 
-  function applyQuickSearch(options, phrase) {
+  function applyQuickSearch(options, phrase, targetNode: Node = document.body) {
     const hilitor = new Hilitor();
     hilitor.applyPhrases([phrase], {
       ...prepareHilitorOptions(options, { partialMatch: true }),
+      targetNode,
       classes: `${HL_BASE_CLASS} ${HL_QUICK_CLASS}`,
     });
   }
 
   function runQuickSearch(options, phrase) {
-    withoutObservedMutations(() => {
-      removeMarksByClass(HL_QUICK_CLASS);
-      quickSearchPhrase = phrase.trim();
-      currentMatchIndex = -1;
-      if (quickSearchPhrase) applyQuickSearch(options, quickSearchPhrase);
-      updateNavigator();
-    });
+    removeMarksByClass(HL_QUICK_CLASS);
+    quickSearchPhrase = phrase.trim();
+    currentMatchIndex = -1;
+    if (quickSearchPhrase) applyQuickSearch(options, quickSearchPhrase);
+    updateNavigator();
+    discardObservedMutations();
   }
 
   function setupToolbar(options) {
@@ -308,19 +356,16 @@ $(function () {
   }
 
   function clearHighlights() {
-    withoutObservedMutations(() => {
-      removeHighlights();
-      $(`#${HL_STYLE_ID}`).remove();
-      removeToolbar();
-    });
+    removeHighlights();
+    document.getElementById(HL_STYLE_ID)?.remove();
+    removeToolbar();
+    discardObservedMutations();
   }
 
   function renderHighlights(options) {
-    withoutObservedMutations(() => {
-      clearHighlights();
-      setupHighlighter(options);
-      highlightPhrases(options);
-    });
+    clearHighlights();
+    setupHighlighter(options);
+    highlightPhrases(options);
   }
 
   function getActionState(options) {
@@ -405,6 +450,10 @@ $(function () {
 
   chrome.storage.local.get((options) => {
     applyOptionsState(normalizeOptions(options));
+    if (togglePending) {
+      togglePending = false;
+      toggleHighlights();
+    }
   });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -434,31 +483,31 @@ $(function () {
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message?.type === 'toggleHighlights') {
-      toggleHighlights();
+      if (currentOptions) {
+        toggleHighlights();
+      } else {
+        togglePending = true;
+      }
     }
   });
 
-  function autoHighlightIfReady() {
-    if (!mutationTime || !currentOptions) {
+  function highlightAddedNodes(nodes: Node[]) {
+    if (
+      !currentOptions ||
+      !bodyHighlighted ||
+      !currentOptions.enableAutoHighlight ||
+      !currentOptions.autoHighlighter ||
+      (!isAllowedURL(window.location.href, currentOptions) && !blockedPageOverride)
+    ) {
       return;
     }
 
-    mutationTime = false;
-    setTimeout(() => {
-      mutationTime = true;
-    }, MUTATION_TIMER);
-
-    if (
-      bodyHighlighted &&
-      currentOptions.enableAutoHighlight &&
-      currentOptions.autoHighlighter &&
-      (isAllowedURL(window.location.href, currentOptions) || blockedPageOverride)
-    ) {
-      highlightPhrases(currentOptions);
-    }
+    const roots = selectHighlightRoots(nodes);
+    if (roots.length) highlightPhrases(currentOptions, roots);
   }
 
-  observer = new MutationObserver(() => {
+  const pendingAddedNodes = new Set<Node>();
+  observer = new MutationObserver((records) => {
     if (
       !currentOptions?.enableAutoHighlight ||
       !currentOptions.enableAutoHighlightUpdates ||
@@ -468,18 +517,22 @@ $(function () {
       return;
     }
 
-    if (mutationTime) {
-      autoHighlightIfReady();
-    } else if (!mutationDelayPending) {
-      mutationDelayPending = true;
-      setTimeout(() => {
-        mutationDelayPending = false;
-        autoHighlightIfReady();
-      }, MUTATION_TIMER);
+    for (const record of records) {
+      for (const node of record.addedNodes) pendingAddedNodes.add(node);
     }
+    if (!pendingAddedNodes.size || mutationTimer) return;
+
+    mutationTimer = setTimeout(() => {
+      mutationTimer = null;
+      const nodes = [...pendingAddedNodes];
+      pendingAddedNodes.clear();
+      highlightAddedNodes(nodes);
+    }, MUTATION_DELAY);
   });
   observer.observe(document, {
     subtree: true,
     childList: true,
   });
-});
+}
+
+initializeHighlighty();
