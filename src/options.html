@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <!-- Highlighty.js | by Stephen Wu -->
     <meta charset="utf-8" />
@@ -10,266 +10,279 @@
     <link rel="stylesheet" type="text/css" href="options.css" />
   </head>
   <body>
-    <section class="hero is-info">
+    <header class="hero is-info HighlightyHero">
       <div class="hero-body">
         <div class="container">
-          <h1 class="title">Highlighty Options</h1>
-          <h2 class="subtitle">Add phrases to your lists or modify settings below.</h2>
-          <a
-            href="info.html"
-            class="button is-primary tooltip is-tooltip-right"
-            data-tooltip="How Highlighty works"
-            >Info</a
-          >
+          <div class="HighlightyHero__row">
+            <div>
+              <h1 class="title">Highlighty</h1>
+              <p class="subtitle">Phrase lists, page filters, and on-page tools.</p>
+            </div>
+            <a href="info.html" class="button is-light is-outlined">How it works</a>
+          </div>
+          <nav class="HighlightyNav" aria-label="Options sections">
+            <a href="#Settings">Settings</a>
+            <a href="#PhraseLists">Phrase lists</a>
+            <a href="#Backup">Import &amp; export</a>
+          </nav>
         </div>
       </div>
-    </section>
-    <section class="section">
+    </header>
+    <main class="section">
       <div class="container" id="Settings">
+        <header class="HighlightySection__head">
+          <h2 class="title is-4">Settings</h2>
+          <p class="HighlightySection__lede">How Highlighty matches phrases and where it runs.</p>
+        </header>
         <div class="box">
-          <h1 class="title">Settings</h1>
-          <div class="field is-grouped">
-            <input
-              id="Settings__enableAutoHighlight"
-              type="checkbox"
-              class="switch is-info"
-              checked="checked"
-            />
-            <label for="Settings__enableAutoHighlight" class="label is-pulled-left">
-              Enable auto-highlight mode
-            </label>
-          </div>
-          <div id="Settings__AutoHighlight" class="box">
+          <section class="HighlightyGroup" aria-labelledby="Settings__autoHeading">
+            <h3 class="HighlightyGroup__title" id="Settings__autoHeading">Auto-highlight</h3>
             <div class="field is-grouped">
               <input
-                id="Settings__enableAutoHighlightUpdates"
+                id="Settings__enableAutoHighlight"
                 type="checkbox"
                 class="switch is-info"
                 checked="checked"
               />
-              <label for="Settings__enableAutoHighlightUpdates" class="label is-pulled-left">
-                Enable catching updates to page on auto-highlight (Suggested)
+              <label for="Settings__enableAutoHighlight" class="label is-pulled-left">
+                Enable auto-highlight mode
               </label>
             </div>
-            <div class="field is-grouped">
-              <input
-                id="Settings__enableURLAllowlist"
-                type="checkbox"
-                class="switch is-info"
-                checked="checked"
-              />
-              <label for="Settings__enableURLAllowlist" class="label is-pulled-left">
-                Enable URL Allowlist:
-              </label>
-            </div>
-            <p>
-              Only URLs matching these patterns will be highlighted by auto-highlight mode unless
-              manually triggered.
-            </p>
-            <p class="help">
-              Use an exact host (<i>example.com</i>), subdomains (<i>*.example.com</i>), a host with
-              a path prefix (<i>example.com/blog</i>), or a path on any host (<i>/blog</i>). Path
-              prefixes match complete segments. <i>www</i> is not removed, and wildcards do not
-              include the base host. Bare words such as <i>reddit</i> are invalid and no longer
-              match URL substrings.
-            </p>
-            <br />
-            <form>
-              <div class="columns">
-                <div class="column is-three-fifths" id="Allowlist__newURL">
-                  <div class="field has-addons">
-                    <div class="control is-expanded">
-                      <input
-                        class="input"
-                        type="text"
-                        placeholder="Add a new URL to allowlist"
-                        id="Allowlist__urlInput"
-                      />
-                    </div>
-                    <div class="control">
-                      <button
-                        type="submit"
-                        class="button is-primary tooltip"
-                        data-tooltip="Add URL to allowlist"
-                        aria-label="Add URL to allowlist"
-                        id="Allowlist__add"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-            <div id="Allowlist__urls"></div>
-            <hr />
-            <div class="field is-grouped">
-              <input id="Settings__enableURLDenylist" type="checkbox" class="switch is-info" />
-              <label for="Settings__enableURLDenylist" class="label is-pulled-left">
-                Enable URL Denylist:
-              </label>
-            </div>
-            <p>
-              URLs matching these patterns will not be highlighted by auto-highlight mode unless
-              manually triggered. Patterns use the syntax described above.
-            </p>
-            <br />
-            <form>
-              <div class="columns">
-                <div class="column is-three-fifths" id="Denylist__newURL">
-                  <div class="field has-addons">
-                    <div class="control is-expanded">
-                      <input
-                        class="input"
-                        type="text"
-                        placeholder="Add a new URL to denylist"
-                        id="Denylist__urlInput"
-                      />
-                    </div>
-                    <div class="control">
-                      <button
-                        type="submit"
-                        class="button is-danger tooltip"
-                        data-tooltip="Add URL to denylist"
-                        aria-label="Add URL to denylist"
-                        id="Denylist__add"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-            <div id="Denylist__urls"></div>
-          </div>
-          <div class="field is-grouped">
-            <input
-              id="Settings__enableTitleMouseover"
-              type="checkbox"
-              class="switch is-info"
-              checked="checked"
-            />
-            <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
-              Enable mouseover on phrase for list title
-            </label>
-          </div>
-          <div class="field is-grouped">
-            <input
-              id="Settings__enablePartialMatch"
-              type="checkbox"
-              class="switch is-info"
-              checked="checked"
-            />
-            <label for="Settings__enablePartialMatch" class="label is-pulled-left">
-              Enable partial phrase matching (e.g. "Lor" will match on "Lorem")
-            </label>
-          </div>
-          <div class="field is-grouped">
-            <input
-              id="Settings__enableCaseInsensitive"
-              type="checkbox"
-              class="switch is-info"
-              checked="checked"
-            />
-            <label for="Settings__enableCaseInsensitive" class="label is-pulled-left">
-              Enable case insensitive matching (e.g. "Ipsum" will match on "ipsum")
-            </label>
-          </div>
-          <div class="field is-grouped">
-            <input id="Settings__enablePhraseNavigator" type="checkbox" class="switch is-info" />
-            <label for="Settings__enablePhraseNavigator" class="label is-pulled-left">
-              Show an on-page highlight count and phrase navigator
-            </label>
-          </div>
-          <div class="field is-grouped">
-            <input id="Settings__enableQuickSearch" type="checkbox" class="switch is-info" />
-            <label for="Settings__enableQuickSearch" class="label is-pulled-left">
-              Show an on-page quick search bar
-            </label>
-          </div>
-          <div class="field" id="Settings__keyboardShortcutField">
-            <label for="Settings__keyboardShortcut" class="label">
-              In-page highlight shortcut
-            </label>
-            <div class="field has-addons">
-              <div class="control">
+            <div id="Settings__AutoHighlight" class="HighlightyNested">
+              <div class="field is-grouped">
                 <input
-                  class="input"
-                  type="text"
-                  id="Settings__keyboardShortcut"
-                  data-recording="false"
-                  readonly
-                  autocomplete="off"
-                  aria-describedby="Settings__keyboardShortcutStatus"
-                  placeholder="Click to record"
+                  id="Settings__enableAutoHighlightUpdates"
+                  type="checkbox"
+                  class="switch is-info"
+                  checked="checked"
                 />
+                <label for="Settings__enableAutoHighlightUpdates" class="label is-pulled-left">
+                  Keep highlighting as the page updates
+                </label>
               </div>
-              <div class="control">
-                <button type="button" class="button" id="Settings__clearKeyboardShortcut">
-                  Clear
-                </button>
-              </div>
-              <div class="control">
-                <button type="button" class="button" id="Settings__resetKeyboardShortcut">
-                  Reset to F6
-                </button>
+              <div class="HighlightyURLPanel">
+                <h4 class="HighlightyGroup__title HighlightyGroup__title--sub">Pages</h4>
+                <p class="help" id="Settings__urlHelp">
+                  Host (<i>example.com</i>), subdomains (<i>*.example.com</i>), or a path (<i
+                    >example.com/blog</i
+                  >
+                  or <i>/blog</i>). <i>www</i> is kept. <i>*.example.com</i> does not include the
+                  base host.
+                </p>
+                <div class="columns is-desktop HighlightyURLColumns">
+                  <div class="column">
+                    <div class="field is-grouped">
+                      <input
+                        id="Settings__enableURLAllowlist"
+                        type="checkbox"
+                        class="switch is-info"
+                        checked="checked"
+                      />
+                      <label for="Settings__enableURLAllowlist" class="label is-pulled-left">
+                        Allowlist
+                      </label>
+                    </div>
+                    <p class="help">When on, auto-highlight runs only on matching pages.</p>
+                    <form>
+                      <div class="field has-addons" id="Allowlist__newURL">
+                        <div class="control is-expanded">
+                          <input
+                            class="input"
+                            type="text"
+                            placeholder="example.com"
+                            id="Allowlist__urlInput"
+                            aria-describedby="Settings__urlHelp"
+                          />
+                        </div>
+                        <div class="control">
+                          <button
+                            type="submit"
+                            class="button is-primary"
+                            aria-label="Add URL to allowlist"
+                            id="Allowlist__add"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                    <div id="Allowlist__urls" class="HighlightyURLTags"></div>
+                  </div>
+                  <div class="column">
+                    <div class="field is-grouped">
+                      <input
+                        id="Settings__enableURLDenylist"
+                        type="checkbox"
+                        class="switch is-info"
+                      />
+                      <label for="Settings__enableURLDenylist" class="label is-pulled-left">
+                        Denylist
+                      </label>
+                    </div>
+                    <p class="help">Matching pages skip auto-highlight unless you trigger it.</p>
+                    <form>
+                      <div class="field has-addons" id="Denylist__newURL">
+                        <div class="control is-expanded">
+                          <input
+                            class="input"
+                            type="text"
+                            placeholder="/login"
+                            id="Denylist__urlInput"
+                            aria-describedby="Settings__urlHelp"
+                          />
+                        </div>
+                        <div class="control">
+                          <button
+                            type="submit"
+                            class="button is-danger"
+                            aria-label="Add URL to denylist"
+                            id="Denylist__add"
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                    <div id="Denylist__urls" class="HighlightyURLTags"></div>
+                  </div>
+                </div>
               </div>
             </div>
-            <p class="help" id="Settings__keyboardShortcutStatus" role="status" aria-live="polite">
-              Focus the shortcut box and press a key combination.
-            </p>
-          </div>
-          <div class="field is-grouped">
-            <div class="control">
-              <div class="select">
-                <select id="Settings__sorting">
-                  <option value="None">Off</option>
-                  <option value="A-Z">A-Z</option>
-                  <option value="Z-A">Z-A</option>
-                </select>
-              </div>
+          </section>
+
+          <section class="HighlightyGroup" aria-labelledby="Settings__matchHeading">
+            <h3 class="HighlightyGroup__title" id="Settings__matchHeading">Matching</h3>
+            <div class="field is-grouped">
+              <input
+                id="Settings__enableTitleMouseover"
+                type="checkbox"
+                class="switch is-info"
+                checked="checked"
+              />
+              <label for="Settings__enableTitleMouseover" class="label is-pulled-left">
+                Show the list name when hovering a highlight
+              </label>
             </div>
-            <div class="field-label is-normal">
-              <label
-                data-tooltip="Keep stored phrase lists in this order"
-                for="Settings__sorting"
-                class="label is-pulled-left tooltip is-tooltip-right"
-                >Automatically sort phrase lists</label
+            <div class="field is-grouped">
+              <input
+                id="Settings__enablePartialMatch"
+                type="checkbox"
+                class="switch is-info"
+                checked="checked"
+              />
+              <label for="Settings__enablePartialMatch" class="label is-pulled-left">
+                Match partial phrases (“Lor” matches “Lorem”)
+              </label>
+            </div>
+            <div class="field is-grouped">
+              <input
+                id="Settings__enableCaseInsensitive"
+                type="checkbox"
+                class="switch is-info"
+                checked="checked"
+              />
+              <label for="Settings__enableCaseInsensitive" class="label is-pulled-left">
+                Ignore case (“Ipsum” matches “ipsum”)
+              </label>
+            </div>
+          </section>
+
+          <section class="HighlightyGroup" aria-labelledby="Settings__toolsHeading">
+            <h3 class="HighlightyGroup__title" id="Settings__toolsHeading">On-page tools</h3>
+            <div class="field is-grouped">
+              <input id="Settings__enablePhraseNavigator" type="checkbox" class="switch is-info" />
+              <label for="Settings__enablePhraseNavigator" class="label is-pulled-left">
+                Show the highlight navigator
+              </label>
+            </div>
+            <div class="field is-grouped">
+              <input id="Settings__enableQuickSearch" type="checkbox" class="switch is-info" />
+              <label for="Settings__enableQuickSearch" class="label is-pulled-left">
+                Show the quick search bar
+              </label>
+            </div>
+            <div class="HighlightyShortcut" id="Settings__keyboardShortcutField">
+              <label for="Settings__keyboardShortcut" class="label"
+                >In-page highlight shortcut</label
               >
+              <div class="field has-addons">
+                <div class="control">
+                  <input
+                    class="input"
+                    type="text"
+                    id="Settings__keyboardShortcut"
+                    data-recording="false"
+                    readonly
+                    autocomplete="off"
+                    aria-describedby="Settings__keyboardShortcutStatus"
+                    placeholder="Click to record"
+                  />
+                </div>
+                <div class="control">
+                  <button type="button" class="button" id="Settings__clearKeyboardShortcut">
+                    Clear
+                  </button>
+                </div>
+                <div class="control">
+                  <button type="button" class="button" id="Settings__resetKeyboardShortcut">
+                    Reset to F6
+                  </button>
+                </div>
+              </div>
+              <p
+                class="help"
+                id="Settings__keyboardShortcutStatus"
+                role="status"
+                aria-live="polite"
+              >
+                Click the box and press a key combination.
+              </p>
             </div>
-          </div>
-          <div class="field">
-            <label for="Settings__baseStyles" class="label"
-              >General highlight CSS declarations</label
-            >
-            <div class="control">
-              <textarea
-                id="Settings__baseStyles"
-                class="textarea is-family-monospace"
-                rows="3"
-                spellcheck="false"
-              ></textarea>
+          </section>
+
+          <section class="HighlightyGroup" aria-labelledby="Settings__lookHeading">
+            <h3 class="HighlightyGroup__title" id="Settings__lookHeading">Appearance</h3>
+            <div class="field is-grouped">
+              <div class="control">
+                <div class="select">
+                  <select id="Settings__sorting" aria-describedby="Settings__sortingHelp">
+                    <option value="None">Off</option>
+                    <option value="A-Z">A-Z</option>
+                    <option value="Z-A">Z-A</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field-label is-normal">
+                <label for="Settings__sorting" class="label is-pulled-left">
+                  Automatically sort phrase lists
+                </label>
+              </div>
             </div>
-            <p class="help">
-              Applied to every saved and quick-search highlight. Enter declarations only, without
-              selectors or braces.
-            </p>
-          </div>
-          <div class="buttons">
-            <button type="button" class="button" id="Settings__resetBaseStyles">
-              Reset general style
-            </button>
-          </div>
+            <p class="help" id="Settings__sortingHelp">Keeps stored lists in this order.</p>
+            <div class="field">
+              <label for="Settings__baseStyles" class="label">General highlight CSS</label>
+              <div class="control">
+                <textarea
+                  id="Settings__baseStyles"
+                  class="textarea is-family-monospace"
+                  rows="3"
+                  spellcheck="false"
+                ></textarea>
+              </div>
+              <p class="help">
+                Declarations only — no selectors or braces. Applies to every highlight.
+              </p>
+            </div>
+            <div class="buttons">
+              <button type="button" class="button" id="Settings__resetBaseStyles">
+                Reset general style
+              </button>
+            </div>
+          </section>
+
           <div class="field is-grouped is-grouped-multiline Settings__saveRow">
             <div class="control">
-              <button
-                type="button"
-                class="button is-info tooltip"
-                data-tooltip="Save all settings"
-                id="Settings__save"
-                disabled
-              >
+              <button type="button" class="button is-info" id="Settings__save" disabled>
                 Save settings
               </button>
             </div>
@@ -283,249 +296,234 @@
       </div>
 
       <div class="container" id="PhraseLists">
-        <h2 class="title">Lists</h2>
-        <div class="field" id="PhraseLists__searchField">
-          <label class="label" for="PhraseLists__search">Search phrases</label>
-          <div class="control">
-            <input
-              class="input"
-              type="search"
-              id="PhraseLists__search"
-              placeholder="Filter phrases in all lists"
-              autocomplete="off"
-              aria-controls="PhraseLists__results"
-            />
+        <header class="HighlightySection__head HighlightySection__head--split">
+          <div>
+            <h2 class="title is-4">Phrase lists</h2>
+            <p class="HighlightySection__lede">
+              Color, optional URL filters, and the phrases to mark.
+            </p>
           </div>
-          <p class="help" id="PhraseLists__searchSummary" role="status" aria-live="polite"></p>
+          <div class="field" id="PhraseLists__searchField">
+            <label class="label" for="PhraseLists__search">Search phrases</label>
+            <div class="control">
+              <input
+                class="input"
+                type="search"
+                id="PhraseLists__search"
+                placeholder="Filter phrases in all lists"
+                autocomplete="off"
+                aria-controls="PhraseLists__results"
+              />
+            </div>
+            <p class="help" id="PhraseLists__searchSummary" role="status" aria-live="polite"></p>
+          </div>
+        </header>
+        <div id="PhraseLists__empty" class="notification is-light is-hidden">
+          No phrase lists yet. Create one below.
         </div>
         <div id="PhraseLists__noResults" class="notification is-light is-hidden">
-          No phrases match your search.
+          No phrases match that search.
         </div>
         <div id="PhraseLists__results">
           <div class="box PhraseList" id="PhraseList--invisible">
-            <div class="columns is-vcentered PhraseList__top">
-              <div class="column is-three-fifths">
-                <div class="field is-grouped PhraseList__header">
-                  <h3 class="title is-4">
-                    <input
-                      type="checkbox"
-                      class="switch is-rounded is-info PhraseList__enabled"
-                      checked="checked"
-                    />
-                    <label class="PhraseList__enabledLabel">Enabled</label>
-                    <button
-                      type="button"
-                      class="PhraseList__color tooltip is-tooltip-right"
-                      data-tooltip="Change list color"
-                      aria-label="Change list color"
-                      style="background-color: #000000"
-                    ></button>
-                    <span class="PhraseList__title"> </span>
-                    <span class="tag PhraseList__phraseCount"> </span>
-                  </h3>
+            <div class="PhraseList__top">
+              <div class="PhraseList__identity">
+                <button
+                  type="button"
+                  class="PhraseList__color"
+                  aria-label="Change list color"
+                  style="background-color: #000000"
+                ></button>
+                <div class="PhraseList__heading">
+                  <h3 class="PhraseList__title"></h3>
+                  <p class="PhraseList__meta">
+                    <span class="tag PhraseList__phraseCount"></span>
+                    <span class="PhraseList__urlSummary">All pages</span>
+                    <span class="tag is-light PhraseList__styleSummary is-hidden"
+                      >Custom style</span
+                    >
+                  </p>
                 </div>
               </div>
-              <div class="column is-two-fifths">
-                <div class="buttons is-right PhraseList__actions">
-                  <button
-                    type="button"
-                    class="button is-small is-info tooltip PhraseList__editName"
-                    data-tooltip="Rename this list"
-                  >
+              <div class="PhraseList__controls">
+                <div class="field PhraseList__enabledField">
+                  <input
+                    type="checkbox"
+                    class="switch is-rounded is-info PhraseList__enabled"
+                    checked="checked"
+                  />
+                  <label class="PhraseList__enabledLabel">Enabled</label>
+                </div>
+                <div class="buttons PhraseList__actions">
+                  <button type="button" class="button is-small is-light PhraseList__editName">
                     Rename
                   </button>
-                  <button
-                    type="button"
-                    class="button is-small is-link tooltip PhraseList__import"
-                    data-tooltip="Add several phrases at once"
-                  >
+                  <button type="button" class="button is-small is-light PhraseList__import">
                     Import
                   </button>
-                  <button
-                    type="button"
-                    class="button is-small is-success tooltip PhraseList__export"
-                    data-tooltip="Copy phrases from this list"
-                  >
+                  <button type="button" class="button is-small is-light PhraseList__export">
                     Export
                   </button>
                   <button
                     type="button"
-                    class="button is-small is-danger tooltip PhraseList__delete"
-                    data-tooltip="Permanently delete this list"
+                    class="button is-small is-outlined is-danger PhraseList__delete"
                   >
                     Delete
                   </button>
                 </div>
               </div>
             </div>
-            <details class="PhraseList__styles">
-              <summary>Custom style for this list</summary>
-              <div class="field">
-                <label class="label">CSS declarations</label>
-                <div class="control">
-                  <textarea
-                    class="textarea is-family-monospace PhraseList__customStyles"
-                    rows="2"
-                    spellcheck="false"
-                    placeholder="Example: text-decoration: underline;"
-                  ></textarea>
-                </div>
-                <p class="help">Overrides the general style for highlights in this list.</p>
-              </div>
-              <div class="buttons">
-                <button type="button" class="button is-info PhraseList__saveStyles">
-                  Save style
-                </button>
-                <button type="button" class="button PhraseList__resetStyles">Reset</button>
-              </div>
-            </details>
-            <details class="PhraseList__URLFilters">
-              <summary>URL filters for this list</summary>
-              <p class="help PhraseList__URLHelp">
-                Leave both empty to use this list on every page allowed by the global URL settings.
-                Denylist matches take priority. Patterns use the same exact-host,
-                wildcard-subdomain, and path-prefix syntax described in Settings above.
-              </p>
-              <div class="columns">
-                <div class="column">
-                  <label class="label">Allowlist</label>
-                  <p class="help">When set, this list runs only on matching URLs.</p>
-                  <div class="field has-addons">
-                    <div class="control is-expanded">
-                      <input
-                        class="input PhraseList__allowlistInput"
-                        type="text"
-                        placeholder="Example: docs.example.com"
-                        aria-label="Add URL phrase to this list's allowlist"
-                      />
-                    </div>
-                    <div class="control">
-                      <button
-                        type="button"
-                        class="button is-primary PhraseList__URLAdd"
-                        data-url-list="allowlist"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                  <div class="PhraseList__allowlistURLs"></div>
-                </div>
-                <div class="column">
-                  <label class="label">Denylist</label>
-                  <p class="help">Matching URLs skip only this list.</p>
-                  <div class="field has-addons">
-                    <div class="control is-expanded">
-                      <input
-                        class="input PhraseList__denylistInput"
-                        type="text"
-                        placeholder="Example: /admin"
-                        aria-label="Add URL phrase to this list's denylist"
-                      />
-                    </div>
-                    <div class="control">
-                      <button
-                        type="button"
-                        class="button is-danger PhraseList__URLAdd"
-                        data-url-list="denylist"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
-                  <div class="PhraseList__denylistURLs"></div>
-                </div>
-              </div>
-            </details>
             <form>
-              <div class="columns">
-                <div class="column is-three-fifths PhraseList__newPhrase">
-                  <div class="field has-addons">
-                    <div class="control is-expanded">
-                      <input
-                        class="input PhraseList__newPhrase__phrase"
-                        type="text"
-                        placeholder="Add a new phrase"
-                      />
-                    </div>
-                    <div class="control">
-                      <button
-                        type="submit"
-                        class="button is-success tooltip PhraseList__newPhrase__add"
-                        data-tooltip="Add phrase to this list"
-                        aria-label="Add phrase to this list"
-                      >
-                        Add
-                      </button>
-                    </div>
-                  </div>
+              <div class="field has-addons PhraseList__newPhrase">
+                <div class="control is-expanded">
+                  <input
+                    class="input PhraseList__newPhrase__phrase"
+                    type="text"
+                    placeholder="Add a phrase"
+                  />
+                </div>
+                <div class="control">
+                  <button
+                    type="submit"
+                    class="button is-success PhraseList__newPhrase__add"
+                    aria-label="Add phrase to this list"
+                  >
+                    Add
+                  </button>
                 </div>
               </div>
             </form>
+            <p class="PhraseList__emptyPhrases help">No phrases in this list yet.</p>
             <div class="PhraseList__phrases"></div>
+            <div class="PhraseList__extras">
+              <details class="PhraseList__URLFilters">
+                <summary>URL filters <span class="PhraseList__urlFilterCount"></span></summary>
+                <p class="help PhraseList__URLHelp">
+                  Leave both empty to follow the global page settings. Deny wins. Same host and path
+                  patterns as Settings.
+                </p>
+                <div class="columns">
+                  <div class="column">
+                    <label class="label">Allowlist</label>
+                    <p class="help">When set, this list runs only on matching URLs.</p>
+                    <div class="field has-addons">
+                      <div class="control is-expanded">
+                        <input
+                          class="input PhraseList__allowlistInput"
+                          type="text"
+                          placeholder="docs.example.com"
+                          aria-label="Add URL to this list's allowlist"
+                        />
+                      </div>
+                      <div class="control">
+                        <button
+                          type="button"
+                          class="button is-primary PhraseList__URLAdd"
+                          data-url-list="allowlist"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                    <div class="PhraseList__allowlistURLs HighlightyURLTags"></div>
+                  </div>
+                  <div class="column">
+                    <label class="label">Denylist</label>
+                    <p class="help">Matching URLs skip only this list.</p>
+                    <div class="field has-addons">
+                      <div class="control is-expanded">
+                        <input
+                          class="input PhraseList__denylistInput"
+                          type="text"
+                          placeholder="/admin"
+                          aria-label="Add URL to this list's denylist"
+                        />
+                      </div>
+                      <div class="control">
+                        <button
+                          type="button"
+                          class="button is-danger PhraseList__URLAdd"
+                          data-url-list="denylist"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                    <div class="PhraseList__denylistURLs HighlightyURLTags"></div>
+                  </div>
+                </div>
+              </details>
+              <details class="PhraseList__styles">
+                <summary>Custom style</summary>
+                <div class="field">
+                  <label class="label">CSS declarations</label>
+                  <div class="control">
+                    <textarea
+                      class="textarea is-family-monospace PhraseList__customStyles"
+                      rows="2"
+                      spellcheck="false"
+                      placeholder="text-decoration: underline;"
+                    ></textarea>
+                  </div>
+                  <p class="help">Overrides the general style for this list’s highlights.</p>
+                </div>
+                <div class="buttons">
+                  <button type="button" class="button is-info PhraseList__saveStyles">
+                    Save style
+                  </button>
+                  <button type="button" class="button PhraseList__resetStyles">Reset</button>
+                </div>
+              </details>
+            </div>
           </div>
         </div>
 
-        <div id="NewPhraseList">
+        <div id="NewPhraseList" class="box HighlightyCreate">
           <form>
-            <label class="label" for="NewPhraseList__title">Add a new list</label>
-            <div class="columns">
-              <div class="column is-three-fifths">
-                <div class="field has-addons">
-                  <div class="control is-expanded">
-                    <input
-                      class="input"
-                      id="NewPhraseList__title"
-                      type="text"
-                      placeholder="List title"
-                    />
-                  </div>
-                  <div class="control">
-                    <button
-                      type="button"
-                      class="button tooltip"
-                      style="background-color: #bb0000; color: #ffffff"
-                      id="NewPhraseList__color"
-                      data-tooltip="Choose the highlight color"
-                    >
-                      Pick color
-                    </button>
-                  </div>
-                  <div class="control">
-                    <button
-                      type="submit"
-                      class="button is-link tooltip"
-                      data-tooltip="Create phrase list"
-                      id="NewPhraseList__add"
-                    >
-                      Create list
-                    </button>
-                  </div>
-                </div>
+            <label class="label" for="NewPhraseList__title">Add a list</label>
+            <div class="field has-addons">
+              <div class="control is-expanded">
+                <input
+                  class="input"
+                  id="NewPhraseList__title"
+                  type="text"
+                  placeholder="List title"
+                />
+              </div>
+              <div class="control">
+                <button
+                  type="button"
+                  class="button"
+                  style="background-color: #bb0000; color: #ffffff"
+                  id="NewPhraseList__color"
+                  aria-label="Choose the highlight color"
+                >
+                  Color
+                </button>
+              </div>
+              <div class="control">
+                <button type="submit" class="button is-link" id="NewPhraseList__add">
+                  Create list
+                </button>
               </div>
             </div>
           </form>
         </div>
-        <div id="BulkImportExport">
-          <button
-            type="button"
-            class="button is-link tooltip"
-            data-tooltip="Import one or more complete lists"
-            id="BulkImport"
-          >
-            Bulk Import
-          </button>
-          <button
-            type="button"
-            class="button is-success tooltip"
-            data-tooltip="Back up all phrase lists"
-            id="BulkExport"
-          >
-            Bulk Export
-          </button>
+      </div>
+
+      <div class="container" id="Backup">
+        <header class="HighlightySection__head">
+          <h2 class="title is-4">Import &amp; export</h2>
+          <p class="HighlightySection__lede">Back up every list, or restore a previous export.</p>
+        </header>
+        <div class="box HighlightyBackup">
+          <div id="BulkImportExport" class="buttons">
+            <button type="button" class="button is-link" id="BulkImport">Bulk Import</button>
+            <button type="button" class="button is-success" id="BulkExport">Bulk Export</button>
+          </div>
         </div>
       </div>
-    </section>
+    </main>
     <footer class="footer">
       <div class="content has-text-centered">
         <p>
@@ -553,9 +551,7 @@
           </div>
           <article id="ImportModal__spaceWarning" class="message is-warning is-hidden">
             <div class="message-body">
-              <b>Multi-word phrases are not preserved.</b> Every space-separated word will be
-              imported as its own phrase. Use Line-Delimited for phrases such as “Sherlock and
-              Holmes.”
+              Spaces split phrases. Use Line-Delimited for “Sherlock and Holmes.”
             </div>
           </article>
           <textarea id="ImportModal__body" class="textarea"></textarea>
@@ -606,7 +602,7 @@
         </header>
         <section class="modal-card-body">
           <div class="field">
-            <label class="label">Import Type</label>
+            <label class="label" for="BulkImportModal__typesSelect">Import type</label>
             <div class="control">
               <div class="select">
                 <select id="BulkImportModal__typesSelect">
@@ -626,30 +622,20 @@
           <div id="BulkImportModal__typesInfo">
             <div id="BulkImportModal__typesInfo--ImportAsNew">
               <article class="message is-info">
-                <div class="message-body">
-                  With this <b>Import</b> option, all your existing lists will be unchanged. All
-                  imported lists will be added as new lists.
-                </div>
+                <div class="message-body">Keeps your current lists and adds the imported ones.</div>
               </article>
             </div>
             <div id="BulkImportModal__typesInfo--ImportAndMerge" style="display: none">
               <article class="message is-warning">
                 <div class="message-body">
-                  With this <b>Import and merge</b> option, all imported lists will either appear as
-                  new lists or be merged with existing lists with the same exact name if a match
-                  exists.<br />
-                  If you have multiple lists with the same name, only your first list will be merged
-                  with the new lists. List colors of merged lists will also be changed to the color
-                  specified in the import, if different.
+                  Lists with the same name merge. The import’s color, style, and URL filters replace
+                  the existing ones. Only the first matching list is merged.
                 </div>
               </article>
             </div>
             <div id="BulkImportModal__typesInfo--Replace" style="display: none">
               <article class="message is-danger">
-                <div class="message-body">
-                  With the <b>Replace</b> option, all your existing phrase lists will be deleted and
-                  replaced with the imported lists.
-                </div>
+                <div class="message-body">Deletes every current list and replaces them.</div>
               </article>
             </div>
           </div>
@@ -688,10 +674,10 @@
     </div>
     <!-- Modal-on-Modal: Bulk Import Preview-->
     <div class="box PhraseList" id="PhraseListPreview--invisible">
-      <h2 class="title is-4">
+      <div class="PhraseList__identity">
         <button class="PhraseList__color" style="background-color: #000000"></button>
-        <span class="PhraseList__title"></span>
-      </h2>
+        <h3 class="PhraseList__title"></h3>
+      </div>
       <div class="PhraseList__phrases"></div>
     </div>
 
@@ -705,14 +691,12 @@
         <section class="modal-card-body">
           <article class="message is-info">
             <div class="message-body">
-              After importing with the
-              <b><span id="BulkImportPreviewModal__optionName">Import as new lists</span></b>
-              option, your lists will look like the result below. If this looks correct, and you're
-              certain you want to proceed with the import, click the "Import" button.<br />You will
-              end up with
-              <b><span id="BulkImportPreviewModal__phraseListCount">0</span> lists</b> with
-              <b><span id="BulkImportPreviewModal__phraseCount">0</span> phrases</b> in total after
-              the import.
+              After
+              <b><span id="BulkImportPreviewModal__optionName">Import as new lists</span></b
+              >, you will have
+              <b><span id="BulkImportPreviewModal__phraseListCount">0</span> lists</b> and
+              <b><span id="BulkImportPreviewModal__phraseCount">0</span> phrases</b>. Import only if
+              this looks right.
             </div>
           </article>
           <div id="BulkImportPreviewModal__preview"></div>
@@ -734,9 +718,7 @@
         <section class="modal-card-body">
           <article class="message is-info">
             <div class="message-body">
-              To export all of your phrase lists, hit the "Copy" or "Download" button below! Then
-              you can use the "Bulk Import" tool to import the phrases in the future or to another
-              installation.
+              Copy or download this file, then use Bulk Import to restore it later.
             </div>
           </article>
           <div id="BulkExportModal__bodySection">

@@ -267,10 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const isReserved = isLikelyReservedShortcut(shortcutString);
       shortcutStatus.classList.toggle('has-text-warning', isReserved);
       shortcutStatus.textContent = isReserved
-        ? 'This shortcut is commonly reserved by the browser or operating system and may not be available.'
+        ? 'Chrome or the OS may already use this shortcut.'
         : shortcutString
-          ? 'Focus the shortcut box and press a new key combination to replace it.'
-          : 'No in-page shortcut is set. Focus the box and press a key combination.';
+          ? 'Click the box and press a new combination to replace it.'
+          : 'No shortcut set. Click the box and press a combination.';
       if (isUserChange && previousShortcut !== shortcutString) {
         setSettingsDirty(true);
       }
@@ -292,8 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.addEventListener('keydown', handleKeyDown);
       document.addEventListener('keyup', handleKeyUp);
       shortcutStatus.classList.remove('has-text-warning');
-      shortcutStatus.textContent =
-        'Recording… Press a complete key combination. Escape clears the shortcut.';
+      shortcutStatus.textContent = 'Recording… Press a complete combination. Escape clears it.';
     });
 
     keyboardShortcutInput.addEventListener('blur', () => {
@@ -316,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pendingShortcut = shortcut;
       pendingCode = e.code;
       keyboardShortcutInput.value = shortcut;
-      shortcutStatus.textContent = 'Release the key to use this shortcut.';
+      shortcutStatus.textContent = 'Release to use this shortcut.';
     }
 
     function handleKeyUp(e) {
@@ -370,10 +369,52 @@ document.addEventListener('DOMContentLoaded', () => {
     query('#PhraseLists__searchSummary').textContent =
       searchText.length === 0
         ? `${pluralize(matchingPhraseCount, 'phrase')} in ${pluralize(matchingListCount, 'list')}`
-        : `${pluralize(matchingPhraseCount, 'matching phrase')} in ${pluralize(
-            matchingListCount,
-            'list',
-          )}`;
+        : `${pluralize(matchingPhraseCount, 'match')} in ${pluralize(matchingListCount, 'list')}`;
+    updateListsEmptyState();
+  }
+
+  function updateListsEmptyState() {
+    const empty = query('#PhraseLists__empty');
+    if (!empty) return;
+    const searchText = input('#PhraseLists__search').value.trim();
+    const lists = queryAll('#PhraseLists__results .PhraseList:not(#PhraseList--invisible)');
+    empty.classList.toggle('is-hidden', searchText.length > 0 || lists.length > 0);
+  }
+
+  function updatePhraseListEmptyState(list: HTMLElement) {
+    const empty = query('.PhraseList__emptyPhrases', list);
+    if (!empty) return;
+    const count = parseInt(
+      query<HTMLElement>('.PhraseList__phraseCount', list).dataset.count || '0',
+      10,
+    );
+    setVisible(empty, count === 0);
+  }
+
+  function updatePhraseListURLSummary(list: HTMLElement) {
+    const allow = queryAll('.PhraseList__allowlistURL', list).length;
+    const deny = queryAll('.PhraseList__denylistURL', list).length;
+    const summary = query('.PhraseList__urlSummary', list);
+    const filterCount = query('.PhraseList__urlFilterCount', list);
+    if (summary) {
+      summary.textContent =
+        !allow && !deny
+          ? 'All pages'
+          : [allow && `${allow} allow`, deny && `${deny} deny`].filter(Boolean).join(' · ');
+    }
+    if (filterCount) {
+      filterCount.textContent =
+        !allow && !deny
+          ? ''
+          : [allow && `${allow} allow`, deny && `${deny} deny`].filter(Boolean).join(', ');
+    }
+  }
+
+  function updatePhraseListStyleSummary(list: HTMLElement) {
+    const badge = query('.PhraseList__styleSummary', list);
+    if (!badge) return;
+    const hasStyles = Boolean(textarea('.PhraseList__customStyles', list)?.value.trim());
+    badge.classList.toggle('is-hidden', !hasStyles);
   }
 
   function addExistingURLLists(options) {
@@ -456,6 +497,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       setupPhraseListHandlers(newListDiv);
       query('#PhraseList--invisible').before(newListDiv);
+      updatePhraseListURLSummary(newListDiv);
+      updatePhraseListStyleSummary(newListDiv);
+      updatePhraseListEmptyState(newListDiv);
+      updateListsEmptyState();
     }
     return newListDiv;
   }
@@ -472,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
     phraseElement.append(deleteButton);
     query('.PhraseList__phrases', listDiv).append(phraseElement);
     incrementPhraseCount(listDiv);
+    updatePhraseListEmptyState(listDiv);
     if (updateSearch) applyPhraseSearch();
   }
 
@@ -630,7 +676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         options.highlighter[listIndex].styles = customStyles;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
-          alert('List style saved!');
+          updatePhraseListStyleSummary(list);
         });
       });
     });
@@ -641,6 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
         options.highlighter[listIndex].styles = '';
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
+          updatePhraseListStyleSummary(list);
         });
       });
     });
@@ -682,6 +729,7 @@ document.addEventListener('DOMContentLoaded', () => {
         phraseList[urlListName] = urls;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           addPhraseListURLTag(list, urlListName, newURL);
+          updatePhraseListURLSummary(list);
         });
       });
     });
@@ -704,6 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
             urls.splice(urlIndex, 1);
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
               urlElement.remove();
+              updatePhraseListURLSummary(list);
             });
           });
         },
@@ -840,6 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
               phraseElement.remove();
               decrementPhraseCount(list);
+              updatePhraseListEmptyState(list);
               applyPhraseSearch();
             });
           });
@@ -906,8 +956,8 @@ document.addEventListener('DOMContentLoaded', () => {
         warningTitle,
         document.createTextNode(
           multiWordPhraseCount > 0
-            ? ' A space-delimited import treats every word as a separate phrase. Use Line-Delimited for a lossless export.'
-            : ' Use Line-Delimited if you add any phrases containing spaces.',
+            ? ' Use Line-Delimited to keep them intact.'
+            : ' Use Line-Delimited if you add phrases with spaces.',
         ),
       );
     });
@@ -978,7 +1028,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const fileExtension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '';
       if (!['txt', 'json'].includes(fileExtension)) {
         resetBulkImportFile();
-        setBulkImportFileStatus('Choose a file ending in .txt or .json.', true);
+        setBulkImportFileStatus('Choose a .txt or .json file.', true);
         return;
       }
 
@@ -996,12 +1046,12 @@ document.addEventListener('DOMContentLoaded', () => {
           body.animate({ opacity: [0, 1] }, { duration: 150, fill: 'forwards' });
           query('#BulkImportModal__fileName').textContent = file.name;
           query<HTMLButtonElement>('#BulkImportModal__previewImport').disabled = false;
-          setBulkImportFileStatus(`Loaded ${file.name}. Its contents replaced the text below.`);
+          setBulkImportFileStatus(`Loaded ${file.name}.`);
         };
       };
       reader.onerror = () => {
         resetBulkImportFile();
-        setBulkImportFileStatus(`Highlighty could not read ${file.name}.`, true);
+        setBulkImportFileStatus(`Could not read ${file.name}.`, true);
       };
       reader.readAsText(file);
     });
@@ -1052,8 +1102,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showDialog({
           title: nothingToImport ? 'Nothing to import' : 'Invalid import data',
           message: nothingToImport
-            ? 'Paste a Highlighty bulk export before previewing the import.'
-            : `Please use a .txt or .json file created by Bulk Export.\n\nDetails: ${error.message}`,
+            ? 'Paste a bulk export, or choose a file, then preview.'
+            : `This isn’t a Highlighty export. ${error.message}`,
         });
       }
     });
@@ -1195,10 +1245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setupOptionsPage(options, false);
             let alertMessage = `${pluralize(phrasesAdded, 'phrase')} added.`;
             if (phrasesSkipped > 0) {
-              alertMessage += `\n${pluralize(
-                phrasesSkipped,
-                'phrase',
-              )} skipped due to already being in the list.`;
+              alertMessage += `\n${pluralize(phrasesSkipped, 'phrase')} already in the list.`;
             }
             showDialog({
               title: 'Import complete',
@@ -1271,10 +1318,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         setSettingsDirty(false);
-        showDialog({
-          title: 'Settings saved',
-          message: 'Your Highlighty settings are up to date.',
-        });
         setupOptionsPage(newOptions, false);
       });
     });
@@ -1287,9 +1330,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function validateStyleDeclarations(styles) {
     const valid = isValidStyleDeclarations(styles);
     if (!valid) {
-      alert(
-        'Styles must contain CSS declarations only. Braces, comments, markup, imports, URLs, and expressions are not allowed.',
-      );
+      showDialog({
+        title: 'Invalid style',
+        message: 'Use CSS declarations only — no braces, comments, or URLs.',
+      });
     }
     return valid;
   }
