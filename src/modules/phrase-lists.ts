@@ -81,6 +81,11 @@ export function sortStoredPhraseLists(
 
 export function clonePhraseLists(highlighter: PhraseList[] | null | undefined): PhraseList[] {
   return Array.isArray(highlighter)
-    ? highlighter.map((list) => ({ ...list, phrases: [...(list.phrases || [])] }))
+    ? highlighter.map((list) => ({
+        ...list,
+        phrases: [...(list.phrases || [])],
+        allowlist: [...(list.allowlist || [])],
+        denylist: [...(list.denylist || [])],
+      }))
     : [];
 }

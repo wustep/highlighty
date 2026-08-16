@@ -6,7 +6,7 @@ import { prepareHilitorOptions } from './modules/matching';
 import { isPhraseListEnabled, normalizePhrases } from './modules/phrase-lists';
 import { normalizeOptions } from './modules/storage';
 import type { HighlightyOptions } from './modules/types';
-import { isAllowedURL } from './modules/urls';
+import { isAllowedURL, isURLAllowedForPhraseList } from './modules/urls';
 
 $(function () {
   if (window.top !== window.self) {
@@ -100,7 +100,12 @@ $(function () {
       }`;
 
     options.highlighter.forEach((list, listIndex) => {
-      if (!list || !Object.keys(list).length || !isPhraseListEnabled(list)) {
+      if (
+        !list ||
+        !Object.keys(list).length ||
+        !isPhraseListEnabled(list) ||
+        !isURLAllowedForPhraseList(window.location.href, list)
+      ) {
         return;
       }
 

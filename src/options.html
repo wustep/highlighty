@@ -358,6 +358,63 @@
                 <button type="button" class="button PhraseList__resetStyles">Reset</button>
               </div>
             </details>
+            <details class="PhraseList__URLFilters">
+              <summary>URL filters for this list</summary>
+              <p class="help PhraseList__URLHelp">
+                Leave both empty to use this list on every page allowed by the global URL settings.
+                Denylist matches take priority.
+              </p>
+              <div class="columns">
+                <div class="column">
+                  <label class="label">Allowlist</label>
+                  <p class="help">When set, this list runs only on matching URLs.</p>
+                  <div class="field has-addons">
+                    <div class="control is-expanded">
+                      <input
+                        class="input PhraseList__allowlistInput"
+                        type="text"
+                        placeholder="Example: docs.example.com"
+                        aria-label="Add URL phrase to this list's allowlist"
+                      />
+                    </div>
+                    <div class="control">
+                      <button
+                        type="button"
+                        class="button is-primary PhraseList__URLAdd"
+                        data-url-list="allowlist"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                  <div class="PhraseList__allowlistURLs"></div>
+                </div>
+                <div class="column">
+                  <label class="label">Denylist</label>
+                  <p class="help">Matching URLs skip only this list.</p>
+                  <div class="field has-addons">
+                    <div class="control is-expanded">
+                      <input
+                        class="input PhraseList__denylistInput"
+                        type="text"
+                        placeholder="Example: /admin"
+                        aria-label="Add URL phrase to this list's denylist"
+                      />
+                    </div>
+                    <div class="control">
+                      <button
+                        type="button"
+                        class="button is-danger PhraseList__URLAdd"
+                        data-url-list="denylist"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                  <div class="PhraseList__denylistURLs"></div>
+                </div>
+              </div>
+            </details>
             <form>
               <div class="columns">
                 <div class="column is-three-fifths PhraseList__newPhrase">

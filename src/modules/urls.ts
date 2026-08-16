@@ -1,4 +1,4 @@
-import type { HighlightyOptions } from './types';
+import type { HighlightyOptions, PhraseList } from './types';
 
 export function normalizeURLPhrases(urlPhrases: unknown): string[] {
   if (!Array.isArray(urlPhrases)) return [];
@@ -20,4 +20,10 @@ export function isAllowedURL(url: string, options: Partial<HighlightyOptions>): 
   const denylisted = Boolean(options.enableURLDenylist) && urlMatchesAny(url, options.denylist);
   const allowlisted = urlMatchesAny(url, options.allowlist);
   return !(denylisted || (options.enableURLAllowlist && !allowlisted));
+}
+
+export function isURLAllowedForPhraseList(url: string, list: Partial<PhraseList>): boolean {
+  if (urlMatchesAny(url, list.denylist)) return false;
+  const allowlist = normalizeURLPhrases(list.allowlist);
+  return allowlist.length === 0 || urlMatchesAny(url, allowlist);
 }

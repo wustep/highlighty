@@ -2,6 +2,7 @@ import { getTextColor, hexClean } from './colors';
 import { normalizeListEnabled, normalizePhrases } from './phrase-lists';
 import { validateStyleDeclarations } from './styles';
 import type { PhraseList } from './types';
+import { normalizeURLPhrases } from './urls';
 
 export type DelimitedFormat = 'Line-Delimited' | 'Space-Delimited';
 
@@ -60,6 +61,17 @@ export function parseBulkImport(importBody: unknown): PhraseList[] {
     if ('styles' in phraseList && !validateStyleDeclarations(phraseList.styles)) {
       throw new Error(`List ${index + 1} has unsafe CSS declarations in "styles".`);
     }
+    for (const urlListName of ['allowlist', 'denylist']) {
+      const urlList = phraseList[urlListName];
+      if (
+        urlListName in phraseList &&
+        (!Array.isArray(urlList) || urlList.some((urlPhrase) => typeof urlPhrase !== 'string'))
+      ) {
+        throw new Error(
+          `List ${index + 1} must have an "${urlListName}" array containing only strings.`,
+        );
+      }
+    }
 
     return {
       color: hexClean(phraseList.color),
@@ -68,6 +80,8 @@ export function parseBulkImport(importBody: unknown): PhraseList[] {
       title: phraseList.title.trim(),
       enabled: normalizeListEnabled(phraseList),
       styles: (phraseList.styles || '').trim(),
+      allowlist: normalizeURLPhrases(phraseList.allowlist),
+      denylist: normalizeURLPhrases(phraseList.denylist),
     };
   });
 }

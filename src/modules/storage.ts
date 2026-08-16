@@ -16,6 +16,8 @@ export const defaultOptions: HighlightyOptions = {
       textColor: '#ffffff',
       enabled: true,
       styles: '',
+      allowlist: [],
+      denylist: [],
     },
   ],
   allowlist: [],
@@ -41,6 +43,8 @@ export function cloneDefaults(): HighlightyOptions {
     highlighter: defaultOptions.highlighter.map((list) => ({
       ...list,
       phrases: [...list.phrases],
+      allowlist: [...list.allowlist],
+      denylist: [...list.denylist],
     })),
     allowlist: [],
     denylist: [],
@@ -69,6 +73,8 @@ export function normalizePhraseList(list: Record<string, unknown>): PhraseList {
     enabled: normalizeListEnabled(list),
     styles: normalizeStyleDeclarations(list.styles || ''),
     phrases: normalizePhrases(list.phrases),
+    allowlist: normalizeURLPhrases(list.allowlist),
+    denylist: normalizeURLPhrases(list.denylist),
     toggled: undefined,
   } as PhraseList;
 }
