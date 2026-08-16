@@ -4,7 +4,7 @@
   "name": "Highlighty",
   "short_name": "highlighty",
   "description": "Highlight selected phrases from custom phrase lists.",
-  "version": "1.2",
+  "version": "1.2.1",
 
   "icons": {
     "16": "img/16pxYellow.png",
@@ -22,7 +22,7 @@
   ],
 
   "action": {
-    "default_title": "Highlight phrases!",
+    "default_title": "Highlight phrases on this page",
     "default_icon": {
       "16": "img/16pxBlue.png",
       "24": "img/24pxBlue.png",
@@ -30,11 +30,14 @@
     }
   },
 
-  "options_page": "options.html",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
 
   "background": {
     "service_worker": "background.js"
   },
 
-  "permissions": ["activeTab", "storage", "background"]
+  "permissions": ["storage"]
 }

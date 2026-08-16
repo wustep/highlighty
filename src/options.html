@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <!-- Highlighty.js | by Stephen Wu -->
@@ -151,7 +151,13 @@
           <div class="field is-grouped">
             <div class="control">
               <div class="input">
-                <input type="text" id="Settings__keyboardShortcut" data-recording="false" readonly placeholder="none"></input>
+                <input
+                  type="text"
+                  id="Settings__keyboardShortcut"
+                  data-recording="false"
+                  readonly
+                  placeholder="none"
+                />
               </div>
             </div>
             <div class="field-label is-normal">
@@ -190,6 +196,12 @@
             <div class="column is-three-fifths">
               <div class="field is-grouped PhraseList__header">
                 <h1 class="title">
+                  <input
+                    type="checkbox"
+                    class="switch is-rounded is-info PhraseList__enabled"
+                    checked="checked"
+                  />
+                  <label class="PhraseList__enabledLabel">Enabled</label>
                   <button class="PhraseList__color" style="background-color: #000000"></button>
                   <span class="PhraseList__title"> </span>
                   <span class="tag PhraseList__phraseCount"> </span>

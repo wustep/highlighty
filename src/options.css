@@ -55,6 +55,17 @@
   margin-bottom: 0px;
 }
 
+.PhraseList__enabledLabel {
+  margin-right: 0.5rem;
+}
+
+.PhraseList[data-enabled='false'] .PhraseList__title,
+.PhraseList[data-enabled='false'] .PhraseList__phraseCount,
+.PhraseList[data-enabled='false'] .PhraseList__phrases,
+.PhraseList[data-enabled='false'] .PhraseList__newPhrase {
+  opacity: 0.5;
+}
+
 button.PhraseList__color {
   height: 16px;
   width: 16px;
@@ -122,6 +133,18 @@ span.Allowlist__url {
 
 /* Color picker */
 .picker_editor input {
-  font-family: BlinkMacSystemFont, -apple-system, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
-    'Fira Sans', 'Droid Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  font-family:
+    BlinkMacSystemFont,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    Helvetica,
+    Arial,
+    sans-serif !important;
 }

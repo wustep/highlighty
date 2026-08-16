@@ -1,255 +1,301 @@
 /* Highlighty.js | by Stephen Wu */
 
 $(function () {
-  if (window.top != window.self) {
-    // Don't run on frames or iframes
+  if (window.top !== window.self) {
+    // Don't run on frames or iframes.
     return;
   }
 
-  const HL_PREFIX_CLASS = 'Highlighty__phrase--'; // Phrases will have class prefixed with their list numbe
-  const HL_BASE_CLASS = 'Highlighty__phrase'; // Phrases will all have this class
-  const HL_STYLE_ID = 'Highlighty__styles'; // Style block containing highlighter styles
+  const HL_PREFIX_CLASS = 'Highlighty__phrase--';
+  const HL_BASE_CLASS = 'Highlighty__phrase';
+  const HL_STYLE_ID = 'Highlighty__styles';
+  const MUTATION_TIMER = 3000;
 
   let bodyHighlighted = false;
-  let urlDenylisted = false;
-  let urlAllowlisted = false;
-  let phrasesToHighlight = []; // Array of arrays of phrases, where index represents the phrase list number.
+  let blockedPageOverride = false;
+  let currentOptions = null;
+  let phrasesToHighlight = [];
+  let mutationTime = true;
+  let mutationDelayPending = false;
 
-  const MUTATION_TIMER = 3000; // Number of miliseconds between updating body after DOM change
-  let mutationTime = true; // Whether to auto-highlight immediately after DOM change
-  let mutationDelayTime = true; // Whether to auto-highlight after a delay due to subsequent DOM changes.
-
-  let developerMode = !('update_url' in chrome.runtime.getManifest()); // Whether to log messages to track perf
+  const developerMode = !('update_url' in chrome.runtime.getManifest());
 
   function log(stuff) {
-    if (developerMode) {
-      const now = new Date();
-      const logPrefix =
-        '[Highlighty] [' +
-        now.getHours() +
-        ':' +
-        now.getMinutes() +
-        ':' +
-        now.getSeconds() +
-        '.' +
-        now.getMilliseconds() +
-        ']';
-      if (typeof stuff === 'string') {
-        console.log(logPrefix + ' ' + stuff);
-      } else {
-        console.log(logPrefix);
-        console.log(stuff);
-      }
+    if (!developerMode) {
+      return;
     }
+
+    const now = new Date();
+    const logPrefix = `[Highlighty] [${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}.${now.getMilliseconds()}]`;
+    console.log(logPrefix, stuff);
   }
 
-  // Setup phrase list and append proper styles
-  // We don't re-setup the highlighter on incremental auto-updates but we do on manual triggers
+  function isPhraseListEnabled(list) {
+    // Lists created before the per-list toggle are enabled by default.
+    return list.enabled !== false && list.toggled !== false;
+  }
+
+  function getValidPhrases(list) {
+    if (!Array.isArray(list.phrases)) {
+      return [];
+    }
+
+    return list.phrases
+      .filter((phrase) => typeof phrase === 'string' && phrase.trim())
+      .map((phrase) => phrase.trim());
+  }
+
   function setupHighlighter(options) {
-    log('setupHighligher start');
     phrasesToHighlight = [];
     let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
-    for (i in options.highlighter) {
-      if (Object.keys(options.highlighter[i]).length) {
-        // Skip deleted lists!
-        let highlighterColor = options.highlighter[i].color || 'black';
-        let textColor = options.highlighter[i].textColor || 'white';
-        highlighterStyles += `.${
-          HL_PREFIX_CLASS + i
-        } { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
-        for (phrase of options.highlighter[i].phrases) {
-          addHighlightPhrase(phrase, i);
-        }
+
+    options.highlighter.forEach((list, listIndex) => {
+      if (!list || !Object.keys(list).length || !isPhraseListEnabled(list)) {
+        return;
       }
-    }
+
+      const phrases = getValidPhrases(list);
+      if (!phrases.length) {
+        return;
+      }
+
+      const highlighterColor = list.color || 'black';
+      const textColor = list.textColor || 'white';
+      highlighterStyles += `.${HL_PREFIX_CLASS}${listIndex} { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
+      phrasesToHighlight[listIndex] = phrases;
+    });
+
     highlighterStyles += '</style>';
     $('head').append(highlighterStyles);
     log(phrasesToHighlight);
-    log('setupHighligher end');
   }
 
-  // Add phrase to highlight list given phrase and its list index
-  function addHighlightPhrase(highlightPhrase, listNumber) {
-    highlightPhrase = String(highlightPhrase);
-    if (phrasesToHighlight[listNumber]) {
-      phrasesToHighlight[listNumber].push(highlightPhrase);
-    } else {
-      phrasesToHighlight[listNumber] = [highlightPhrase];
-    }
-  }
-
-  // Highlight phrases in body
   function highlightPhrases(options) {
-    log('highlightPhrases start');
-    for (let phraseListIndex in phrasesToHighlight) {
-      log('highlightPhrases ' + phraseListIndex);
-      let markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
-      let hilitor = new Hilitor();
+    for (const phraseListIndex in phrasesToHighlight) {
+      const markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
+      const hilitor = new Hilitor();
       hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
         classes: markClasses,
         caseSensitive: !options.enableCaseInsensitive,
         partialMatch: options.enablePartialMatch,
       });
     }
+
     if (options.enableTitleMouseover) {
-      log('enableTitleMousever start');
-      for (let i = 0; i < options.highlighter.length; i++) {
-        if ('title' in options.highlighter[i]) {
-          $('.' + HL_PREFIX_CLASS + i).attr('title', options.highlighter[i].title);
+      options.highlighter.forEach((list, listIndex) => {
+        if (list?.title && isPhraseListEnabled(list)) {
+          $(`.${HL_PREFIX_CLASS}${listIndex}`).attr('title', list.title);
         }
-      }
-      log('enableTitleMousever end');
+      });
     }
+
     bodyHighlighted = true;
-    log('highlightPhrases end');
   }
 
-  function removeHighlightStyles() {
-    $('#' + HL_STYLE_ID).remove();
-  }
-
-  // Remove all highlights (from Hilitor code!)
   function removeHighlights() {
-    let arr = document.getElementsByClassName(HL_BASE_CLASS);
-    // Remove the wrapping Highlighty span.
-    while (arr.length && (mark = arr[0])) {
-      let parent = mark.parentNode;
+    const highlightedElements = document.getElementsByClassName(HL_BASE_CLASS);
+    while (highlightedElements.length) {
+      const mark = highlightedElements[0];
+      const parent = mark.parentNode;
       parent.replaceChild(mark.firstChild, mark);
       parent.normalize();
     }
+    bodyHighlighted = false;
   }
 
-  function processHighlights(manualTrigger = false) {
-    log('processHighlights');
-    chrome.storage.local.get((options) => {
-      if (!manualTrigger && !isAllowedURL(options)) {
-        chrome.runtime.sendMessage({ blockedHighlighter: true });
-      } else {
-        // Let a manualTrigger override denylist and go directly to highlight mode.
-        // Deal with badges, notifying background.js.
-        if (!options.enableAutoHighlight) {
-          chrome.runtime.sendMessage({ manualHighlighter: !bodyHighlighted, tab: true });
-        } else if (manualTrigger) {
-          let newAutoHighlighter = !isAllowedURL(options) ? true : !options.autoHighlighter;
-          urlDenylisted = false;
-          urlAllowlisted = true;
-          chrome.storage.local.set({ autoHighlighter: newAutoHighlighter });
-          chrome.runtime.sendMessage({ autoHighlighter: newAutoHighlighter });
-        }
-        // Deal with appropriate (un)highlighting.
-        if (!bodyHighlighted) {
-          removeHighlightStyles();
-          setupHighlighter(options);
-          highlightPhrases(options);
-        } else {
-          bodyHighlighted = false;
-          removeHighlights();
-        }
-      }
-    });
+  function clearHighlights() {
+    removeHighlights();
+    $(`#${HL_STYLE_ID}`).remove();
+  }
+
+  function renderHighlights(options) {
+    clearHighlights();
+    setupHighlighter(options);
+    highlightPhrases(options);
+  }
+
+  function urlMatchesAny(urlPhrases) {
+    return Array.isArray(urlPhrases)
+      ? urlPhrases.some(
+          (urlPhrase) => typeof urlPhrase === 'string' && window.location.href.includes(urlPhrase),
+        )
+      : false;
   }
 
   function isAllowedURL(options) {
-    return !(
-      (options.enableURLDenylist && urlDenylisted) ||
-      (options.enableURLAllowlist && !urlAllowlisted)
-    );
+    const denylisted = options.enableURLDenylist && urlMatchesAny(options.denylist);
+    const allowlisted = urlMatchesAny(options.allowlist);
+    return !(denylisted || (options.enableURLAllowlist && !allowlisted));
+  }
+
+  function getActionState(options) {
+    if (!options.enableAutoHighlight) {
+      return bodyHighlighted ? 'manualOn' : 'manualOff';
+    }
+    if (!options.autoHighlighter) {
+      return 'autoOff';
+    }
+    if (!isAllowedURL(options) && !blockedPageOverride) {
+      return 'blocked';
+    }
+    return blockedPageOverride ? 'manualOn' : 'autoOn';
+  }
+
+  function updateActionState() {
+    if (!currentOptions) {
+      return;
+    }
+    chrome.runtime.sendMessage({
+      type: 'actionState',
+      state: getActionState(currentOptions),
+    });
+  }
+
+  function applyOptionsState(options) {
+    currentOptions = options;
+
+    if (!options.enableAutoHighlight) {
+      blockedPageOverride = false;
+      clearHighlights();
+    } else if (!options.autoHighlighter) {
+      blockedPageOverride = false;
+      clearHighlights();
+    } else if (!isAllowedURL(options)) {
+      if (!blockedPageOverride) {
+        clearHighlights();
+      } else {
+        renderHighlights(options);
+      }
+    } else {
+      blockedPageOverride = false;
+      renderHighlights(options);
+    }
+
+    updateActionState();
+  }
+
+  function toggleHighlights() {
+    if (!currentOptions) {
+      return;
+    }
+
+    if (!currentOptions.enableAutoHighlight) {
+      if (bodyHighlighted) {
+        clearHighlights();
+      } else {
+        renderHighlights(currentOptions);
+      }
+      updateActionState();
+      return;
+    }
+
+    if (!currentOptions.autoHighlighter) {
+      chrome.storage.local.set({ autoHighlighter: true });
+      return;
+    }
+
+    if (!isAllowedURL(currentOptions)) {
+      blockedPageOverride = !bodyHighlighted;
+      if (blockedPageOverride) {
+        renderHighlights(currentOptions);
+      } else {
+        clearHighlights();
+      }
+      updateActionState();
+      return;
+    }
+
+    chrome.storage.local.set({ autoHighlighter: false });
   }
 
   chrome.storage.local.get((options) => {
-    if (options.enableAutoHighlight && options.autoHighlighter) {
-      if (options.denylist.length) {
-        for (let url of options.denylist) {
-          if (window.location.href.indexOf(url) !== -1) {
-            urlDenylisted = true;
-            break;
-          }
-        }
-      }
-      if (options.allowlist.length) {
-        for (let url of options.allowlist) {
-          if (window.location.href.indexOf(url) !== -1) {
-            urlAllowlisted = true;
-            break;
-          }
-        }
-      }
-      log(`URL: allowlist(${urlAllowlisted}) denylist(${urlDenylisted})`);
-      processHighlights();
-    }
+    applyOptionsState(options);
   });
 
-  chrome.storage.local.get((options) => {
-    if (options.keyboardShortcut && options.keyboardShortcut.trim() !== '') {
-      window.addEventListener('keydown', (e) => {
-        const specialKeys = {
-          ' ': 'space',
-        };
-        const pressedKeys = [];
-        if (e.ctrlKey) pressedKeys.push('ctrl');
-        if (e.shiftKey) pressedKeys.push('shift');
-        if (e.altKey) pressedKeys.push('alt');
-        if (e.metaKey) pressedKeys.push('meta');
-        let keyStr = ['Control', 'Shift', 'Alt', 'Meta,'].includes(e.key)
-          ? ''
-          : specialKeys[e.key] || e.key;
-        if (keyStr.length < 2) {
-          keyStr = keyStr.toLowerCase();
-        }
-        if (keyStr) pressedKeys.push(keyStr);
-        const pressedKeysString = pressedKeys.join(' + ').trim();
-        if (pressedKeysString === options.keyboardShortcut) {
-          processHighlights(true);
-        }
-      });
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local') {
+      return;
+    }
+
+    chrome.storage.local.get((options) => {
+      applyOptionsState(options);
+    });
+  });
+
+  window.addEventListener('keydown', (event) => {
+    if (!currentOptions?.keyboardShortcut?.trim()) {
+      return;
+    }
+
+    const specialKeys = { ' ': 'space' };
+    const pressedKeys = [];
+    if (event.ctrlKey) pressedKeys.push('ctrl');
+    if (event.shiftKey) pressedKeys.push('shift');
+    if (event.altKey) pressedKeys.push('alt');
+    if (event.metaKey) pressedKeys.push('meta');
+
+    let keyString = ['Control', 'Shift', 'Alt', 'Meta'].includes(event.key)
+      ? ''
+      : specialKeys[event.key] || event.key;
+    if (keyString.length < 2) {
+      keyString = keyString.toLowerCase();
+    }
+    if (keyString) pressedKeys.push(keyString);
+
+    if (pressedKeys.join(' + ').trim() === currentOptions.keyboardShortcut) {
+      toggleHighlights();
     }
   });
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message === 'highlighty') {
-      processHighlights(true);
+    if (message?.type === 'toggleHighlights') {
+      toggleHighlights();
     }
   });
 
   function autoHighlightIfReady() {
-    log('autoHighlightIfReady');
-    if (mutationTime) {
-      log('autoHighlightIfReady: ready');
-      mutationTime = false;
-      setTimeout(() => {
-        mutationTime = true;
-      }, MUTATION_TIMER);
-      chrome.storage.local.get((options) => {
-        if (options.enableAutoHighlight && options.autoHighlighter) {
-          highlightPhrases(options);
-        }
-      });
+    if (!mutationTime || !currentOptions) {
+      return;
+    }
+
+    mutationTime = false;
+    setTimeout(() => {
+      mutationTime = true;
+    }, MUTATION_TIMER);
+
+    if (
+      bodyHighlighted &&
+      currentOptions.enableAutoHighlight &&
+      currentOptions.autoHighlighter &&
+      (isAllowedURL(currentOptions) || blockedPageOverride)
+    ) {
+      highlightPhrases(currentOptions);
     }
   }
 
-  chrome.storage.local.get((options) => {
-    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-    var observer = new MutationObserver(function (mutations, observer) {
-      if (
-        options.enableAutoHighlight &&
-        options.enableAutoHighlightUpdates &&
-        isAllowedURL(options)
-      ) {
-        if (mutationTime) {
-          autoHighlightIfReady();
-        } else {
-          if (mutationDelayTime) {
-            setTimeout(() => {
-              mutationDelayTime = false;
-              autoHighlightIfReady();
-            }, MUTATION_TIMER);
-          }
-        }
-      }
-    });
-    observer.observe(document, {
-      subtree: true,
-      childList: true,
-    });
+  const MutationObserverClass = window.MutationObserver || window.WebKitMutationObserver;
+  const observer = new MutationObserverClass(() => {
+    if (
+      !currentOptions?.enableAutoHighlight ||
+      !currentOptions.enableAutoHighlightUpdates ||
+      !bodyHighlighted ||
+      (!isAllowedURL(currentOptions) && !blockedPageOverride)
+    ) {
+      return;
+    }
+
+    if (mutationTime) {
+      autoHighlightIfReady();
+    } else if (!mutationDelayPending) {
+      mutationDelayPending = true;
+      setTimeout(() => {
+        mutationDelayPending = false;
+        autoHighlightIfReady();
+      }, MUTATION_TIMER);
+    }
+  });
+  observer.observe(document, {
+    subtree: true,
+    childList: true,
   });
 });

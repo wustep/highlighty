@@ -6,25 +6,25 @@
  */
 
 function Hilitor() {
-  let hiliteTag = "MARK";
-  let skipTags = new RegExp("^(?:" + hiliteTag + "|FORM|HEAD|SCRIPT|STYLE|TEXTAREA)$");
-  let matchRegExp = "";
+  const hiliteTag = 'MARK';
+  const skipTags = new RegExp('^(?:' + hiliteTag + '|FORM|HEAD|SCRIPT|STYLE|TEXTAREA)$');
+  let matchRegExp = '';
   let partialMatch = false;
   let caseSensitive = false;
 
   function setRegexFromPhrases(phrases) {
-    let input = "";
-    for (phrase of phrases) {
-        phrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        input += phrase + "|";
+    let input = '';
+    for (const phrase of phrases) {
+      const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      input += escapedPhrase + '|';
     }
-    input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', "g"), "");
+    input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', 'g'), '');
     if (input) {
-      let regex = "(" + input + ")";
+      let regex = '(' + input + ')';
       if (!partialMatch) {
-        regex = "\\b" + regex + "\\b";
+        regex = '\\b' + regex + '\\b';
       }
-      let flags = (caseSensitive) ? "" : "i";
+      let flags = caseSensitive ? '' : 'i';
       matchRegExp = new RegExp(regex, flags);
       return matchRegExp;
     }
@@ -32,35 +32,38 @@ function Hilitor() {
   }
 
   // Recursively apply word highlighting
-  function hiliteWords(node, classes="") {
+  function hiliteWords(node, classes = '') {
     if (node === undefined || !node) return;
     if (!matchRegExp) return;
     if (skipTags.test(node.nodeName)) return;
 
     if (node.hasChildNodes()) {
-      for (node of node.childNodes) {
-        hiliteWords(node, classes);
+      for (const childNode of node.childNodes) {
+        hiliteWords(childNode, classes);
       }
     }
-    if (node.nodeType == 3) { // NODE_TEXT
-      if ((nv = node.nodeValue) && (regs = matchRegExp.exec(nv))) {
-        let match = document.createElement(hiliteTag);
-        match.appendChild(document.createTextNode(regs[0]));
+    if (node.nodeType == 3) {
+      // NODE_TEXT
+      const nodeValue = node.nodeValue;
+      const regexMatch = nodeValue && matchRegExp.exec(nodeValue);
+      if (regexMatch) {
+        const match = document.createElement(hiliteTag);
+        match.appendChild(document.createTextNode(regexMatch[0]));
         if (classes.length) {
           match.className = classes;
         }
-        let after = node.splitText(regs.index);
-        after.nodeValue = after.nodeValue.substring(regs[0].length);
+        const after = node.splitText(regexMatch.index);
+        after.nodeValue = after.nodeValue.substring(regexMatch[0].length);
         node.parentNode.insertBefore(match, after);
       }
-    };
-  };
+    }
+  }
 
   /*
    * Apply classes to provided phrases list to provided targetNode.
    * markOptions should be { caseSensitive: bool, partialMatch: bool, ... }
    */
-  this.applyPhrases = function(phrases, options = {}) {
+  this.applyPhrases = function (phrases, options = {}) {
     if (options.partialMatch) {
       partialMatch = true;
     }
@@ -68,6 +71,9 @@ function Hilitor() {
       caseSensitive = true;
     }
     setRegexFromPhrases(phrases);
-    hiliteWords(options.targetNode ? options.targetNode : document.body, options.classes ? options.classes : "");
-  }
+    hiliteWords(
+      options.targetNode ? options.targetNode : document.body,
+      options.classes ? options.classes : '',
+    );
+  };
 }
