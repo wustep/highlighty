@@ -1,5 +1,13 @@
 /* Highlighty.js | by Stephen Wu */
 
+import { Hilitor } from './hilitor';
+import { isEditableTarget, shortcutFromKeyboardEvent } from './modules/keyboard';
+import { prepareHilitorOptions } from './modules/matching';
+import { isPhraseListEnabled, normalizePhrases } from './modules/phrase-lists';
+import { normalizeOptions } from './modules/storage';
+import type { HighlightyOptions } from './modules/types';
+import { isAllowedURL } from './modules/urls';
+
 $(function () {
   if (window.top !== window.self) {
     // Don't run on frames or iframes.
@@ -23,6 +31,8 @@ $(function () {
   let quickSearchPhrase = '';
   let mutationTime = true;
   let mutationDelayPending = false;
+  let observer = null;
+  let observerPauseDepth = 0;
 
   const developerMode = !('update_url' in chrome.runtime.getManifest());
 
@@ -36,19 +46,17 @@ $(function () {
     console.log(logPrefix, stuff);
   }
 
-  function isPhraseListEnabled(list) {
-    // Lists created before the per-list toggle are enabled by default.
-    return list.enabled !== false && list.toggled !== false;
-  }
-
-  function getValidPhrases(list) {
-    if (!Array.isArray(list.phrases)) {
-      return [];
+  function withoutObservedMutations(callback) {
+    if (observerPauseDepth === 0) observer?.disconnect();
+    observerPauseDepth++;
+    try {
+      return callback();
+    } finally {
+      observerPauseDepth--;
+      if (observerPauseDepth === 0) {
+        observer?.observe(document, { subtree: true, childList: true });
+      }
     }
-
-    return list.phrases
-      .filter((phrase) => typeof phrase === 'string' && phrase.trim())
-      .map((phrase) => phrase.trim());
   }
 
   function setupHighlighter(options) {
@@ -96,7 +104,7 @@ $(function () {
         return;
       }
 
-      const phrases = getValidPhrases(list);
+      const phrases = normalizePhrases(list.phrases);
       if (!phrases.length) {
         return;
       }
@@ -116,32 +124,33 @@ $(function () {
   }
 
   function highlightPhrases(options) {
-    for (const phraseListIndex in phrasesToHighlight) {
-      const markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
-      const hilitor = new Hilitor();
-      hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
-        classes: markClasses,
-        caseSensitive: !options.enableCaseInsensitive,
-        partialMatch: options.enablePartialMatch,
-      });
-    }
+    withoutObservedMutations(() => {
+      for (const phraseListIndex in phrasesToHighlight) {
+        const markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
+        const hilitor = new Hilitor();
+        hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
+          ...prepareHilitorOptions(options),
+          classes: markClasses,
+        });
+      }
 
-    if (quickSearchPhrase) {
-      applyQuickSearch(options, quickSearchPhrase);
-    }
+      if (quickSearchPhrase) {
+        applyQuickSearch(options, quickSearchPhrase);
+      }
 
-    if (options.enableTitleMouseover) {
-      options.highlighter.forEach((list, listIndex) => {
-        if (list?.title && isPhraseListEnabled(list)) {
-          $(`.${HL_PREFIX_CLASS}${listIndex}`)
-            .addClass(HL_TOOLTIP_CLASS)
-            .attr('data-highlighty-title', list.title);
-        }
-      });
-    }
+      if (options.enableTitleMouseover) {
+        options.highlighter.forEach((list, listIndex) => {
+          if (list?.title && isPhraseListEnabled(list)) {
+            $(`.${HL_PREFIX_CLASS}${listIndex}`)
+              .addClass(HL_TOOLTIP_CLASS)
+              .attr('data-highlighty-title', list.title);
+          }
+        });
+      }
 
-    bodyHighlighted = true;
-    setupToolbar(options);
+      bodyHighlighted = true;
+      setupToolbar(options);
+    });
   }
 
   function getHighlightMarks() {
@@ -157,7 +166,8 @@ $(function () {
       currentMatchIndex = marks.length ? marks.length - 1 : -1;
     }
     const currentNumber = currentMatchIndex >= 0 ? currentMatchIndex + 1 : 0;
-    countElement.textContent = `${currentNumber} / ${marks.length}`;
+    const countText = `${currentNumber} / ${marks.length}`;
+    if (countElement.textContent !== countText) countElement.textContent = countText;
   }
 
   function navigateHighlights(direction) {
@@ -193,18 +203,19 @@ $(function () {
   function applyQuickSearch(options, phrase) {
     const hilitor = new Hilitor();
     hilitor.applyPhrases([phrase], {
+      ...prepareHilitorOptions(options, { partialMatch: true }),
       classes: `${HL_BASE_CLASS} ${HL_QUICK_CLASS}`,
-      caseSensitive: !options.enableCaseInsensitive,
-      partialMatch: true,
     });
   }
 
   function runQuickSearch(options, phrase) {
-    removeMarksByClass(HL_QUICK_CLASS);
-    quickSearchPhrase = phrase.trim();
-    currentMatchIndex = -1;
-    if (quickSearchPhrase) applyQuickSearch(options, quickSearchPhrase);
-    updateNavigator();
+    withoutObservedMutations(() => {
+      removeMarksByClass(HL_QUICK_CLASS);
+      quickSearchPhrase = phrase.trim();
+      currentMatchIndex = -1;
+      if (quickSearchPhrase) applyQuickSearch(options, quickSearchPhrase);
+      updateNavigator();
+    });
   }
 
   function setupToolbar(options) {
@@ -292,29 +303,19 @@ $(function () {
   }
 
   function clearHighlights() {
-    removeHighlights();
-    $(`#${HL_STYLE_ID}`).remove();
-    removeToolbar();
+    withoutObservedMutations(() => {
+      removeHighlights();
+      $(`#${HL_STYLE_ID}`).remove();
+      removeToolbar();
+    });
   }
 
   function renderHighlights(options) {
-    clearHighlights();
-    setupHighlighter(options);
-    highlightPhrases(options);
-  }
-
-  function urlMatchesAny(urlPhrases) {
-    return Array.isArray(urlPhrases)
-      ? urlPhrases.some(
-          (urlPhrase) => typeof urlPhrase === 'string' && window.location.href.includes(urlPhrase),
-        )
-      : false;
-  }
-
-  function isAllowedURL(options) {
-    const denylisted = options.enableURLDenylist && urlMatchesAny(options.denylist);
-    const allowlisted = urlMatchesAny(options.allowlist);
-    return !(denylisted || (options.enableURLAllowlist && !allowlisted));
+    withoutObservedMutations(() => {
+      clearHighlights();
+      setupHighlighter(options);
+      highlightPhrases(options);
+    });
   }
 
   function getActionState(options) {
@@ -324,7 +325,7 @@ $(function () {
     if (!options.autoHighlighter) {
       return 'autoOff';
     }
-    if (!isAllowedURL(options) && !blockedPageOverride) {
+    if (!isAllowedURL(window.location.href, options) && !blockedPageOverride) {
       return 'blocked';
     }
     return blockedPageOverride ? 'manualOn' : 'autoOn';
@@ -349,7 +350,7 @@ $(function () {
     } else if (!options.autoHighlighter) {
       blockedPageOverride = false;
       clearHighlights();
-    } else if (!isAllowedURL(options)) {
+    } else if (!isAllowedURL(window.location.href, options)) {
       if (!blockedPageOverride) {
         clearHighlights();
       } else {
@@ -383,7 +384,7 @@ $(function () {
       return;
     }
 
-    if (!isAllowedURL(currentOptions)) {
+    if (!isAllowedURL(window.location.href, currentOptions)) {
       blockedPageOverride = !bodyHighlighted;
       if (blockedPageOverride) {
         renderHighlights(currentOptions);
@@ -398,7 +399,7 @@ $(function () {
   }
 
   chrome.storage.local.get((options) => {
-    applyOptionsState(options);
+    applyOptionsState(normalizeOptions(options));
   });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -407,31 +408,16 @@ $(function () {
     }
 
     chrome.storage.local.get((options) => {
-      applyOptionsState(options);
+      applyOptionsState(normalizeOptions(options));
     });
   });
 
   window.addEventListener('keydown', (event) => {
-    if (!currentOptions?.keyboardShortcut?.trim()) {
+    if (!currentOptions?.keyboardShortcut?.trim() || isEditableTarget(event.target)) {
       return;
     }
 
-    const specialKeys = { ' ': 'space' };
-    const pressedKeys = [];
-    if (event.ctrlKey) pressedKeys.push('ctrl');
-    if (event.shiftKey) pressedKeys.push('shift');
-    if (event.altKey) pressedKeys.push('alt');
-    if (event.metaKey) pressedKeys.push('meta');
-
-    let keyString = ['Control', 'Shift', 'Alt', 'Meta'].includes(event.key)
-      ? ''
-      : specialKeys[event.key] || event.key;
-    if (keyString.length < 2) {
-      keyString = keyString.toLowerCase();
-    }
-    if (keyString) pressedKeys.push(keyString);
-
-    if (pressedKeys.join(' + ').trim() === currentOptions.keyboardShortcut) {
+    if (shortcutFromKeyboardEvent(event) === currentOptions.keyboardShortcut) {
       toggleHighlights();
     }
   });
@@ -456,19 +442,18 @@ $(function () {
       bodyHighlighted &&
       currentOptions.enableAutoHighlight &&
       currentOptions.autoHighlighter &&
-      (isAllowedURL(currentOptions) || blockedPageOverride)
+      (isAllowedURL(window.location.href, currentOptions) || blockedPageOverride)
     ) {
       highlightPhrases(currentOptions);
     }
   }
 
-  const MutationObserverClass = window.MutationObserver || window.WebKitMutationObserver;
-  const observer = new MutationObserverClass(() => {
+  observer = new MutationObserver(() => {
     if (
       !currentOptions?.enableAutoHighlight ||
       !currentOptions.enableAutoHighlightUpdates ||
       !bodyHighlighted ||
-      (!isAllowedURL(currentOptions) && !blockedPageOverride)
+      (!isAllowedURL(window.location.href, currentOptions) && !blockedPageOverride)
     ) {
       return;
     }

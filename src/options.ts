@@ -1,8 +1,20 @@
 /* Highlighty.js | by Stephen Wu */
 
+import { getTextColor, hexClean, rgbaStringToHex } from './modules/colors';
+import { getDelimitedPhrases, parseBulkImport } from './modules/import-export';
+import { shortcutFromKeyboardEvent } from './modules/keyboard';
+import {
+  addUniquePhrases,
+  clonePhraseLists,
+  normalizeSortOrder,
+  sortPhrases,
+  sortStoredPhraseLists,
+} from './modules/phrase-lists';
+import { DEFAULT_BASE_STYLES, normalizeOptions } from './modules/storage';
+import { validateStyleDeclarations as isValidStyleDeclarations } from './modules/styles';
+import type { HighlightyOptions } from './modules/types';
+
 $(function () {
-  const DEFAULT_BASE_STYLES =
-    'display: inline; border-radius: 0.3rem; padding: 0.1rem; font-weight: normal; box-shadow: inset 0 -0.1rem 0 rgba(20,20,20,0.40);';
   const settingsInputSelector = [
     '#Settings__enableAutoHighlight',
     '#Settings__enableAutoHighlightUpdates',
@@ -19,11 +31,25 @@ $(function () {
   ].join(', ');
   let settingsDirty = false;
 
+  interface DialogOptions {
+    title?: string;
+    message: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    isDanger?: boolean;
+    inputValue?: string;
+    onConfirm?: (value?: string) => void;
+  }
+
+  function getOptions(callback: (options: HighlightyOptions) => void): void {
+    chrome.storage.local.get((options) => callback(normalizeOptions(options)));
+  }
+
   /**
    * Set up or reset the options page handlers and lists components.
    * If fresh is false, then don't run the one-time handlers setup meant for a fresh load.
    */
-  function setupOptionsPage(options, fresh = true) {
+  function setupOptionsPage(options: HighlightyOptions, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
 
@@ -53,7 +79,7 @@ $(function () {
     isDanger = false,
     inputValue,
     onConfirm = () => {},
-  }) {
+  }: DialogOptions) {
     const $modal = $('#DialogModal');
     const $confirm = $('#DialogModal__confirm');
     const $cancel = $('#DialogModal__cancel');
@@ -75,13 +101,13 @@ $(function () {
     function closeDialog() {
       $modal.removeClass('is-active').attr('aria-hidden', 'true');
       $(document).off('keydown.highlightyDialog');
-      if (previouslyFocused) {
+      if (previouslyFocused instanceof HTMLElement) {
         previouslyFocused.focus();
       }
     }
 
     $confirm.off('click.highlightyDialog').on('click.highlightyDialog', () => {
-      const value = hasInput ? $input.val().trim() : undefined;
+      const value = hasInput ? String($input.val() ?? '').trim() : undefined;
       closeDialog();
       onConfirm(value);
     });
@@ -218,24 +244,7 @@ $(function () {
         return;
       }
       e.preventDefault();
-      const specialKeys = {
-        ' ': 'space',
-      };
-      const pressedKeys = [];
-      if (e.ctrlKey) pressedKeys.push('ctrl');
-      if (e.shiftKey) pressedKeys.push('shift');
-      if (e.altKey) pressedKeys.push('alt');
-      if (e.metaKey) pressedKeys.push('meta');
-      let keyStr = ['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)
-        ? ''
-        : specialKeys[e.key] || e.key;
-      // Function keys remain capitalized
-      if (keyStr.length < 2) {
-        keyStr = keyStr.toLowerCase();
-      }
-      if (keyStr) pressedKeys.push(keyStr);
-      let pressedKeysString = pressedKeys.join(' + ').trim();
-      updateShortcutInput(pressedKeysString, true);
+      updateShortcutInput(shortcutFromKeyboardEvent(e), true);
     }
   }
 
@@ -244,7 +253,9 @@ $(function () {
   }
 
   function applyPhraseSearch() {
-    const searchText = $.trim($('#PhraseLists__search').val() || '').toLowerCase();
+    const searchText = String($('#PhraseLists__search').val() || '')
+      .trim()
+      .toLowerCase();
     let matchingPhraseCount = 0;
     let matchingListCount = 0;
 
@@ -332,16 +343,6 @@ $(function () {
     }
   }
 
-  function sortPhrases(phrases, order) {
-    let list = phrases.slice();
-    if (order === 'A-Z') {
-      list = alphabetical(list);
-    } else if (order === 'Z-A') {
-      list = reverseAlphabetical(list);
-    }
-    return list;
-  }
-
   function addNewListDiv(list, index, isImportPreview = false) {
     const enabled = list.enabled !== false && list.toggled !== false;
     const $newListDiv = $(
@@ -349,7 +350,7 @@ $(function () {
     )
       .clone()
       .attr('id', `PhraseList--${index}`)
-      .attr('data-enabled', enabled)
+      .attr('data-enabled', String(enabled))
       .data('index', index);
     $newListDiv.find('.PhraseList__color').css('background-color', list.color);
     $newListDiv.find('.PhraseList__title').text(list.title);
@@ -420,14 +421,17 @@ $(function () {
     });
   }
 
-  function setupURLListHandler(listName, optionName) {
+  function setupURLListHandler(
+    listName: 'Denylist' | 'Allowlist',
+    optionName: 'denylist' | 'allowlist',
+  ) {
     $(`#${listName}__add`).on('click', (event) => {
       event.preventDefault();
       const $input = $(`#${listName}__urlInput`);
-      const newURL = $.trim($input.val());
+      const newURL = String($input.val() || '').trim();
       if (!newURL) return;
 
-      chrome.storage.local.get((options) => {
+      getOptions((options) => {
         const urls = options[optionName] || [];
         $input.val('');
         if (urls.includes(newURL)) {
@@ -454,7 +458,7 @@ $(function () {
         cancelLabel: 'Keep URL',
         isDanger: true,
         onConfirm: () => {
-          chrome.storage.local.get((options) => {
+          getOptions((options) => {
             const urls = options[optionName] || [];
             const urlIndex = urls.indexOf(url);
             if (urlIndex < 0) return;
@@ -482,9 +486,9 @@ $(function () {
     });
     $('#NewPhraseList__add').on('click', (e) => {
       e.preventDefault();
-      chrome.storage.local.get((options) => {
+      getOptions((options) => {
         const listIndex = options.highlighter.length;
-        const listTitle = $('#NewPhraseList__title').val().trim() || 'Untitled';
+        const listTitle = String($('#NewPhraseList__title').val() || '').trim() || 'Untitled';
         const listColor = rgbaStringToHex($('#NewPhraseList__color').css('background-color'));
         const listTextColor = rgbaStringToHex($('#NewPhraseList__color').css('color'));
         const newList = {
@@ -519,13 +523,13 @@ $(function () {
   }
 
   function setupPhraseListStylesHandler($list) {
-    const listIndex = $list.data('index');
     $list.on('click', '.PhraseList__saveStyles', () => {
-      const customStyles = $list.find('.PhraseList__customStyles').val().trim();
+      const customStyles = String($list.find('.PhraseList__customStyles').val() || '').trim();
       if (!validateStyleDeclarations(customStyles)) {
         return;
       }
-      chrome.storage.local.get((options) => {
+      getOptions((options) => {
+        const listIndex = $list.data('index');
         options.highlighter[listIndex].styles = customStyles;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -535,7 +539,8 @@ $(function () {
     });
     $list.on('click', '.PhraseList__resetStyles', () => {
       $list.find('.PhraseList__customStyles').val('');
-      chrome.storage.local.get((options) => {
+      getOptions((options) => {
+        const listIndex = $list.data('index');
         options.highlighter[listIndex].styles = '';
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -548,11 +553,11 @@ $(function () {
     $list.on('change', '.PhraseList__enabled', (event) => {
       const listIndex = $list.data('index');
       const enabled = $(event.currentTarget).is(':checked');
-      chrome.storage.local.get((options) => {
+      getOptions((options) => {
         options.highlighter[listIndex].enabled = enabled;
         delete options.highlighter[listIndex].toggled;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-          $list.attr('data-enabled', enabled);
+          $list.attr('data-enabled', String(enabled));
         });
       });
     });
@@ -570,7 +575,7 @@ $(function () {
         const newColorHexString = hexClean(newColor.hex);
         colorButton.style['background-color'] = newColorHexString;
         colorPicker.setOptions({ color: newColorHexString });
-        chrome.storage.local.get((options) => {
+        getOptions((options) => {
           options.highlighter[$list.data('index')].color = newColorHexString;
           options.highlighter[$list.data('index')].textColor = getTextColor(newColorHexString);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
@@ -592,7 +597,7 @@ $(function () {
         inputValue: oldListName,
         onConfirm: (newListName) => {
           if (newListName && newListName !== oldListName) {
-            chrome.storage.local.get((options) => {
+            getOptions((options) => {
               options.highlighter[$list.data('index')].title = newListName;
               chrome.storage.local.set({ highlighter: options.highlighter }, () => {
                 $list.find('.PhraseList__title').text(newListName);
@@ -614,7 +619,7 @@ $(function () {
         cancelLabel: 'Keep list',
         isDanger: true,
         onConfirm: () => {
-          chrome.storage.local.get((options) => {
+          getOptions((options) => {
             options.highlighter.splice($list.data('index'), 1);
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
               setupOptionsPage(options, false);
@@ -626,13 +631,13 @@ $(function () {
   }
 
   function setupPhraseListAddPhraseHandler($list) {
-    let listIndex = $list.data('index');
     $list.on('click', '.PhraseList__newPhrase__add', (e) => {
       e.preventDefault();
       const $input = $list.find('.PhraseList__newPhrase__phrase');
-      const newPhrase = $.trim($input.val());
+      const newPhrase = String($input.val() || '').trim();
       if (newPhrase.length > 0) {
-        chrome.storage.local.get((options) => {
+        getOptions((options) => {
+          const listIndex = $list.data('index');
           if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
             $input.val('');
             showDialog({
@@ -653,8 +658,7 @@ $(function () {
   }
 
   function setupPhraseListDeletePhraseHandler($list) {
-    let listIndex = $list.data('index');
-    let $phrases = $list.find('.PhraseList__phrases');
+    const $phrases = $list.find('.PhraseList__phrases');
     $phrases.on('click', '.PhraseList__phrase__delete', (e) => {
       const $phrase = $(e.target).parent();
       const phrase = $phrase.data('phrase');
@@ -665,7 +669,8 @@ $(function () {
         cancelLabel: 'Keep phrase',
         isDanger: true,
         onConfirm: () => {
-          chrome.storage.local.get((options) => {
+          getOptions((options) => {
+            const listIndex = $list.data('index');
             const phraseIndex = options.highlighter[listIndex].phrases.indexOf(phrase);
             if (phraseIndex < 0) return;
             options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
@@ -714,7 +719,7 @@ $(function () {
   function setExportModalTab(tabName) {
     $('#ExportModal__tabs').find('li').removeClass('is-active');
     $('#ExportModal__tabs').find(`#ExportModal__tab--${tabName}`).addClass('is-active');
-    chrome.storage.local.get((options) => {
+    getOptions((options) => {
       const listIndex = $('#ExportModal').data('index');
       const phrases = options.highlighter[listIndex].phrases;
       const delimiter = tabName === 'Line-Delimited' ? '\r\n' : ' ';
@@ -722,28 +727,26 @@ $(function () {
 
       $('#ExportModal__body').val(phrases.join(delimiter));
       $('#ExportModal__phraseCount').text(phrases.length);
-      $('#ExportModal__spaceWarning')
-        .toggleClass('is-hidden', tabName !== 'Space-Delimited')
-        .find('.message-body')
-        .html(
+      const $warning = $('#ExportModal__spaceWarning').toggleClass(
+        'is-hidden',
+        tabName !== 'Space-Delimited',
+      );
+      const $warningBody = $warning.find('.message-body').empty();
+      $('<b>')
+        .text(
           multiWordPhraseCount > 0
-            ? `<b>${pluralize(
-                multiWordPhraseCount,
-                'multi-word phrase',
-              )} will not be preserved.</b> A space-delimited import treats every word as a separate phrase. Use Line-Delimited for a lossless export.`
-            : '<b>Space-delimited exports cannot preserve multi-word phrases.</b> Use Line-Delimited if you add any phrases containing spaces.',
-        );
+            ? `${pluralize(multiWordPhraseCount, 'multi-word phrase')} will not be preserved.`
+            : 'Space-delimited exports cannot preserve multi-word phrases.',
+        )
+        .appendTo($warningBody);
+      $warningBody.append(
+        document.createTextNode(
+          multiWordPhraseCount > 0
+            ? ' A space-delimited import treats every word as a separate phrase. Use Line-Delimited for a lossless export.'
+            : ' Use Line-Delimited if you add any phrases containing spaces.',
+        ),
+      );
     });
-  }
-
-  function getDelimitedPhrases(body, format) {
-    if (format === 'Space-Delimited') {
-      return body.match(/\S+/g) || [];
-    }
-    return body
-      .split(/\r?\n/)
-      .map((phrase) => phrase.trim())
-      .filter(Boolean);
   }
 
   /**
@@ -753,7 +756,7 @@ $(function () {
   function setupBulkImportPreviewModal(newHighlighter) {
     const sorting = $('#Settings__sorting').val() || 'None';
     sortStoredPhraseLists(newHighlighter, sorting);
-    $('#BulkImportPreviewModal__preview').html('');
+    $('#BulkImportPreviewModal__preview').empty();
     $('#BulkImportPreviewModal__phraseListCount').text(newHighlighter.length);
     $('#BulkImportPreviewModal__phraseCount').text(
       newHighlighter.reduce((prev, curr) => prev + curr.phrases.length, 0),
@@ -769,7 +772,7 @@ $(function () {
     $('#BulkImportPreviewModal__import').off('click');
     $('#BulkImportPreviewModal__import').on('click', () => {
       chrome.storage.local.set({ highlighter: newHighlighter }, () => {
-        chrome.storage.local.get((options) => {
+        getOptions((options) => {
           setupOptionsPage(options, false);
         });
       });
@@ -789,14 +792,14 @@ $(function () {
 
     $('#BulkImportModal__typesSelect').change((e) => {
       $('#BulkImportModal__typesInfo > div').hide();
-      const importType = e.target.value;
-      const importName = $.trim($(`#BulkImportModal__typesSelect--${importType}`).text());
+      const importType = (e.target as HTMLSelectElement).value;
+      const importName = $(`#BulkImportModal__typesSelect--${importType}`).text().trim();
       $(`#BulkImportModal__typesInfo--${importType}`).show();
       $('#BulkImportPreviewModal__optionName').text(importName);
     });
 
     $('#BulkImportModal__fileInput').on('change', (event) => {
-      const file = event.target.files[0];
+      const file = (event.target as HTMLInputElement).files?.[0];
       if (!file) {
         resetBulkImportFile();
         return;
@@ -817,7 +820,7 @@ $(function () {
       reader.onload = () => {
         const $body = $('#BulkImportModal__body');
         $body.stop(true, true).fadeTo(100, 0, () => {
-          $body.val(reader.result).fadeTo(150, 1);
+          $body.val(String(reader.result || '')).fadeTo(150, 1);
           $('#BulkImportModal__fileName').text(file.name);
           $('#BulkImportModal__previewImport').prop('disabled', false);
           setBulkImportFileStatus(`Loaded ${file.name}. Its contents replaced the text below.`);
@@ -834,14 +837,14 @@ $(function () {
       const importType = $('#BulkImportModal__typesSelect').val();
       const importBody = $('#BulkImportModal__body').val();
       try {
-        if ($.trim(importBody).length === 0) {
+        if (String(importBody).trim().length === 0) {
           throw new Error('Nothing to import.');
         }
         const newImportLists = parseBulkImport(importBody);
         if (importType === 'Replace') {
           setupBulkImportPreviewModal(newImportLists);
         } else if (importType === 'ImportAsNew' || importType === 'ImportAndMerge') {
-          chrome.storage.local.get((options) => {
+          getOptions((options) => {
             const existingLists = clonePhraseLists(options.highlighter);
             if (importType === 'ImportAsNew') {
               setupBulkImportPreviewModal(existingLists.concat(newImportLists));
@@ -852,7 +855,10 @@ $(function () {
             newImportLists.forEach((newList) => {
               const existingList = existingLists.find((list) => list.title === newList.title);
               if (existingList) {
-                existingList.phrases = arrayMerge(existingList.phrases, newList.phrases);
+                existingList.phrases = addUniquePhrases(
+                  existingList.phrases,
+                  newList.phrases,
+                ).phrases;
                 existingList.color = newList.color;
                 existingList.textColor = newList.textColor;
                 existingList.enabled = newList.enabled;
@@ -878,70 +884,6 @@ $(function () {
     });
   }
 
-  function parseBulkImport(importBody) {
-    const parsedLists = JSON.parse(importBody);
-    if (!Array.isArray(parsedLists) || parsedLists.length === 0) {
-      throw new Error('Imported contents must be a non-empty array of phrase lists.');
-    }
-
-    return parsedLists.map((phraseList, index) => {
-      if (!phraseList || typeof phraseList !== 'object' || Array.isArray(phraseList)) {
-        throw new Error(`List ${index + 1} must be an object.`);
-      }
-      if (typeof phraseList.title !== 'string' || !phraseList.title.trim()) {
-        throw new Error(`List ${index + 1} must have a non-empty "title" string.`);
-      }
-      if (
-        typeof phraseList.color !== 'string' ||
-        !/^#[a-f\d]{6}(?:[a-f\d]{2})?$/i.test(phraseList.color)
-      ) {
-        throw new Error(`List ${index + 1} must have a hex color such as "#ffffff".`);
-      }
-      if (!Array.isArray(phraseList.phrases)) {
-        throw new Error(`List ${index + 1} must have a "phrases" array.`);
-      }
-      if (phraseList.phrases.some((phrase) => typeof phrase !== 'string')) {
-        throw new Error(`Every phrase in list ${index + 1} must be a string.`);
-      }
-      if ('enabled' in phraseList && typeof phraseList.enabled !== 'boolean') {
-        throw new Error(`List ${index + 1} must have a boolean "enabled" value.`);
-      }
-      if ('toggled' in phraseList && typeof phraseList.toggled !== 'boolean') {
-        throw new Error(`List ${index + 1} must have a boolean legacy "toggled" value.`);
-      }
-      if ('styles' in phraseList && typeof phraseList.styles !== 'string') {
-        throw new Error(`List ${index + 1} must have a string "styles" value.`);
-      }
-      if ('styles' in phraseList && !validateStyleDeclarations(phraseList.styles, false)) {
-        throw new Error(`List ${index + 1} has unsafe CSS declarations in "styles".`);
-      }
-      const normalizedPhrases = [
-        ...new Set(phraseList.phrases.map((phrase) => phrase.trim()).filter(Boolean)),
-      ];
-
-      return {
-        color: phraseList.color,
-        phrases: normalizedPhrases,
-        textColor: getTextColor(phraseList.color),
-        title: phraseList.title.trim(),
-        enabled:
-          typeof phraseList.enabled === 'boolean'
-            ? phraseList.enabled
-            : typeof phraseList.toggled === 'boolean'
-              ? phraseList.toggled
-              : true,
-        styles: phraseList.styles || '',
-      };
-    });
-  }
-
-  function clonePhraseLists(highlighter) {
-    return (highlighter || []).map((list) => ({
-      ...list,
-      phrases: list.phrases.slice(),
-    }));
-  }
-
   function resetBulkImportFile() {
     $('#BulkImportModal__fileInput').val('');
     $('#BulkImportModal__fileName').text('No file selected');
@@ -959,7 +901,7 @@ $(function () {
   function setupBulkExportModal() {
     $('#BulkExport').on('click', () => {
       $('#BulkExportModal').addClass('is-active');
-      chrome.storage.local.get((options) => {
+      getOptions((options) => {
         const highlighterExport = [];
         let phraseCount = 0;
         Object.values(options.highlighter).forEach((phraseList) => {
@@ -1052,19 +994,12 @@ $(function () {
       const importFormat = getActiveDelimitedFormat('ImportModal');
       const phrasesToAdd = getDelimitedPhrases($('#ImportModal__body').val(), importFormat);
       if (phrasesToAdd.length > 0) {
-        chrome.storage.local.get((options) => {
+        getOptions((options) => {
           const listIndex = $('#ImportModal').data('index');
-          const currentPhraseList = options.highlighter[listIndex].phrases;
-          let phrasesSkipped = 0;
-          let phrasesAdded = 0;
-          for (const phrase of phrasesToAdd) {
-            if (!currentPhraseList.includes(phrase)) {
-              currentPhraseList.push(phrase);
-              phrasesAdded++;
-            } else {
-              phrasesSkipped++;
-            }
-          }
+          const result = addUniquePhrases(options.highlighter[listIndex].phrases, phrasesToAdd);
+          options.highlighter[listIndex].phrases = result.phrases;
+          const phrasesAdded = result.added;
+          const phrasesSkipped = result.skipped;
           sortStoredPhraseLists(options.highlighter, options.sorting);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             setupOptionsPage(options, false);
@@ -1093,12 +1028,12 @@ $(function () {
     });
   }
 
-  chrome.storage.local.get((options) => {
+  getOptions((options) => {
     setupOptionsPage(options);
   });
 
   $('#Settings__save').on('click', () => {
-    chrome.storage.local.get((options) => {
+    getOptions((options) => {
       const newEnableAutoHighlight = $('#Settings__enableAutoHighlight').is(':checked');
       const newEnableAutoHighlightUpdates = $('#Settings__enableAutoHighlightUpdates').is(
         ':checked',
@@ -1108,11 +1043,11 @@ $(function () {
       const newEnableCaseInsensitive = $('#Settings__enableCaseInsensitive').is(':checked');
       const newEnablePhraseNavigator = $('#Settings__enablePhraseNavigator').is(':checked');
       const newEnableQuickSearch = $('#Settings__enableQuickSearch').is(':checked');
-      const newKeyboardShortcut = $('#Settings__keyboardShortcut').val();
+      const newKeyboardShortcut = String($('#Settings__keyboardShortcut').val() || '');
       const newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
       const newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
-      const newSorting = $('#Settings__sorting').val();
-      const newBaseStyles = $('#Settings__baseStyles').val().trim();
+      const newSorting = normalizeSortOrder($('#Settings__sorting').val());
+      const newBaseStyles = String($('#Settings__baseStyles').val() || '').trim();
 
       if (!validateStyleDeclarations(newBaseStyles)) {
         return;
@@ -1161,122 +1096,13 @@ $(function () {
     return `${count} ${noun}${count !== 1 ? suffix : ''}`;
   }
 
-  /**
-   * Alphabetically sorts a list of strings
-   */
-  function alphabetical(list) {
-    list.sort((a, b) => {
-      const A = a.toLowerCase();
-      const B = b.toLowerCase();
-      if (A < B) {
-        return -1;
-      }
-      if (A > B) {
-        return 1;
-      }
-      return 0;
-    });
-    return list;
-  }
-
-  function reverseAlphabetical(list) {
-    let sortedList = alphabetical(list);
-    sortedList.reverse();
-    return sortedList;
-  }
-
-  function sortStoredPhraseLists(highlighter, order) {
-    if (order === 'None') {
-      return highlighter;
-    }
-    highlighter.forEach((phraseList) => {
-      if (order === 'A-Z') {
-        alphabetical(phraseList.phrases);
-      } else if (order === 'Z-A') {
-        reverseAlphabetical(phraseList.phrases);
-      }
-    });
-    return highlighter;
-  }
-
-  function validateStyleDeclarations(styles, showAlert = true) {
-    const unsafeStyles = /[{}<>]|@import|url\s*\(|expression\s*\(/i.test(styles);
-    if (unsafeStyles && showAlert) {
+  function validateStyleDeclarations(styles) {
+    const valid = isValidStyleDeclarations(styles);
+    if (!valid) {
       alert(
-        'Styles must contain CSS declarations only. Braces, markup, imports, URLs, and expressions are not allowed.',
+        'Styles must contain CSS declarations only. Braces, comments, markup, imports, URLs, and expressions are not allowed.',
       );
     }
-    return !unsafeStyles;
-  }
-
-  /**
-   * Returns either black or white -- whichever would look better as a text color on the hex background color provided.
-   * https://stackoverflow.com/a/1855903
-   */
-  function getTextColor(hex) {
-    const rgb = hexToRgbArray(hex);
-    const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
-    return luminance > 0.5 ? '#000000' : '#ffffff';
-  }
-  /**
-   * Given hex string, convert to rgb array
-   * https://stackoverflow.com/a/21646821
-   */
-  function hexToRgbArray(hexString) {
-    const hex = hexString.toLowerCase();
-    var h = '0123456789abcdef';
-    var r = h.indexOf(hex[1]) * 16 + h.indexOf(hex[2]);
-    var g = h.indexOf(hex[3]) * 16 + h.indexOf(hex[4]);
-    var b = h.indexOf(hex[5]) * 16 + h.indexOf(hex[6]);
-    return [r, g, b];
-  }
-
-  /** rgbaToHex, rgbaStringToHex, hexClean functions -- keep in sync with background.js **/
-  /**
-   * Given rgba array, convert to hex string
-   * e.g. [187, 0, 0, 1], -> "#BB0000"
-   * https://stackoverflow.com/a/3627747
-   */
-  function rgbaToHex(rgba) {
-    const hex = `#${rgba
-      .map((n, i) =>
-        (i === 3 ? Math.round(parseFloat(n) * 255) : parseFloat(n))
-          .toString(16)
-          .padStart(2, '0')
-          .replace('NaN', ''),
-      )
-      .join('')}`;
-    return hexClean(hex);
-  }
-
-  /**
-   * Same as above, but from string form, e.g. "rgba(0,0,0,0)".
-   *
-   * This is used mainly used because jQuery's 'css' function by default will pull the rgba string instead of hex.
-   * To maintain consistency for imports & exports merging, we'll just always use the hex string.
-   * https://stackoverflow.com/a/3627747
-   */
-  function rgbaStringToHex(rgbaString) {
-    const rgba = rgbaString
-      .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
-      .slice(1);
-    return rgbaToHex(rgba);
-  }
-
-  /**
-   * Given a hex string color, e.g. #ffffff00, remove the opacity if-and-only-if it is "ff" (1.0).
-   *
-   * This makes the export a tad cleaner and easier to work with.
-   */
-  function hexClean(hex) {
-    return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;
+    return valid;
   }
 });
-
-/**
- * Merge two arrays without duplicates:
- * https://stackoverflow.com/a/23080662
- * */
-function arrayMerge(array1, array2) {
-  return array1.concat(array2.filter((item) => array1.indexOf(item) < 0));
-}

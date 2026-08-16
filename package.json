@@ -1,0 +1,33 @@
+{
+  "name": "highlighty",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Web extension to highlight phrases from given lists.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "tsx --test test/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && node --check scripts/build.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wustep/highlighty.git"
+  },
+  "author": "Stephen Wu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wustep/highlighty/issues"
+  },
+  "homepage": "https://github.com/wustep/highlighty#readme",
+  "devDependencies": {
+    "@types/chrome": "^0.2.6",
+    "@types/jquery": "^4.0.1",
+    "@types/node": "^26.2.0",
+    "esbuild": "^0.28.2",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
+  }
+}
