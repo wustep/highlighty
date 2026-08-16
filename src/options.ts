@@ -356,6 +356,8 @@ $(function () {
     $newListDiv.find('.PhraseList__title').text(list.title);
     $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
     $newListDiv.find('.PhraseList__customStyles').val(list.styles || '');
+    (list.allowlist || []).forEach((url) => addPhraseListURLTag($newListDiv, 'allowlist', url));
+    (list.denylist || []).forEach((url) => addPhraseListURLTag($newListDiv, 'denylist', url));
     const toggleId = `PhraseList__enabled--${index}`;
     $newListDiv.find('.PhraseList__enabled').attr('id', toggleId).prop('checked', enabled);
     $newListDiv.find('.PhraseList__enabledLabel').attr('for', toggleId);
@@ -498,6 +500,8 @@ $(function () {
           title: listTitle,
           enabled: true,
           styles: '',
+          allowlist: [],
+          denylist: [],
         };
         addNewListDiv(newList, listIndex);
         options.highlighter.push(newList);
@@ -520,6 +524,7 @@ $(function () {
     setupPhraseListAddPhraseHandler($list);
     setupPhraseListDeletePhraseHandler($list);
     setupPhraseListStylesHandler($list);
+    setupPhraseListURLHandlers($list);
   }
 
   function setupPhraseListStylesHandler($list) {
@@ -545,6 +550,72 @@ $(function () {
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
         });
+      });
+    });
+  }
+
+  function addPhraseListURLTag($list, urlListName: 'allowlist' | 'denylist', url: string) {
+    const $url = $('<span>')
+      .addClass(`tag is-medium PhraseList__URL PhraseList__${urlListName}URL`)
+      .attr('data-url-list', urlListName)
+      .data('url', url)
+      .text(url);
+    $('<button>')
+      .addClass('delete is-small PhraseList__URLDelete')
+      .attr('aria-label', `Delete ${url}`)
+      .appendTo($url);
+    $list.find(`.PhraseList__${urlListName}URLs`).append($url);
+  }
+
+  function setupPhraseListURLHandlers($list) {
+    $list.on('click', '.PhraseList__URLAdd', (event) => {
+      event.preventDefault();
+      const urlListName = String($(event.currentTarget).attr('data-url-list')) as
+        'allowlist' | 'denylist';
+      const $input = $list.find(`.PhraseList__${urlListName}Input`);
+      const newURL = String($input.val() || '').trim();
+      if (!newURL) return;
+
+      getOptions((options) => {
+        const phraseList = options.highlighter[$list.data('index')];
+        const urls = phraseList[urlListName] || [];
+        $input.val('');
+        if (urls.includes(newURL)) {
+          showDialog({
+            title: 'Already added',
+            message: `That URL is already in this list’s ${urlListName}.`,
+          });
+          return;
+        }
+        urls.push(newURL);
+        phraseList[urlListName] = urls;
+        chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+          addPhraseListURLTag($list, urlListName, newURL);
+        });
+      });
+    });
+
+    $list.on('click', '.PhraseList__URLDelete', (event) => {
+      const $url = $(event.currentTarget).parent();
+      const url = String($url.data('url'));
+      const urlListName = String($url.attr('data-url-list')) as 'allowlist' | 'denylist';
+      showDialog({
+        title: `Remove list ${urlListName} URL?`,
+        message: `Remove “${url}” from this list’s ${urlListName}?`,
+        confirmLabel: 'Remove',
+        cancelLabel: 'Keep URL',
+        isDanger: true,
+        onConfirm: () => {
+          getOptions((options) => {
+            const urls = options.highlighter[$list.data('index')][urlListName] || [];
+            const urlIndex = urls.indexOf(url);
+            if (urlIndex < 0) return;
+            urls.splice(urlIndex, 1);
+            chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+              $url.remove();
+            });
+          });
+        },
       });
     });
   }
@@ -863,6 +934,8 @@ $(function () {
                 existingList.textColor = newList.textColor;
                 existingList.enabled = newList.enabled;
                 existingList.styles = newList.styles;
+                existingList.allowlist = [...newList.allowlist];
+                existingList.denylist = [...newList.denylist];
               } else {
                 newListsToAppend.push(newList);
               }
@@ -912,6 +985,8 @@ $(function () {
             phrases: phraseList.phrases,
             enabled: phraseList.enabled !== false && phraseList.toggled !== false,
             ...(phraseList.styles ? { styles: phraseList.styles } : {}),
+            ...(phraseList.allowlist.length ? { allowlist: phraseList.allowlist } : {}),
+            ...(phraseList.denylist.length ? { denylist: phraseList.denylist } : {}),
           });
         });
         const highlightyExportText = JSON.stringify(highlighterExport, null, 2);

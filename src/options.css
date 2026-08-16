@@ -108,7 +108,8 @@ span.PhraseList__title {
 
 span.tag.PhraseList__phrase,
 span.tag.Denylist__url,
-span.tag.Allowlist__url {
+span.tag.Allowlist__url,
+span.tag.PhraseList__URL {
   display: inline-flex;
   margin-right: 0.5rem;
   margin-bottom: 0.5rem;
@@ -131,29 +132,47 @@ span.PhraseList__phraseCount {
   font-size: 0.8rem;
 }
 
-.PhraseList__styles {
+.PhraseList__styles,
+.PhraseList__URLFilters {
   margin: -0.5rem 0 1.25rem;
 }
 
-.PhraseList__styles summary {
+.PhraseList__styles summary,
+.PhraseList__URLFilters summary {
   color: #3273dc;
   cursor: pointer;
   font-weight: 600;
   margin-bottom: 0.75rem;
 }
 
-.PhraseList__styles[open] {
+.PhraseList__styles[open],
+.PhraseList__URLFilters[open] {
   background: #f5f7fa;
   border-radius: 4px;
   padding: 0.9rem 1rem 0.25rem;
 }
 
-.PhraseList__styles[open] summary {
+.PhraseList__styles[open] summary,
+.PhraseList__URLFilters[open] summary {
   margin-bottom: 1rem;
 }
 
 .PhraseList__customStyles {
   min-height: 5rem;
+}
+
+.PhraseList__URLHelp {
+  margin-bottom: 0.75rem;
+}
+
+span.PhraseList__allowlistURL {
+  background-color: #00d1b2;
+  color: white;
+}
+
+span.PhraseList__denylistURL {
+  background-color: #ff3860;
+  color: white;
 }
 
 span.Denylist__url {

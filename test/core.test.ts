@@ -14,7 +14,12 @@ const {
   escapePhrase,
   prepareHilitorOptions,
 } = require('../src/modules/matching.ts');
-const { isAllowedURL, normalizeURLPhrases, urlMatchesAny } = require('../src/modules/urls.ts');
+const {
+  isAllowedURL,
+  isURLAllowedForPhraseList,
+  normalizeURLPhrases,
+  urlMatchesAny,
+} = require('../src/modules/urls.ts');
 const { getDelimitedPhrases, parseBulkImport } = require('../src/modules/import-export.ts');
 const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/modules/colors.ts');
 const { normalizeOptions, normalizePhraseLists } = require('../src/modules/storage.ts');
@@ -109,6 +114,33 @@ test('URL allowlist and denylist use normalized non-empty substrings', () => {
   );
 });
 
+test('phrase-list URL filters apply independently with denylist precedence', () => {
+  const articleURL = 'https://example.com/articles/1';
+  assert.equal(isURLAllowedForPhraseList(articleURL, {}), true);
+  assert.equal(isURLAllowedForPhraseList(articleURL, { allowlist: [], denylist: [] }), true);
+  assert.equal(
+    isURLAllowedForPhraseList(articleURL, {
+      allowlist: [' example.com '],
+      denylist: [],
+    }),
+    true,
+  );
+  assert.equal(
+    isURLAllowedForPhraseList(articleURL, {
+      allowlist: ['other.example'],
+      denylist: [],
+    }),
+    false,
+  );
+  assert.equal(
+    isURLAllowedForPhraseList(articleURL, {
+      allowlist: ['example.com'],
+      denylist: ['/articles/'],
+    }),
+    false,
+  );
+});
+
 test('bulk import parses and normalizes a valid export', () => {
   const lists = parseBulkImport(
     JSON.stringify([
@@ -129,8 +161,35 @@ test('bulk import parses and normalizes a valid export', () => {
       phrases: ['Alpha', 'Beta'],
       enabled: false,
       styles: 'text-decoration: underline;',
+      allowlist: [],
+      denylist: [],
     },
   ]);
+});
+
+test('bulk import validates and normalizes per-list URL filters', () => {
+  const [list] = parseBulkImport(
+    JSON.stringify([
+      {
+        title: 'Scoped',
+        color: '#112233',
+        phrases: ['term'],
+        allowlist: [' docs.example.com ', '', 'docs.example.com'],
+        denylist: [' /private '],
+      },
+    ]),
+  );
+  assert.deepEqual(list.allowlist, ['docs.example.com']);
+  assert.deepEqual(list.denylist, ['/private']);
+  assert.throws(
+    () =>
+      parseBulkImport('[{"title":"Bad","color":"#ffffff","phrases":[],"allowlist":"example.com"}]'),
+    /allowlist.*array/,
+  );
+  assert.throws(
+    () => parseBulkImport('[{"title":"Bad","color":"#ffffff","phrases":[],"denylist":["ok",42]}]'),
+    /denylist.*only strings/,
+  );
 });
 
 test('bulk import rejects empty JSON, bad property types, and unsafe CSS', () => {
@@ -173,6 +232,8 @@ test('legacy list toggles normalize to enabled without losing false', () => {
   assert.equal(list.enabled, false);
   assert.equal('toggled' in list, false);
   assert.deepEqual(list.phrases, ['one']);
+  assert.deepEqual(list.allowlist, []);
+  assert.deepEqual(list.denylist, []);
 });
 
 test('stored options receive missing defaults and unsafe legacy styles are removed', () => {
@@ -183,6 +244,8 @@ test('stored options receive missing defaults and unsafe legacy styles are remov
         color: '#112233',
         phrases: ['phrase'],
         styles: 'color:red;} body {display:none',
+        allowlist: [' docs.example.com ', '', 'docs.example.com'],
+        denylist: 'invalid legacy value',
       },
     ],
   });
@@ -190,6 +253,8 @@ test('stored options receive missing defaults and unsafe legacy styles are remov
   assert.equal(options.enableQuickSearch, false);
   assert.equal(options.sorting, 'None');
   assert.equal(options.highlighter[0].styles, '');
+  assert.deepEqual(options.highlighter[0].allowlist, ['docs.example.com']);
+  assert.deepEqual(options.highlighter[0].denylist, []);
   assert.equal(normalizeOptions(null).keyboardShortcut, 'F6');
   assert.equal(normalizeOptions({ enableQuickSearch: 'false' }).enableQuickSearch, false);
 });

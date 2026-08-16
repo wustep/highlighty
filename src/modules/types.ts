@@ -7,6 +7,8 @@ export interface PhraseList {
   textColor: string;
   enabled: boolean;
   styles: string;
+  allowlist: string[];
+  denylist: string[];
   toggled?: boolean;
   [key: string]: unknown;
 }
