@@ -48,6 +48,10 @@
   align-items: center;
 }
 
+.tooltip {
+  cursor: help;
+}
+
 /* Phrase & URL lists */
 
 #PhraseLists__searchField {
@@ -74,17 +78,28 @@
   opacity: 0.5;
 }
 
+.PhraseList__top {
+  margin-bottom: 0.25rem;
+}
+
+.PhraseList__actions {
+  flex-wrap: nowrap;
+}
+
 button.PhraseList__color {
-  height: 16px;
-  width: 16px;
+  height: 1.35rem;
+  width: 1.35rem;
   border-radius: 100%;
   display: inline-block;
   vertical-align: middle;
-  border-color: black;
+  border: 2px solid rgba(10, 10, 10, 0.35);
+  box-shadow: 0 0 0 2px white;
+  margin-right: 0.25rem;
 }
 
 button.PhraseList__color:hover {
   cursor: pointer;
+  transform: scale(1.08);
 }
 
 span.PhraseList__title {
@@ -96,8 +111,9 @@ span.tag.Denylist__url,
 span.tag.Allowlist__url {
   display: inline-flex;
   margin-right: 0.5rem;
-  margin-bottom: 0.4rem;
-  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  line-height: 1.25;
 }
 
 .PhraseList__newPhrase,
@@ -126,7 +142,9 @@ span.Allowlist__url {
 }
 
 #BulkImportExport {
-  padding-top: 1rem;
+  padding-top: 1.25rem;
+  display: flex;
+  gap: 0.5rem;
 }
 
 #BulkImportModal__typesInfo {
@@ -148,6 +166,14 @@ span.Allowlist__url {
 }
 
 /* Color picker */
+.picker_wrapper {
+  border: 0 !important;
+  border-radius: 6px !important;
+  box-shadow:
+    0 0.5em 1em -0.125em rgba(10, 10, 10, 0.2),
+    0 0 0 1px rgba(10, 10, 10, 0.04) !important;
+}
+
 .picker_editor input {
   font-family:
     BlinkMacSystemFont,
@@ -163,4 +189,20 @@ span.Allowlist__url {
     Helvetica,
     Arial,
     sans-serif !important;
+}
+
+#DialogModal__message {
+  white-space: pre-line;
+}
+
+#DialogModal__inputField {
+  display: none;
+  margin-top: 1rem;
+}
+
+@media screen and (max-width: 768px) {
+  .PhraseList__actions {
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
+  }
 }
