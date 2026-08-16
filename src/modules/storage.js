@@ -86,10 +86,7 @@
     return highlighter
       .filter(
         (list) =>
-          list &&
-          typeof list === 'object' &&
-          !Array.isArray(list) &&
-          Object.keys(list).length > 0,
+          list && typeof list === 'object' && !Array.isArray(list) && Object.keys(list).length > 0,
       )
       .map(normalizePhraseList)
       .map((list) => {
