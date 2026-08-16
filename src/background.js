@@ -196,9 +196,7 @@ function rgbaToHex(rgba) {
   return hexClean(hex);
 }
 function rgbaStringToHex(rgbaString) {
-  const match = rgbaString.match(
-    /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/,
-  );
+  const match = rgbaString.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/);
   return match ? rgbaToHex(match.slice(1)) : rgbaString;
 }
 function hexClean(hex) {

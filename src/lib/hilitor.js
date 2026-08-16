@@ -6,25 +6,25 @@
  */
 
 function Hilitor() {
-  const hiliteTag = "MARK";
-  const skipTags = new RegExp("^(?:" + hiliteTag + "|FORM|HEAD|SCRIPT|STYLE|TEXTAREA)$");
-  let matchRegExp = "";
+  const hiliteTag = 'MARK';
+  const skipTags = new RegExp('^(?:' + hiliteTag + '|FORM|HEAD|SCRIPT|STYLE|TEXTAREA)$');
+  let matchRegExp = '';
   let partialMatch = false;
   let caseSensitive = false;
 
   function setRegexFromPhrases(phrases) {
-    let input = "";
+    let input = '';
     for (const phrase of phrases) {
-        const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        input += escapedPhrase + "|";
+      const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      input += escapedPhrase + '|';
     }
-    input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', "g"), "");
+    input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', 'g'), '');
     if (input) {
-      let regex = "(" + input + ")";
+      let regex = '(' + input + ')';
       if (!partialMatch) {
-        regex = "\\b" + regex + "\\b";
+        regex = '\\b' + regex + '\\b';
       }
-      let flags = (caseSensitive) ? "" : "i";
+      let flags = caseSensitive ? '' : 'i';
       matchRegExp = new RegExp(regex, flags);
       return matchRegExp;
     }
@@ -32,7 +32,7 @@ function Hilitor() {
   }
 
   // Recursively apply word highlighting
-  function hiliteWords(node, classes="") {
+  function hiliteWords(node, classes = '') {
     if (node === undefined || !node) return;
     if (!matchRegExp) return;
     if (skipTags.test(node.nodeName)) return;
@@ -42,7 +42,8 @@ function Hilitor() {
         hiliteWords(childNode, classes);
       }
     }
-    if (node.nodeType == 3) { // NODE_TEXT
+    if (node.nodeType == 3) {
+      // NODE_TEXT
       const nodeValue = node.nodeValue;
       const regexMatch = nodeValue && matchRegExp.exec(nodeValue);
       if (regexMatch) {
@@ -55,14 +56,14 @@ function Hilitor() {
         after.nodeValue = after.nodeValue.substring(regexMatch[0].length);
         node.parentNode.insertBefore(match, after);
       }
-    };
-  };
+    }
+  }
 
   /*
    * Apply classes to provided phrases list to provided targetNode.
    * markOptions should be { caseSensitive: bool, partialMatch: bool, ... }
    */
-  this.applyPhrases = function(phrases, options = {}) {
+  this.applyPhrases = function (phrases, options = {}) {
     if (options.partialMatch) {
       partialMatch = true;
     }
@@ -70,6 +71,9 @@ function Hilitor() {
       caseSensitive = true;
     }
     setRegexFromPhrases(phrases);
-    hiliteWords(options.targetNode ? options.targetNode : document.body, options.classes ? options.classes : "");
-  }
+    hiliteWords(
+      options.targetNode ? options.targetNode : document.body,
+      options.classes ? options.classes : '',
+    );
+  };
 }
