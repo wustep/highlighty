@@ -4,7 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["DOM", "ES2022"],
-    "types": ["chrome", "jquery", "node"],
+    "types": ["chrome", "node"],
     "strict": false,
     "noEmit": true,
     "allowImportingTsExtensions": true,

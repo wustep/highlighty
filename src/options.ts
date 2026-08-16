@@ -18,7 +18,38 @@ import { DEFAULT_BASE_STYLES, normalizeOptions } from './modules/storage';
 import { validateStyleDeclarations as isValidStyleDeclarations } from './modules/styles';
 import type { HighlightyOptions } from './modules/types';
 
-$(function () {
+document.addEventListener('DOMContentLoaded', () => {
+  const query = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) =>
+    root.querySelector<T>(selector);
+  const queryAll = <T extends Element = HTMLElement>(
+    selector: string,
+    root: ParentNode = document,
+  ) => Array.from(root.querySelectorAll<T>(selector));
+  const input = (selector: string, root: ParentNode = document) =>
+    query<HTMLInputElement>(selector, root);
+  const textarea = (selector: string, root: ParentNode = document) =>
+    query<HTMLTextAreaElement>(selector, root);
+  const select = (selector: string, root: ParentNode = document) =>
+    query<HTMLSelectElement>(selector, root);
+  const setVisible = (element: HTMLElement, visible: boolean) => {
+    if (!visible) {
+      element.style.display = 'none';
+      return;
+    }
+    element.style.removeProperty('display');
+    if (getComputedStyle(element).display === 'none') element.style.display = 'block';
+  };
+  const delegate = (
+    element: Element,
+    eventName: string,
+    selector: string,
+    handler: (event: Event, target: HTMLElement) => void,
+  ) => {
+    element.addEventListener(eventName, (event) => {
+      const target = (event.target as Element).closest<HTMLElement>(selector);
+      if (target && element.contains(target)) handler(event, target);
+    });
+  };
   const settingsInputSelector = [
     '#Settings__enableAutoHighlight',
     '#Settings__enableAutoHighlightUpdates',
@@ -34,6 +65,7 @@ $(function () {
     '#Settings__baseStyles',
   ].join(', ');
   let settingsDirty = false;
+  let removeDialogHandlers = () => {};
 
   interface DialogOptions {
     title?: string;
@@ -84,66 +116,79 @@ $(function () {
     inputValue,
     onConfirm = () => {},
   }: DialogOptions) {
-    const $modal = $('#DialogModal');
-    const $confirm = $('#DialogModal__confirm');
-    const $cancel = $('#DialogModal__cancel');
-    const $inputField = $('#DialogModal__inputField');
-    const $input = $('#DialogModal__input');
+    removeDialogHandlers();
+    const modal = query('#DialogModal');
+    const confirm = query<HTMLButtonElement>('#DialogModal__confirm');
+    const cancel = query<HTMLButtonElement>('#DialogModal__cancel');
+    const inputField = query('#DialogModal__inputField');
+    const dialogInput = input('#DialogModal__input');
     const previouslyFocused = document.activeElement;
     const hasInput = typeof inputValue === 'string';
 
-    $('#DialogModal__title').text(title);
-    $('#DialogModal__message').text(message);
-    $confirm
-      .text(confirmLabel)
-      .toggleClass('is-link', !isDanger)
-      .toggleClass('is-danger', isDanger);
-    $cancel.text(cancelLabel || 'Cancel').toggle(Boolean(cancelLabel));
-    $inputField.toggle(hasInput);
-    $input.val(hasInput ? inputValue : '');
+    query('#DialogModal__title').textContent = title;
+    query('#DialogModal__message').textContent = message;
+    confirm.textContent = confirmLabel;
+    confirm.classList.toggle('is-link', !isDanger);
+    confirm.classList.toggle('is-danger', isDanger);
+    cancel.textContent = cancelLabel || 'Cancel';
+    setVisible(cancel, Boolean(cancelLabel));
+    setVisible(inputField, hasInput);
+    dialogInput.value = hasInput ? inputValue : '';
 
     function closeDialog() {
-      $modal.removeClass('is-active').attr('aria-hidden', 'true');
-      $(document).off('keydown.highlightyDialog');
+      modal.classList.remove('is-active');
+      modal.setAttribute('aria-hidden', 'true');
+      removeDialogHandlers();
       if (previouslyFocused instanceof HTMLElement) {
         previouslyFocused.focus();
       }
     }
 
-    $confirm.off('click.highlightyDialog').on('click.highlightyDialog', () => {
-      const value = hasInput ? String($input.val() ?? '').trim() : undefined;
+    function handleConfirm() {
+      const value = hasInput ? dialogInput.value.trim() : undefined;
       closeDialog();
       onConfirm(value);
-    });
-    $('#DialogModal__cancel, #DialogModal__close, #DialogModal .modal-background')
-      .off('click.highlightyDialog')
-      .on('click.highlightyDialog', closeDialog);
-    $(document)
-      .off('keydown.highlightyDialog')
-      .on('keydown.highlightyDialog', (e) => {
-        if (e.key === 'Escape') {
-          closeDialog();
-        } else if (e.key === 'Enter' && (hasInput || document.activeElement === $confirm[0])) {
-          e.preventDefault();
-          $confirm.trigger('click');
-        }
-      });
+    }
+    const closeControls = queryAll(
+      '#DialogModal__cancel, #DialogModal__close, #DialogModal .modal-background',
+    );
+    function handleDialogKeydown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        closeDialog();
+      } else if (e.key === 'Enter' && (hasInput || document.activeElement === confirm)) {
+        e.preventDefault();
+        confirm.click();
+      }
+    }
+    confirm.addEventListener('click', handleConfirm);
+    closeControls.forEach((element) => element.addEventListener('click', closeDialog));
+    document.addEventListener('keydown', handleDialogKeydown);
+    removeDialogHandlers = () => {
+      confirm.removeEventListener('click', handleConfirm);
+      closeControls.forEach((element) => element.removeEventListener('click', closeDialog));
+      document.removeEventListener('keydown', handleDialogKeydown);
+      removeDialogHandlers = () => {};
+    };
 
-    $modal.addClass('is-active').attr('aria-hidden', 'false');
+    modal.classList.add('is-active');
+    modal.setAttribute('aria-hidden', 'false');
     if (hasInput) {
-      $input.focus().select();
+      dialogInput.focus();
+      dialogInput.select();
     } else {
-      $confirm.focus();
+      confirm.focus();
     }
   }
 
   function removeExistingLists() {
     // This will also remove all associated handlers in the phrase list
-    $('#PhraseLists__results .PhraseList').not('#PhraseList--invisible').remove();
+    queryAll('#PhraseLists__results .PhraseList:not(#PhraseList--invisible)').forEach((element) =>
+      element.remove(),
+    );
   }
 
   function removeExistingListStyles() {
-    $('#HighlighterStyles').remove();
+    query('#HighlighterStyles')?.remove();
   }
 
   function redoAllListStyles(options) {
@@ -152,54 +197,52 @@ $(function () {
   }
 
   function setPrimarySettings(options) {
-    $('#Settings__enableAutoHighlight').prop('checked', options.enableAutoHighlight);
-    $('#Settings__enableAutoHighlightUpdates').prop('checked', options.enableAutoHighlightUpdates);
-    $('#Settings__enableTitleMouseover').prop('checked', options.enableTitleMouseover);
-    $('#Settings__enablePartialMatch').prop('checked', options.enablePartialMatch);
-    $('#Settings__enableCaseInsensitive').prop('checked', options.enableCaseInsensitive);
-    $('#Settings__enablePhraseNavigator').prop('checked', options.enablePhraseNavigator);
-    $('#Settings__enableQuickSearch').prop('checked', options.enableQuickSearch);
-    $('#Settings__keyboardShortcut').val(options.keyboardShortcut);
-    $('#Settings__enableURLDenylist').prop('checked', options.enableURLDenylist);
-    $('#Settings__enableURLAllowlist').prop('checked', options.enableURLAllowlist);
-    $('#Settings__sorting').val(options.sorting);
-    $('#Settings__baseStyles').val(options.baseStyles);
+    input('#Settings__enableAutoHighlight').checked = options.enableAutoHighlight;
+    input('#Settings__enableAutoHighlightUpdates').checked = options.enableAutoHighlightUpdates;
+    input('#Settings__enableTitleMouseover').checked = options.enableTitleMouseover;
+    input('#Settings__enablePartialMatch').checked = options.enablePartialMatch;
+    input('#Settings__enableCaseInsensitive').checked = options.enableCaseInsensitive;
+    input('#Settings__enablePhraseNavigator').checked = options.enablePhraseNavigator;
+    input('#Settings__enableQuickSearch').checked = options.enableQuickSearch;
+    input('#Settings__keyboardShortcut').value = options.keyboardShortcut;
+    input('#Settings__enableURLDenylist').checked = options.enableURLDenylist;
+    input('#Settings__enableURLAllowlist').checked = options.enableURLAllowlist;
+    select('#Settings__sorting').value = options.sorting;
+    textarea('#Settings__baseStyles').value = options.baseStyles;
     showHideAutoHighlightSettings();
     setSettingsDirty(false);
   }
 
   function showHideAutoHighlightSettings() {
-    if ($('#Settings__enableAutoHighlight').is(':checked')) {
-      $('#Settings__AutoHighlight').show();
-    } else {
-      $('#Settings__AutoHighlight').hide();
-    }
+    setVisible(query('#Settings__AutoHighlight'), input('#Settings__enableAutoHighlight').checked);
   }
 
   function setupAutoHighlightHandler() {
-    $('#Settings__enableAutoHighlight').on('click', function () {
+    input('#Settings__enableAutoHighlight').addEventListener('click', () => {
       showHideAutoHighlightSettings();
     });
   }
 
   function setupOptionalSettingsHandlers() {
-    $('#Settings__resetBaseStyles').on('click', () => {
-      $('#Settings__baseStyles').val(DEFAULT_BASE_STYLES).trigger('change');
+    query('#Settings__resetBaseStyles').addEventListener('click', () => {
+      const baseStyles = textarea('#Settings__baseStyles');
+      baseStyles.value = DEFAULT_BASE_STYLES;
+      baseStyles.dispatchEvent(new Event('change', { bubbles: true }));
     });
   }
 
   function setSettingsDirty(isDirty) {
     settingsDirty = isDirty;
-    $('#Settings__save').prop('disabled', !isDirty);
-    $('#Settings__saveStatus')
-      .removeClass('is-danger')
-      .toggleClass('is-light', !isDirty)
-      .toggleClass('is-warning', isDirty)
-      .text(isDirty ? 'Unsaved settings' : 'All settings saved');
+    query<HTMLButtonElement>('#Settings__save').disabled = !isDirty;
+    const status = query('#Settings__saveStatus');
+    status.classList.remove('is-danger');
+    status.classList.toggle('is-light', !isDirty);
+    status.classList.toggle('is-warning', isDirty);
+    status.textContent = isDirty ? 'Unsaved settings' : 'All settings saved';
   }
 
   function setupUnsavedSettingsHandlers() {
-    $('#Settings').on('change', settingsInputSelector, () => {
+    delegate(query('#Settings'), 'change', settingsInputSelector, () => {
       setSettingsDirty(true);
     });
     window.addEventListener('beforeunload', (event) => {
@@ -210,8 +253,8 @@ $(function () {
   }
 
   function setupKeyboardShortcutHandler(savedShortcut) {
-    const keyboardShortcutInput = $('#Settings__keyboardShortcut');
-    const shortcutStatus = $('#Settings__keyboardShortcutStatus');
+    const keyboardShortcutInput = input('#Settings__keyboardShortcut');
+    const shortcutStatus = query('#Settings__keyboardShortcutStatus');
     let committedShortcut = '';
     let pendingShortcut = '';
     let pendingCode = '';
@@ -220,24 +263,21 @@ $(function () {
       shortcutString = normalizeShortcut(shortcutString);
       const previousShortcut = committedShortcut;
       committedShortcut = shortcutString;
-      keyboardShortcutInput.val(shortcutString);
+      keyboardShortcutInput.value = shortcutString;
       const isReserved = isLikelyReservedShortcut(shortcutString);
-      shortcutStatus
-        .toggleClass('has-text-warning', isReserved)
-        .text(
-          isReserved
-            ? 'This shortcut is commonly reserved by the browser or operating system and may not be available.'
-            : shortcutString
-              ? 'Focus the shortcut box and press a new key combination to replace it.'
-              : 'No in-page shortcut is set. Focus the box and press a key combination.',
-        );
+      shortcutStatus.classList.toggle('has-text-warning', isReserved);
+      shortcutStatus.textContent = isReserved
+        ? 'This shortcut is commonly reserved by the browser or operating system and may not be available.'
+        : shortcutString
+          ? 'Focus the shortcut box and press a new key combination to replace it.'
+          : 'No in-page shortcut is set. Focus the box and press a key combination.';
       if (isUserChange && previousShortcut !== shortcutString) {
         setSettingsDirty(true);
       }
     }
 
     function stopRecording() {
-      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
+      keyboardShortcutInput.setAttribute('data-recording', 'false');
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
       if (pendingShortcut) updateShortcutInput(committedShortcut);
@@ -247,16 +287,16 @@ $(function () {
 
     updateShortcutInput(savedShortcut);
 
-    keyboardShortcutInput.on('focus', () => {
-      document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'true');
+    keyboardShortcutInput.addEventListener('focus', () => {
+      keyboardShortcutInput.setAttribute('data-recording', 'true');
       document.addEventListener('keydown', handleKeyDown);
       document.addEventListener('keyup', handleKeyUp);
-      shortcutStatus
-        .removeClass('has-text-warning')
-        .text('Recording… Press a complete key combination. Escape clears the shortcut.');
+      shortcutStatus.classList.remove('has-text-warning');
+      shortcutStatus.textContent =
+        'Recording… Press a complete key combination. Escape clears the shortcut.';
     });
 
-    keyboardShortcutInput.on('blur', () => {
+    keyboardShortcutInput.addEventListener('blur', () => {
       stopRecording();
     });
 
@@ -275,8 +315,8 @@ $(function () {
       e.stopPropagation();
       pendingShortcut = shortcut;
       pendingCode = e.code;
-      keyboardShortcutInput.val(shortcut);
-      shortcutStatus.text('Release the key to use this shortcut.');
+      keyboardShortcutInput.value = shortcut;
+      shortcutStatus.textContent = 'Release the key to use this shortcut.';
     }
 
     function handleKeyUp(e) {
@@ -288,59 +328,52 @@ $(function () {
       pendingCode = '';
     }
 
-    $('#Settings__clearKeyboardShortcut').on('click', () => {
+    query('#Settings__clearKeyboardShortcut').addEventListener('click', () => {
       updateShortcutInput('', true);
       keyboardShortcutInput.focus();
     });
-    $('#Settings__resetKeyboardShortcut').on('click', () => {
+    query('#Settings__resetKeyboardShortcut').addEventListener('click', () => {
       updateShortcutInput('F6', true);
       keyboardShortcutInput.focus();
     });
   }
 
   function setupSearchPhraseListsHandler() {
-    $('#PhraseLists__search').on('input', applyPhraseSearch);
+    input('#PhraseLists__search').addEventListener('input', applyPhraseSearch);
   }
 
   function applyPhraseSearch() {
-    const searchText = String($('#PhraseLists__search').val() || '')
-      .trim()
-      .toLowerCase();
+    const searchText = input('#PhraseLists__search').value.trim().toLowerCase();
     let matchingPhraseCount = 0;
     let matchingListCount = 0;
 
-    $('#PhraseLists__results .PhraseList')
-      .not('#PhraseList--invisible')
-      .each(function () {
-        const $list = $(this);
-        let listMatchCount = 0;
-        $list.find('.PhraseList__phrase').each(function () {
-          const $phrase = $(this);
-          const phraseText = String($phrase.data('phrase') || $phrase.text()).toLowerCase();
-          const matches = searchText.length === 0 || phraseText.includes(searchText);
-          $phrase.toggle(matches);
-          if (matches) listMatchCount++;
-        });
-        const listMatches = searchText.length === 0 || listMatchCount > 0;
-        $list.toggle(listMatches);
-        if (listMatches) {
-          matchingListCount++;
-          matchingPhraseCount += listMatchCount;
-        }
+    queryAll('#PhraseLists__results .PhraseList:not(#PhraseList--invisible)').forEach((list) => {
+      let listMatchCount = 0;
+      queryAll<HTMLElement>('.PhraseList__phrase', list).forEach((phrase) => {
+        const phraseText = String(phrase.dataset.phrase || phrase.textContent).toLowerCase();
+        const matches = searchText.length === 0 || phraseText.includes(searchText);
+        setVisible(phrase, matches);
+        if (matches) listMatchCount++;
       });
+      const listMatches = searchText.length === 0 || listMatchCount > 0;
+      setVisible(list, listMatches);
+      if (listMatches) {
+        matchingListCount++;
+        matchingPhraseCount += listMatchCount;
+      }
+    });
 
-    $('#PhraseLists__noResults').toggleClass(
+    query('#PhraseLists__noResults').classList.toggle(
       'is-hidden',
       searchText.length === 0 || matchingPhraseCount > 0,
     );
-    $('#PhraseLists__searchSummary').text(
+    query('#PhraseLists__searchSummary').textContent =
       searchText.length === 0
         ? `${pluralize(matchingPhraseCount, 'phrase')} in ${pluralize(matchingListCount, 'list')}`
         : `${pluralize(matchingPhraseCount, 'matching phrase')} in ${pluralize(
             matchingListCount,
             'list',
-          )}`,
-    );
+          )}`;
   }
 
   function addExistingURLLists(options) {
@@ -349,12 +382,15 @@ $(function () {
   }
 
   function addURLListElement(listName, url) {
-    const $url = $('<span>').addClass(`tag is-medium ${listName}__url`).data('url', url).text(url);
-    $('<button>')
-      .addClass(`delete is-small ${listName}__url__delete`)
-      .attr('aria-label', `Delete ${url}`)
-      .appendTo($url);
-    $(`#${listName}__urls`).append($url);
+    const urlElement = document.createElement('span');
+    urlElement.className = `tag is-medium ${listName}__url`;
+    urlElement.dataset.url = url;
+    urlElement.textContent = url;
+    const deleteButton = document.createElement('button');
+    deleteButton.className = `delete is-small ${listName}__url__delete`;
+    deleteButton.setAttribute('aria-label', `Delete ${url}`);
+    urlElement.append(deleteButton);
+    query(`#${listName}__urls`).append(urlElement);
   }
 
   function addExistingListStyles(options) {
@@ -365,10 +401,9 @@ $(function () {
         textColor = 'white',
         styles: customStyles = '',
       } = options.highlighter[i];
-      $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
-        backgroundColor: highlighterColor,
-        color: textColor,
-      });
+      const phraseCount = query<HTMLElement>(`#PhraseList--${i} .PhraseList__phraseCount`);
+      phraseCount.style.backgroundColor = highlighterColor;
+      phraseCount.style.color = textColor;
       highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor}; ${customStyles} }\r\n`;
     }
     const styleElement = document.createElement('style');
@@ -381,13 +416,13 @@ $(function () {
     const highlighter = Array.isArray(options) ? options : options.highlighter;
     const sorting = Array.isArray(options) ? 'None' : options.sorting;
     for (let i = 0; i < highlighter.length; i++) {
-      const $newListDiv = addNewListDiv(highlighter[i], i, isImportPreview);
+      const newListDiv = addNewListDiv(highlighter[i], i, isImportPreview);
       const sortedList = sortPhrases(highlighter[i].phrases, sorting);
       for (const phrase of sortedList) {
         if (isImportPreview) {
-          addPreviewPhraseElement($newListDiv, phrase, highlighter[i].color);
+          addPreviewPhraseElement(newListDiv, phrase, highlighter[i].color);
         } else {
-          addPhraseElement($newListDiv, phrase, i, false);
+          addPhraseElement(newListDiv, phrase, i, false);
         }
       }
     }
@@ -395,81 +430,87 @@ $(function () {
 
   function addNewListDiv(list, index, isImportPreview = false) {
     const enabled = list.enabled !== false && list.toggled !== false;
-    const $newListDiv = $(
+    const newListDiv = query(
       !isImportPreview ? '#PhraseList--invisible' : '#PhraseListPreview--invisible',
-    )
-      .clone()
-      .attr('id', `PhraseList--${index}`)
-      .attr('data-enabled', String(enabled))
-      .data('index', index);
-    $newListDiv.find('.PhraseList__color').css('background-color', list.color);
-    $newListDiv.find('.PhraseList__title').text(list.title);
-    $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
-    $newListDiv.find('.PhraseList__customStyles').val(list.styles || '');
-    (list.allowlist || []).forEach((url) => addPhraseListURLTag($newListDiv, 'allowlist', url));
-    (list.denylist || []).forEach((url) => addPhraseListURLTag($newListDiv, 'denylist', url));
+    ).cloneNode(true) as HTMLElement;
+    newListDiv.id = `PhraseList--${index}`;
+    newListDiv.dataset.enabled = String(enabled);
+    newListDiv.dataset.index = String(index);
+    query<HTMLElement>('.PhraseList__color', newListDiv).style.backgroundColor = list.color;
+    query('.PhraseList__title', newListDiv).textContent = list.title;
+    const phraseCount = query('.PhraseList__phraseCount', newListDiv);
+    if (phraseCount) phraseCount.textContent = '0 phrases';
+    const customStyles = textarea('.PhraseList__customStyles', newListDiv);
+    if (customStyles) customStyles.value = list.styles || '';
+    (list.allowlist || []).forEach((url) => addPhraseListURLTag(newListDiv, 'allowlist', url));
+    (list.denylist || []).forEach((url) => addPhraseListURLTag(newListDiv, 'denylist', url));
     const toggleId = `PhraseList__enabled--${index}`;
-    $newListDiv.find('.PhraseList__enabled').attr('id', toggleId).prop('checked', enabled);
-    $newListDiv.find('.PhraseList__enabledLabel').attr('for', toggleId);
-    if (isImportPreview) {
-      $('#BulkImportPreviewModal__preview').append($newListDiv);
-    } else {
-      setupPhraseListHandlers($newListDiv);
-      $newListDiv.insertBefore('#PhraseList--invisible');
+    const enabledInput = input('.PhraseList__enabled', newListDiv);
+    if (enabledInput) {
+      enabledInput.id = toggleId;
+      enabledInput.checked = enabled;
+      query('.PhraseList__enabledLabel', newListDiv).setAttribute('for', toggleId);
     }
-    return $newListDiv;
+    if (isImportPreview) {
+      query('#BulkImportPreviewModal__preview').append(newListDiv);
+    } else {
+      setupPhraseListHandlers(newListDiv);
+      query('#PhraseList--invisible').before(newListDiv);
+    }
+    return newListDiv;
   }
 
-  function addPhraseElement($listDiv, phrase, listIndex, updateSearch = true) {
-    const $phrase = $('<span>')
-      .addClass(`tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}`)
-      .attr('data-list', listIndex)
-      .data('phrase', phrase)
-      .text(phrase);
-    $('<button>')
-      .addClass('delete is-small PhraseList__phrase__delete')
-      .attr('aria-label', `Delete ${phrase}`)
-      .appendTo($phrase);
-    $listDiv.find('.PhraseList__phrases').append($phrase);
-    incrementPhraseCount($listDiv);
+  function addPhraseElement(listDiv, phrase, listIndex, updateSearch = true) {
+    const phraseElement = document.createElement('span');
+    phraseElement.className = `tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}`;
+    phraseElement.dataset.list = String(listIndex);
+    phraseElement.dataset.phrase = phrase;
+    phraseElement.textContent = phrase;
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete is-small PhraseList__phrase__delete';
+    deleteButton.setAttribute('aria-label', `Delete ${phrase}`);
+    phraseElement.append(deleteButton);
+    query('.PhraseList__phrases', listDiv).append(phraseElement);
+    incrementPhraseCount(listDiv);
     if (updateSearch) applyPhraseSearch();
   }
 
-  function incrementPhraseCount($listDiv) {
-    const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
+  function incrementPhraseCount(listDiv) {
+    const phraseCountElement = query<HTMLElement>('.PhraseList__phraseCount', listDiv);
     // Defaults to 0 if data-count attribute not set
-    let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
+    let phraseCount = parseInt(phraseCountElement.dataset.count || '0', 10);
     phraseCount++;
-    $phraseCount.data('count', phraseCount);
-    $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
+    phraseCountElement.dataset.count = String(phraseCount);
+    phraseCountElement.textContent = `${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`;
   }
 
-  function decrementPhraseCount($listDiv) {
-    const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
-    let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
+  function decrementPhraseCount(listDiv) {
+    const phraseCountElement = query<HTMLElement>('.PhraseList__phraseCount', listDiv);
+    let phraseCount = parseInt(phraseCountElement.dataset.count || '0', 10);
     phraseCount = Math.max(0, phraseCount - 1);
-    $phraseCount.data('count', phraseCount);
-    $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
+    phraseCountElement.dataset.count = String(phraseCount);
+    phraseCountElement.textContent = `${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`;
   }
 
-  function addPreviewPhraseElement($listDiv, phrase, color) {
+  function addPreviewPhraseElement(listDiv, phrase, color) {
     const textColor = getTextColor(color);
-    $('<span>')
-      .addClass('tag is-medium PhraseList__phrase')
-      .data('phrase', phrase)
-      .css({ backgroundColor: color, color: textColor })
-      .text(phrase)
-      .appendTo($listDiv.find('.PhraseList__phrases'));
+    const phraseElement = document.createElement('span');
+    phraseElement.className = 'tag is-medium PhraseList__phrase';
+    phraseElement.dataset.phrase = phrase;
+    phraseElement.style.backgroundColor = color;
+    phraseElement.style.color = textColor;
+    phraseElement.textContent = phrase;
+    query('.PhraseList__phrases', listDiv).append(phraseElement);
   }
 
   function setupURLListHandlers() {
     setupURLListHandler('Denylist', 'denylist');
     setupURLListHandler('Allowlist', 'allowlist');
-    $('#Settings').on('click', '#Settings__enableURLDenylist', () => {
-      $('#Settings__enableURLAllowlist').prop('checked', false);
+    delegate(query('#Settings'), 'click', '#Settings__enableURLDenylist', () => {
+      input('#Settings__enableURLAllowlist').checked = false;
     });
-    $('#Settings').on('click', '#Settings__enableURLAllowlist', () => {
-      $('#Settings__enableURLDenylist').prop('checked', false);
+    delegate(query('#Settings'), 'click', '#Settings__enableURLAllowlist', () => {
+      input('#Settings__enableURLDenylist').checked = false;
     });
   }
 
@@ -477,15 +518,15 @@ $(function () {
     listName: 'Denylist' | 'Allowlist',
     optionName: 'denylist' | 'allowlist',
   ) {
-    $(`#${listName}__add`).on('click', (event) => {
+    query(`#${listName}__add`).addEventListener('click', (event) => {
       event.preventDefault();
-      const $input = $(`#${listName}__urlInput`);
-      const newURL = String($input.val() || '').trim();
+      const urlInput = input(`#${listName}__urlInput`);
+      const newURL = urlInput.value.trim();
       if (!newURL) return;
 
       getOptions((options) => {
         const urls = options[optionName] || [];
-        $input.val('');
+        urlInput.value = '';
         if (urls.includes(newURL)) {
           showDialog({
             title: 'Already added',
@@ -500,9 +541,9 @@ $(function () {
       });
     });
 
-    $('#Settings').on('click', `.${listName}__url__delete`, (event) => {
-      const $url = $(event.target).parent();
-      const url = $url.data('url');
+    delegate(query('#Settings'), 'click', `.${listName}__url__delete`, (_event, target) => {
+      const urlElement = target.parentElement;
+      const url = urlElement.dataset.url;
       showDialog({
         title: `Remove ${optionName} URL?`,
         message: `Remove “${url}” from the ${optionName}?`,
@@ -516,7 +557,7 @@ $(function () {
             if (urlIndex < 0) return;
             urls.splice(urlIndex, 1);
             chrome.storage.local.set({ [optionName]: urls }, () => {
-              $url.remove();
+              urlElement.remove();
             });
           });
         },
@@ -525,7 +566,7 @@ $(function () {
   }
 
   function setupAddPhraseListHandler() {
-    const colorInput = $('#NewPhraseList__color')[0];
+    const colorInput = query<HTMLElement>('#NewPhraseList__color');
     const colorPicker = new Picker({
       alpha: false,
       color: '#BB0000',
@@ -536,13 +577,14 @@ $(function () {
         colorInput.style['color'] = getTextColor(color.hex);
       },
     });
-    $('#NewPhraseList__add').on('click', (e) => {
+    query('#NewPhraseList__add').addEventListener('click', (e) => {
       e.preventDefault();
       getOptions((options) => {
         const listIndex = options.highlighter.length;
-        const listTitle = String($('#NewPhraseList__title').val() || '').trim() || 'Untitled';
-        const listColor = rgbaStringToHex($('#NewPhraseList__color').css('background-color'));
-        const listTextColor = rgbaStringToHex($('#NewPhraseList__color').css('color'));
+        const listTitle = input('#NewPhraseList__title').value.trim() || 'Untitled';
+        const colorStyle = getComputedStyle(colorInput);
+        const listColor = rgbaStringToHex(colorStyle.backgroundColor);
+        const listTextColor = rgbaStringToHex(colorStyle.color);
         const newList = {
           phrases: [],
           color: listColor,
@@ -557,34 +599,34 @@ $(function () {
         options.highlighter.push(newList);
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
-          $('#NewPhraseList__title').val('');
+          input('#NewPhraseList__title').value = '';
           applyPhraseSearch();
         });
       });
     });
   }
 
-  function setupPhraseListHandlers($list) {
-    setupPhraseListEnabledHandler($list);
-    setupPhraseListEditColorHandler($list);
-    setupPhraseListEditNameHandler($list);
-    setupPhraseListImportHandler($list);
-    setupPhraseListExportHandler($list);
-    setupPhraseListDeleteHandler($list);
-    setupPhraseListAddPhraseHandler($list);
-    setupPhraseListDeletePhraseHandler($list);
-    setupPhraseListStylesHandler($list);
-    setupPhraseListURLHandlers($list);
+  function setupPhraseListHandlers(list) {
+    setupPhraseListEnabledHandler(list);
+    setupPhraseListEditColorHandler(list);
+    setupPhraseListEditNameHandler(list);
+    setupPhraseListImportHandler(list);
+    setupPhraseListExportHandler(list);
+    setupPhraseListDeleteHandler(list);
+    setupPhraseListAddPhraseHandler(list);
+    setupPhraseListDeletePhraseHandler(list);
+    setupPhraseListStylesHandler(list);
+    setupPhraseListURLHandlers(list);
   }
 
-  function setupPhraseListStylesHandler($list) {
-    $list.on('click', '.PhraseList__saveStyles', () => {
-      const customStyles = String($list.find('.PhraseList__customStyles').val() || '').trim();
+  function setupPhraseListStylesHandler(list) {
+    delegate(list, 'click', '.PhraseList__saveStyles', () => {
+      const customStyles = textarea('.PhraseList__customStyles', list).value.trim();
       if (!validateStyleDeclarations(customStyles)) {
         return;
       }
       getOptions((options) => {
-        const listIndex = $list.data('index');
+        const listIndex = Number(list.dataset.index);
         options.highlighter[listIndex].styles = customStyles;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -592,10 +634,10 @@ $(function () {
         });
       });
     });
-    $list.on('click', '.PhraseList__resetStyles', () => {
-      $list.find('.PhraseList__customStyles').val('');
+    delegate(list, 'click', '.PhraseList__resetStyles', () => {
+      textarea('.PhraseList__customStyles', list).value = '';
       getOptions((options) => {
-        const listIndex = $list.data('index');
+        const listIndex = Number(list.dataset.index);
         options.highlighter[listIndex].styles = '';
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
@@ -604,32 +646,31 @@ $(function () {
     });
   }
 
-  function addPhraseListURLTag($list, urlListName: 'allowlist' | 'denylist', url: string) {
-    const $url = $('<span>')
-      .addClass(`tag is-medium PhraseList__URL PhraseList__${urlListName}URL`)
-      .attr('data-url-list', urlListName)
-      .data('url', url)
-      .text(url);
-    $('<button>')
-      .addClass('delete is-small PhraseList__URLDelete')
-      .attr('aria-label', `Delete ${url}`)
-      .appendTo($url);
-    $list.find(`.PhraseList__${urlListName}URLs`).append($url);
+  function addPhraseListURLTag(list, urlListName: 'allowlist' | 'denylist', url: string) {
+    const urlElement = document.createElement('span');
+    urlElement.className = `tag is-medium PhraseList__URL PhraseList__${urlListName}URL`;
+    urlElement.dataset.urlList = urlListName;
+    urlElement.dataset.url = url;
+    urlElement.textContent = url;
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete is-small PhraseList__URLDelete';
+    deleteButton.setAttribute('aria-label', `Delete ${url}`);
+    urlElement.append(deleteButton);
+    query(`.PhraseList__${urlListName}URLs`, list)?.append(urlElement);
   }
 
-  function setupPhraseListURLHandlers($list) {
-    $list.on('click', '.PhraseList__URLAdd', (event) => {
+  function setupPhraseListURLHandlers(list) {
+    delegate(list, 'click', '.PhraseList__URLAdd', (event, target) => {
       event.preventDefault();
-      const urlListName = String($(event.currentTarget).attr('data-url-list')) as
-        'allowlist' | 'denylist';
-      const $input = $list.find(`.PhraseList__${urlListName}Input`);
-      const newURL = String($input.val() || '').trim();
+      const urlListName = target.dataset.urlList as 'allowlist' | 'denylist';
+      const urlInput = input(`.PhraseList__${urlListName}Input`, list);
+      const newURL = urlInput.value.trim();
       if (!newURL) return;
 
       getOptions((options) => {
-        const phraseList = options.highlighter[$list.data('index')];
+        const phraseList = options.highlighter[Number(list.dataset.index)];
         const urls = phraseList[urlListName] || [];
-        $input.val('');
+        urlInput.value = '';
         if (urls.includes(newURL)) {
           showDialog({
             title: 'Already added',
@@ -640,15 +681,15 @@ $(function () {
         urls.push(newURL);
         phraseList[urlListName] = urls;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-          addPhraseListURLTag($list, urlListName, newURL);
+          addPhraseListURLTag(list, urlListName, newURL);
         });
       });
     });
 
-    $list.on('click', '.PhraseList__URLDelete', (event) => {
-      const $url = $(event.currentTarget).parent();
-      const url = String($url.data('url'));
-      const urlListName = String($url.attr('data-url-list')) as 'allowlist' | 'denylist';
+    delegate(list, 'click', '.PhraseList__URLDelete', (_event, target) => {
+      const urlElement = target.parentElement;
+      const url = urlElement.dataset.url;
+      const urlListName = urlElement.dataset.urlList as 'allowlist' | 'denylist';
       showDialog({
         title: `Remove list ${urlListName} URL?`,
         message: `Remove “${url}” from this list’s ${urlListName}?`,
@@ -657,12 +698,12 @@ $(function () {
         isDanger: true,
         onConfirm: () => {
           getOptions((options) => {
-            const urls = options.highlighter[$list.data('index')][urlListName] || [];
+            const urls = options.highlighter[Number(list.dataset.index)][urlListName] || [];
             const urlIndex = urls.indexOf(url);
             if (urlIndex < 0) return;
             urls.splice(urlIndex, 1);
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-              $url.remove();
+              urlElement.remove();
             });
           });
         },
@@ -670,23 +711,23 @@ $(function () {
     });
   }
 
-  function setupPhraseListEnabledHandler($list) {
-    $list.on('change', '.PhraseList__enabled', (event) => {
-      const listIndex = $list.data('index');
-      const enabled = $(event.currentTarget).is(':checked');
+  function setupPhraseListEnabledHandler(list) {
+    delegate(list, 'change', '.PhraseList__enabled', (_event, target) => {
+      const listIndex = Number(list.dataset.index);
+      const enabled = (target as HTMLInputElement).checked;
       getOptions((options) => {
         options.highlighter[listIndex].enabled = enabled;
         delete options.highlighter[listIndex].toggled;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-          $list.attr('data-enabled', String(enabled));
+          list.dataset.enabled = String(enabled);
         });
       });
     });
   }
 
-  function setupPhraseListEditColorHandler($list) {
-    const currentColor = rgbaStringToHex($list.find('.PhraseList__color').css('background-color'));
-    const colorButton = $list.find('.PhraseList__color')[0];
+  function setupPhraseListEditColorHandler(list) {
+    const colorButton = query<HTMLElement>('.PhraseList__color', list);
+    const currentColor = rgbaStringToHex(getComputedStyle(colorButton).backgroundColor);
     const colorPicker = new Picker({
       alpha: false,
       color: currentColor,
@@ -697,8 +738,9 @@ $(function () {
         colorButton.style['background-color'] = newColorHexString;
         colorPicker.setOptions({ color: newColorHexString });
         getOptions((options) => {
-          options.highlighter[$list.data('index')].color = newColorHexString;
-          options.highlighter[$list.data('index')].textColor = getTextColor(newColorHexString);
+          options.highlighter[Number(list.dataset.index)].color = newColorHexString;
+          options.highlighter[Number(list.dataset.index)].textColor =
+            getTextColor(newColorHexString);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             redoAllListStyles(options);
           });
@@ -707,9 +749,9 @@ $(function () {
     });
   }
 
-  function setupPhraseListEditNameHandler($list) {
-    $list.on('click', '.PhraseList__editName', () => {
-      const oldListName = $list.find('.PhraseList__title').text();
+  function setupPhraseListEditNameHandler(list) {
+    delegate(list, 'click', '.PhraseList__editName', () => {
+      const oldListName = query('.PhraseList__title', list).textContent;
       showDialog({
         title: 'Rename phrase list',
         message: 'Choose a short name that describes these phrases.',
@@ -719,9 +761,9 @@ $(function () {
         onConfirm: (newListName) => {
           if (newListName && newListName !== oldListName) {
             getOptions((options) => {
-              options.highlighter[$list.data('index')].title = newListName;
+              options.highlighter[Number(list.dataset.index)].title = newListName;
               chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-                $list.find('.PhraseList__title').text(newListName);
+                query('.PhraseList__title', list).textContent = newListName;
               });
             });
           }
@@ -730,9 +772,9 @@ $(function () {
     });
   }
 
-  function setupPhraseListDeleteHandler($list) {
-    $list.on('click', '.PhraseList__delete', () => {
-      const oldListName = $list.find('.PhraseList__title').text();
+  function setupPhraseListDeleteHandler(list) {
+    delegate(list, 'click', '.PhraseList__delete', () => {
+      const oldListName = query('.PhraseList__title', list).textContent;
       showDialog({
         title: 'Delete phrase list?',
         message: `“${oldListName}” and all of its phrases will be permanently deleted.`,
@@ -741,7 +783,7 @@ $(function () {
         isDanger: true,
         onConfirm: () => {
           getOptions((options) => {
-            options.highlighter.splice($list.data('index'), 1);
+            options.highlighter.splice(Number(list.dataset.index), 1);
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
               setupOptionsPage(options, false);
             });
@@ -751,16 +793,16 @@ $(function () {
     });
   }
 
-  function setupPhraseListAddPhraseHandler($list) {
-    $list.on('click', '.PhraseList__newPhrase__add', (e) => {
+  function setupPhraseListAddPhraseHandler(list) {
+    delegate(list, 'click', '.PhraseList__newPhrase__add', (e) => {
       e.preventDefault();
-      const $input = $list.find('.PhraseList__newPhrase__phrase');
-      const newPhrase = String($input.val() || '').trim();
+      const phraseInput = input('.PhraseList__newPhrase__phrase', list);
+      const newPhrase = phraseInput.value.trim();
       if (newPhrase.length > 0) {
         getOptions((options) => {
-          const listIndex = $list.data('index');
+          const listIndex = Number(list.dataset.index);
           if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
-            $input.val('');
+            phraseInput.value = '';
             showDialog({
               title: 'Already added',
               message: 'That phrase is already in this list.',
@@ -768,7 +810,7 @@ $(function () {
           } else {
             options.highlighter[listIndex].phrases.push(newPhrase);
             sortStoredPhraseLists(options.highlighter, options.sorting);
-            $input.val('');
+            phraseInput.value = '';
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
               setupOptionsPage(options, false);
             });
@@ -778,11 +820,11 @@ $(function () {
     });
   }
 
-  function setupPhraseListDeletePhraseHandler($list) {
-    const $phrases = $list.find('.PhraseList__phrases');
-    $phrases.on('click', '.PhraseList__phrase__delete', (e) => {
-      const $phrase = $(e.target).parent();
-      const phrase = $phrase.data('phrase');
+  function setupPhraseListDeletePhraseHandler(list) {
+    const phrases = query('.PhraseList__phrases', list);
+    delegate(phrases, 'click', '.PhraseList__phrase__delete', (_event, target) => {
+      const phraseElement = target.parentElement;
+      const phrase = phraseElement.dataset.phrase;
       showDialog({
         title: 'Delete phrase?',
         message: `Remove “${phrase}” from this list?`,
@@ -791,13 +833,13 @@ $(function () {
         isDanger: true,
         onConfirm: () => {
           getOptions((options) => {
-            const listIndex = $list.data('index');
+            const listIndex = Number(list.dataset.index);
             const phraseIndex = options.highlighter[listIndex].phrases.indexOf(phrase);
             if (phraseIndex < 0) return;
             options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-              $phrase.remove();
-              decrementPhraseCount($list);
+              phraseElement.remove();
+              decrementPhraseCount(list);
               applyPhraseSearch();
             });
           });
@@ -806,61 +848,62 @@ $(function () {
     });
   }
 
-  function setupPhraseListImportHandler($list) {
-    $list.on('click', '.PhraseList__import', (e) => {
-      $('#ImportModal').data('index', $list.data('index'));
-      $('#ImportModal__listName').text($list.find('.PhraseList__title').text());
-      $('#ImportModal__body').val('');
-      $('#ImportModal__phraseCount').text('0');
+  function setupPhraseListImportHandler(list) {
+    delegate(list, 'click', '.PhraseList__import', () => {
+      query<HTMLElement>('#ImportModal').dataset.index = list.dataset.index;
+      query('#ImportModal__listName').textContent = query('.PhraseList__title', list).textContent;
+      textarea('#ImportModal__body').value = '';
+      query('#ImportModal__phraseCount').textContent = '0';
       setImportModalTab('Line-Delimited');
-      $('#ImportModal').addClass('is-active');
-      $('#ImportModal__body').focus();
+      query('#ImportModal').classList.add('is-active');
+      textarea('#ImportModal__body').focus();
     });
   }
 
-  function setupPhraseListExportHandler($list) {
-    $list.on('click', '.PhraseList__export', (e) => {
-      $('#ExportModal__listName').text($list.find('.PhraseList__title').text());
-      $('#ExportModal').data('index', $list.data('index'));
+  function setupPhraseListExportHandler(list) {
+    delegate(list, 'click', '.PhraseList__export', () => {
+      query('#ExportModal__listName').textContent = query('.PhraseList__title', list).textContent;
+      query<HTMLElement>('#ExportModal').dataset.index = list.dataset.index;
       setExportModalTab('Line-Delimited');
-      $('#ExportModal').addClass('is-active');
+      query('#ExportModal').classList.add('is-active');
     });
   }
 
   function setImportModalTab(tabName) {
-    $('#ImportModal__tabs').find('li').removeClass('is-active');
-    $('#ImportModal__tabs').find(`#ImportModal__tab--${tabName}`).addClass('is-active');
-    $('#ImportModal__body').attr(
+    queryAll('#ImportModal__tabs li').forEach((tab) => tab.classList.remove('is-active'));
+    query(`#ImportModal__tab--${tabName}`).classList.add('is-active');
+    textarea('#ImportModal__body').setAttribute(
       'placeholder',
       `Enter your ${tabName.toLowerCase()} phrase list here.`,
     );
-    $('#ImportModal__spaceWarning').toggleClass('is-hidden', tabName !== 'Space-Delimited');
+    query('#ImportModal__spaceWarning').classList.toggle(
+      'is-hidden',
+      tabName !== 'Space-Delimited',
+    );
   }
 
   function setExportModalTab(tabName) {
-    $('#ExportModal__tabs').find('li').removeClass('is-active');
-    $('#ExportModal__tabs').find(`#ExportModal__tab--${tabName}`).addClass('is-active');
+    queryAll('#ExportModal__tabs li').forEach((tab) => tab.classList.remove('is-active'));
+    query(`#ExportModal__tab--${tabName}`).classList.add('is-active');
     getOptions((options) => {
-      const listIndex = $('#ExportModal').data('index');
+      const listIndex = Number(query<HTMLElement>('#ExportModal').dataset.index);
       const phrases = options.highlighter[listIndex].phrases;
       const delimiter = tabName === 'Line-Delimited' ? '\r\n' : ' ';
       const multiWordPhraseCount = phrases.filter((phrase) => /\s/.test(phrase)).length;
 
-      $('#ExportModal__body').val(phrases.join(delimiter));
-      $('#ExportModal__phraseCount').text(phrases.length);
-      const $warning = $('#ExportModal__spaceWarning').toggleClass(
-        'is-hidden',
-        tabName !== 'Space-Delimited',
-      );
-      const $warningBody = $warning.find('.message-body').empty();
-      $('<b>')
-        .text(
-          multiWordPhraseCount > 0
-            ? `${pluralize(multiWordPhraseCount, 'multi-word phrase')} will not be preserved.`
-            : 'Space-delimited exports cannot preserve multi-word phrases.',
-        )
-        .appendTo($warningBody);
-      $warningBody.append(
+      textarea('#ExportModal__body').value = phrases.join(delimiter);
+      query('#ExportModal__phraseCount').textContent = String(phrases.length);
+      const warning = query('#ExportModal__spaceWarning');
+      warning.classList.toggle('is-hidden', tabName !== 'Space-Delimited');
+      const warningBody = query('.message-body', warning);
+      warningBody.replaceChildren();
+      const warningTitle = document.createElement('b');
+      warningTitle.textContent =
+        multiWordPhraseCount > 0
+          ? `${pluralize(multiWordPhraseCount, 'multi-word phrase')} will not be preserved.`
+          : 'Space-delimited exports cannot preserve multi-word phrases.';
+      warningBody.append(
+        warningTitle,
         document.createTextNode(
           multiWordPhraseCount > 0
             ? ' A space-delimited import treats every word as a separate phrase. Use Line-Delimited for a lossless export.'
@@ -875,11 +918,11 @@ $(function () {
    * set up the bulk preview modal.
    */
   function setupBulkImportPreviewModal(newHighlighter) {
-    const sorting = $('#Settings__sorting').val() || 'None';
+    const sorting = select('#Settings__sorting').value || 'None';
     sortStoredPhraseLists(newHighlighter, sorting);
-    $('#BulkImportPreviewModal__preview').empty();
-    $('#BulkImportPreviewModal__phraseListCount').text(newHighlighter.length);
-    $('#BulkImportPreviewModal__phraseCount').text(
+    query('#BulkImportPreviewModal__preview').replaceChildren();
+    query('#BulkImportPreviewModal__phraseListCount').textContent = String(newHighlighter.length);
+    query('#BulkImportPreviewModal__phraseCount').textContent = String(
       newHighlighter.reduce((prev, curr) => prev + curr.phrases.length, 0),
     );
     addExistingLists(
@@ -889,37 +932,43 @@ $(function () {
       },
       true,
     );
-    $('#BulkImportPreviewModal').addClass('is-active');
-    $('#BulkImportPreviewModal__import').off('click');
-    $('#BulkImportPreviewModal__import').on('click', () => {
+    query('#BulkImportPreviewModal').classList.add('is-active');
+    const importButton = query<HTMLButtonElement>('#BulkImportPreviewModal__import');
+    const replacement = importButton.cloneNode(true) as HTMLButtonElement;
+    importButton.replaceWith(replacement);
+    replacement.addEventListener('click', () => {
       chrome.storage.local.set({ highlighter: newHighlighter }, () => {
         getOptions((options) => {
           setupOptionsPage(options, false);
         });
       });
-      $('#BulkImportModal').removeClass('is-active');
-      $('#BulkImportPreviewModal').removeClass('is-active');
-      $('#BulkImportModal__body').val('');
+      query('#BulkImportModal').classList.remove('is-active');
+      query('#BulkImportPreviewModal').classList.remove('is-active');
+      textarea('#BulkImportModal__body').value = '';
       resetBulkImportFile();
     });
   }
 
   function setupBulkImportModal() {
-    $('#BulkImport').on('click', () => {
-      $('#BulkImportModal__body').val('').css('opacity', 1);
+    query('#BulkImport').addEventListener('click', () => {
+      const body = textarea('#BulkImportModal__body');
+      body.value = '';
+      body.style.opacity = '1';
       resetBulkImportFile();
-      $('#BulkImportModal').addClass('is-active');
+      query('#BulkImportModal').classList.add('is-active');
     });
 
-    $('#BulkImportModal__typesSelect').change((e) => {
-      $('#BulkImportModal__typesInfo > div').hide();
+    select('#BulkImportModal__typesSelect').addEventListener('change', (e) => {
+      queryAll<HTMLElement>('#BulkImportModal__typesInfo > div').forEach((element) =>
+        setVisible(element, false),
+      );
       const importType = (e.target as HTMLSelectElement).value;
-      const importName = $(`#BulkImportModal__typesSelect--${importType}`).text().trim();
-      $(`#BulkImportModal__typesInfo--${importType}`).show();
-      $('#BulkImportPreviewModal__optionName').text(importName);
+      const importName = query(`#BulkImportModal__typesSelect--${importType}`).textContent.trim();
+      setVisible(query(`#BulkImportModal__typesInfo--${importType}`), true);
+      query('#BulkImportPreviewModal__optionName').textContent = importName;
     });
 
-    $('#BulkImportModal__fileInput').on('change', (event) => {
+    input('#BulkImportModal__fileInput').addEventListener('change', (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (!file) {
         resetBulkImportFile();
@@ -933,19 +982,22 @@ $(function () {
         return;
       }
 
-      $('#BulkImportModal__previewImport').prop('disabled', true);
-      $('#BulkImportModal__fileStatus')
-        .removeClass('has-text-danger has-text-success')
-        .text(`Reading ${file.name}…`);
+      query<HTMLButtonElement>('#BulkImportModal__previewImport').disabled = true;
+      const fileStatus = query('#BulkImportModal__fileStatus');
+      fileStatus.classList.remove('has-text-danger', 'has-text-success');
+      fileStatus.textContent = `Reading ${file.name}…`;
       const reader = new FileReader();
       reader.onload = () => {
-        const $body = $('#BulkImportModal__body');
-        $body.stop(true, true).fadeTo(100, 0, () => {
-          $body.val(String(reader.result || '')).fadeTo(150, 1);
-          $('#BulkImportModal__fileName').text(file.name);
-          $('#BulkImportModal__previewImport').prop('disabled', false);
+        const body = textarea('#BulkImportModal__body');
+        body.getAnimations().forEach((animation) => animation.cancel());
+        const fadeOut = body.animate({ opacity: [Number(getComputedStyle(body).opacity), 0] }, 100);
+        fadeOut.onfinish = () => {
+          body.value = String(reader.result || '');
+          body.animate({ opacity: [0, 1] }, { duration: 150, fill: 'forwards' });
+          query('#BulkImportModal__fileName').textContent = file.name;
+          query<HTMLButtonElement>('#BulkImportModal__previewImport').disabled = false;
           setBulkImportFileStatus(`Loaded ${file.name}. Its contents replaced the text below.`);
-        });
+        };
       };
       reader.onerror = () => {
         resetBulkImportFile();
@@ -954,9 +1006,9 @@ $(function () {
       reader.readAsText(file);
     });
 
-    $('#BulkImportModal__previewImport').on('click', () => {
-      const importType = $('#BulkImportModal__typesSelect').val();
-      const importBody = $('#BulkImportModal__body').val();
+    query('#BulkImportModal__previewImport').addEventListener('click', () => {
+      const importType = select('#BulkImportModal__typesSelect').value;
+      const importBody = textarea('#BulkImportModal__body').value;
       try {
         if (String(importBody).trim().length === 0) {
           throw new Error('Nothing to import.');
@@ -1008,22 +1060,22 @@ $(function () {
   }
 
   function resetBulkImportFile() {
-    $('#BulkImportModal__fileInput').val('');
-    $('#BulkImportModal__fileName').text('No file selected');
-    $('#BulkImportModal__previewImport').prop('disabled', false);
+    input('#BulkImportModal__fileInput').value = '';
+    query('#BulkImportModal__fileName').textContent = 'No file selected';
+    query<HTMLButtonElement>('#BulkImportModal__previewImport').disabled = false;
     setBulkImportFileStatus('');
   }
 
   function setBulkImportFileStatus(message, isError = false) {
-    $('#BulkImportModal__fileStatus')
-      .toggleClass('has-text-danger', isError)
-      .toggleClass('has-text-success', Boolean(message) && !isError)
-      .text(message);
+    const status = query('#BulkImportModal__fileStatus');
+    status.classList.toggle('has-text-danger', isError);
+    status.classList.toggle('has-text-success', Boolean(message) && !isError);
+    status.textContent = message;
   }
 
   function setupBulkExportModal() {
-    $('#BulkExport').on('click', () => {
-      $('#BulkExportModal').addClass('is-active');
+    query('#BulkExport').addEventListener('click', () => {
+      query('#BulkExportModal').classList.add('is-active');
       getOptions((options) => {
         const highlighterExport = [];
         let phraseCount = 0;
@@ -1040,22 +1092,20 @@ $(function () {
           });
         });
         const highlightyExportText = JSON.stringify(highlighterExport, null, 2);
-        $('#BulkExportModal__body').val(highlightyExportText);
-        $('#BulkExportModal__phraseListCount').text(highlighterExport.length);
-        $('#BulkExportModal__phraseCount').text(phraseCount);
-        $('#BulkExportModal').focus();
+        textarea('#BulkExportModal__body').value = highlightyExportText;
+        query('#BulkExportModal__phraseListCount').textContent = String(highlighterExport.length);
+        query('#BulkExportModal__phraseCount').textContent = String(phraseCount);
+        query<HTMLElement>('#BulkExportModal').focus();
 
         const saveFileBlob = new Blob([highlightyExportText], { type: 'text/plain;charset=utf-8' });
-        $('#BulkExportModal__download').attr('href', URL.createObjectURL(saveFileBlob));
-        $('#BulkExportModal__download').attr(
-          'download',
-          'HighlightyExport' + new Date().toISOString().split('T')[0] + '.txt',
-        );
+        const download = query<HTMLAnchorElement>('#BulkExportModal__download');
+        download.href = URL.createObjectURL(saveFileBlob);
+        download.download = 'HighlightyExport' + new Date().toISOString().split('T')[0] + '.txt';
       });
     });
 
-    $('#BulkExportModal__copy').on('click', () => {
-      $('#BulkExportModal__body').select();
+    query('#BulkExportModal__copy').addEventListener('click', () => {
+      textarea('#BulkExportModal__body').select();
       document.execCommand('copy');
     });
   }
@@ -1072,55 +1122,70 @@ $(function () {
   }
 
   function setupImportExportTabHandlers() {
-    $('#ImportModal__tabs > li').on('click', (e) => {
-      const tabName = e.currentTarget.id.split('--')[1];
-      setImportModalTab(tabName);
-      $('#ImportModal__body').trigger('input');
+    queryAll('#ImportModal__tabs > li').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.id.split('--')[1];
+        setImportModalTab(tabName);
+        textarea('#ImportModal__body').dispatchEvent(new Event('input'));
+      });
     });
-    $('#ExportModal__tabs > li').on('click', (e) => {
-      const tabName = e.currentTarget.id.split('--')[1];
-      setExportModalTab(tabName);
+    queryAll('#ExportModal__tabs > li').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.id.split('--')[1];
+        setExportModalTab(tabName);
+      });
     });
   }
 
   function setupImportExportCloseHandlers() {
-    $('#ImportModal__cancel, #ImportModal__close').on('click', () => {
-      $('#ImportModal').removeClass('is-active');
+    queryAll('#ImportModal__cancel, #ImportModal__close').forEach((element) => {
+      element.addEventListener('click', () => query('#ImportModal').classList.remove('is-active'));
     });
-    $('#ExportModal__cancel, #ExportModal__close').on('click', () => {
-      $('#ExportModal').removeClass('is-active');
+    queryAll('#ExportModal__cancel, #ExportModal__close').forEach((element) => {
+      element.addEventListener('click', () => query('#ExportModal').classList.remove('is-active'));
     });
-    $('#BulkExportModal__cancel, #BulkExportModal__close').on('click', () => {
-      $('#BulkExportModal').removeClass('is-active');
+    queryAll('#BulkExportModal__cancel, #BulkExportModal__close').forEach((element) => {
+      element.addEventListener('click', () =>
+        query('#BulkExportModal').classList.remove('is-active'),
+      );
     });
-    $('#BulkImportModal__cancel, #BulkImportModal__close').on('click', () => {
-      resetBulkImportFile();
-      $('#BulkImportModal').removeClass('is-active');
+    queryAll('#BulkImportModal__cancel, #BulkImportModal__close').forEach((element) => {
+      element.addEventListener('click', () => {
+        resetBulkImportFile();
+        query('#BulkImportModal').classList.remove('is-active');
+      });
     });
-    $('#BulkImportPreviewModal__cancel, #BulkImportPreviewModal__close').on('click', () => {
-      $('#BulkImportPreviewModal').removeClass('is-active');
-    });
+    queryAll('#BulkImportPreviewModal__cancel, #BulkImportPreviewModal__close').forEach(
+      (element) => {
+        element.addEventListener('click', () =>
+          query('#BulkImportPreviewModal').classList.remove('is-active'),
+        );
+      },
+    );
   }
 
   function setupImportExportPhraseCountHandler() {
-    $('#ImportModal__body').on('input', () => {
+    textarea('#ImportModal__body').addEventListener('input', () => {
       const importFormat = getActiveDelimitedFormat('ImportModal');
-      const phraseCount = getDelimitedPhrases($('#ImportModal__body').val(), importFormat).length;
-      $('#ImportModal__phraseCount').text(phraseCount);
+      const phraseCount = getDelimitedPhrases(
+        textarea('#ImportModal__body').value,
+        importFormat,
+      ).length;
+      query('#ImportModal__phraseCount').textContent = String(phraseCount);
     });
   }
 
   function getActiveDelimitedFormat(modalId) {
-    return $(`#${modalId}__tabs li.is-active`).attr('id').split('--')[1];
+    return query(`#${modalId}__tabs li.is-active`).id.split('--')[1];
   }
 
   function setupImportSubmitButton() {
-    $('#ImportModal__submit').on('click', () => {
+    query('#ImportModal__submit').addEventListener('click', () => {
       const importFormat = getActiveDelimitedFormat('ImportModal');
-      const phrasesToAdd = getDelimitedPhrases($('#ImportModal__body').val(), importFormat);
+      const phrasesToAdd = getDelimitedPhrases(textarea('#ImportModal__body').value, importFormat);
       if (phrasesToAdd.length > 0) {
         getOptions((options) => {
-          const listIndex = $('#ImportModal').data('index');
+          const listIndex = Number(query<HTMLElement>('#ImportModal').dataset.index);
           const result = addUniquePhrases(options.highlighter[listIndex].phrases, phrasesToAdd);
           options.highlighter[listIndex].phrases = result.phrases;
           const phrasesAdded = result.added;
@@ -1142,13 +1207,13 @@ $(function () {
           });
         });
       }
-      $('#ImportModal').removeClass('is-active');
+      query('#ImportModal').classList.remove('is-active');
     });
   }
 
   function setupExportCopyButton() {
-    $('#ExportModal__copy').on('click', () => {
-      $('#ExportModal__body').select();
+    query('#ExportModal__copy').addEventListener('click', () => {
+      textarea('#ExportModal__body').select();
       document.execCommand('copy');
     });
   }
@@ -1157,22 +1222,20 @@ $(function () {
     setupOptionsPage(options);
   });
 
-  $('#Settings__save').on('click', () => {
+  query('#Settings__save').addEventListener('click', () => {
     getOptions((options) => {
-      const newEnableAutoHighlight = $('#Settings__enableAutoHighlight').is(':checked');
-      const newEnableAutoHighlightUpdates = $('#Settings__enableAutoHighlightUpdates').is(
-        ':checked',
-      );
-      const newEnableTitleMouseover = $('#Settings__enableTitleMouseover').is(':checked');
-      const newEnablePartialMatch = $('#Settings__enablePartialMatch').is(':checked');
-      const newEnableCaseInsensitive = $('#Settings__enableCaseInsensitive').is(':checked');
-      const newEnablePhraseNavigator = $('#Settings__enablePhraseNavigator').is(':checked');
-      const newEnableQuickSearch = $('#Settings__enableQuickSearch').is(':checked');
-      const newKeyboardShortcut = String($('#Settings__keyboardShortcut').val() || '');
-      const newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
-      const newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
-      const newSorting = normalizeSortOrder($('#Settings__sorting').val());
-      const newBaseStyles = String($('#Settings__baseStyles').val() || '').trim();
+      const newEnableAutoHighlight = input('#Settings__enableAutoHighlight').checked;
+      const newEnableAutoHighlightUpdates = input('#Settings__enableAutoHighlightUpdates').checked;
+      const newEnableTitleMouseover = input('#Settings__enableTitleMouseover').checked;
+      const newEnablePartialMatch = input('#Settings__enablePartialMatch').checked;
+      const newEnableCaseInsensitive = input('#Settings__enableCaseInsensitive').checked;
+      const newEnablePhraseNavigator = input('#Settings__enablePhraseNavigator').checked;
+      const newEnableQuickSearch = input('#Settings__enableQuickSearch').checked;
+      const newKeyboardShortcut = input('#Settings__keyboardShortcut').value;
+      const newEnableURLDenylist = input('#Settings__enableURLDenylist').checked;
+      const newEnableURLAllowlist = input('#Settings__enableURLAllowlist').checked;
+      const newSorting = normalizeSortOrder(select('#Settings__sorting').value);
+      const newBaseStyles = textarea('#Settings__baseStyles').value.trim();
 
       if (!validateStyleDeclarations(newBaseStyles)) {
         return;
@@ -1201,10 +1264,10 @@ $(function () {
 
       chrome.storage.local.set(newOptions, () => {
         if (chrome.runtime.lastError) {
-          $('#Settings__saveStatus')
-            .removeClass('is-light is-warning')
-            .addClass('is-danger')
-            .text('Settings could not be saved');
+          const status = query('#Settings__saveStatus');
+          status.classList.remove('is-light', 'is-warning');
+          status.classList.add('is-danger');
+          status.textContent = 'Settings could not be saved';
           return;
         }
         setSettingsDirty(false);
