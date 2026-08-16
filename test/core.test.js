@@ -9,19 +9,14 @@ const {
   sortPhrases,
   sortStoredPhraseLists,
 } = require('../src/modules/phrase-lists.js');
-const { buildPhraseRegExp, escapePhrase, prepareHilitorOptions } = require(
-  '../src/modules/matching.js',
-);
-const { isAllowedURL, normalizeURLPhrases, urlMatchesAny } = require(
-  '../src/modules/urls.js',
-);
-const { parseBulkImport } = require('../src/modules/import-export.js');
 const {
-  getTextColor,
-  hexClean,
-  rgbaStringToHex,
-  rgbaToHex,
-} = require('../src/modules/colors.js');
+  buildPhraseRegExp,
+  escapePhrase,
+  prepareHilitorOptions,
+} = require('../src/modules/matching.js');
+const { isAllowedURL, normalizeURLPhrases, urlMatchesAny } = require('../src/modules/urls.js');
+const { parseBulkImport } = require('../src/modules/import-export.js');
+const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/modules/colors.js');
 const { normalizeOptions, normalizePhraseLists } = require('../src/modules/storage.js');
 const { validateStyleDeclarations } = require('../src/modules/styles.js');
 
@@ -182,6 +177,8 @@ test('stored options receive missing defaults and unsafe legacy styles are remov
   assert.equal(options.enableQuickSearch, false);
   assert.equal(options.sorting, 'None');
   assert.equal(options.highlighter[0].styles, '');
+  assert.equal(normalizeOptions(null).keyboardShortcut, 'F6');
+  assert.equal(normalizeOptions({ enableQuickSearch: 'false' }).enableQuickSearch, false);
 });
 
 test('style declaration validation rejects rule and resource injection', () => {

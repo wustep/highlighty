@@ -982,10 +982,7 @@ $(function () {
       if (phrasesToAdd.length > 0) {
         getOptions((options) => {
           const listIndex = $('#ImportModal').data('index');
-          const result = addUniquePhrases(
-            options.highlighter[listIndex].phrases,
-            phrasesToAdd,
-          );
+          const result = addUniquePhrases(options.highlighter[listIndex].phrases, phrasesToAdd);
           options.highlighter[listIndex].phrases = result.phrases;
           const phrasesAdded = result.added;
           const phrasesSkipped = result.skipped;

@@ -21,8 +21,7 @@
   }
 
   function isAllowedURL(url, options) {
-    const denylisted =
-      Boolean(options?.enableURLDenylist) && urlMatchesAny(url, options?.denylist);
+    const denylisted = Boolean(options?.enableURLDenylist) && urlMatchesAny(url, options?.denylist);
     const allowlisted = urlMatchesAny(url, options?.allowlist);
     return !(denylisted || (options?.enableURLAllowlist && !allowlisted));
   }

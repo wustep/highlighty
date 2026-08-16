@@ -84,7 +84,13 @@
   function normalizePhraseLists(highlighter) {
     if (!Array.isArray(highlighter)) return cloneDefaults().highlighter;
     return highlighter
-      .filter((list) => list && typeof list === 'object' && !Array.isArray(list))
+      .filter(
+        (list) =>
+          list &&
+          typeof list === 'object' &&
+          !Array.isArray(list) &&
+          Object.keys(list).length > 0,
+      )
       .map(normalizePhraseList)
       .map((list) => {
         delete list.toggled;
@@ -93,20 +99,23 @@
   }
 
   function normalizeOptions(storedOptions = {}) {
-    const options =
-      storedOptions && typeof storedOptions === 'object' ? { ...cloneDefaults(), ...storedOptions } : cloneDefaults();
+    const stored =
+      storedOptions && typeof storedOptions === 'object' && !Array.isArray(storedOptions)
+        ? storedOptions
+        : {};
+    const options = { ...cloneDefaults(), ...stored };
 
-    if (!('allowlist' in storedOptions) && Array.isArray(storedOptions.whitelist)) {
-      options.allowlist = storedOptions.whitelist;
+    if (!('allowlist' in stored) && Array.isArray(stored.whitelist)) {
+      options.allowlist = stored.whitelist;
     }
-    if (!('denylist' in storedOptions) && Array.isArray(storedOptions.blacklist)) {
-      options.denylist = storedOptions.blacklist;
+    if (!('denylist' in stored) && Array.isArray(stored.blacklist)) {
+      options.denylist = stored.blacklist;
     }
-    if (!('enableURLAllowlist' in storedOptions) && 'enableURLWhitelist' in storedOptions) {
-      options.enableURLAllowlist = Boolean(storedOptions.enableURLWhitelist);
+    if (!('enableURLAllowlist' in stored) && 'enableURLWhitelist' in stored) {
+      options.enableURLAllowlist = Boolean(stored.enableURLWhitelist);
     }
-    if (!('enableURLDenylist' in storedOptions) && 'enableURLBlacklist' in storedOptions) {
-      options.enableURLDenylist = Boolean(storedOptions.enableURLBlacklist);
+    if (!('enableURLDenylist' in stored) && 'enableURLBlacklist' in stored) {
+      options.enableURLDenylist = Boolean(stored.enableURLBlacklist);
     }
 
     options.highlighter = normalizePhraseLists(options.highlighter);
@@ -116,6 +125,22 @@
     options.baseStyles = core.validateStyleDeclarations(options.baseStyles)
       ? options.baseStyles.trim()
       : DEFAULT_BASE_STYLES;
+    for (const optionName of [
+      'autoHighlighter',
+      'enableAutoHighlight',
+      'enableAutoHighlightUpdates',
+      'enableTitleMouseover',
+      'enablePartialMatch',
+      'enableCaseInsensitive',
+      'enablePhraseNavigator',
+      'enableQuickSearch',
+      'enableURLDenylist',
+      'enableURLAllowlist',
+    ]) {
+      if (typeof options[optionName] !== 'boolean') {
+        options[optionName] = defaultOptions[optionName];
+      }
+    }
 
     if (options.keyboardShortcut === -1) options.keyboardShortcut = '';
     else if (options.keyboardShortcut === 117) options.keyboardShortcut = 'F6';

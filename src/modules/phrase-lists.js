@@ -54,9 +54,7 @@
     const normalizedOrder = normalizeSortOrder(order);
     if (normalizedOrder === 'None') return sorted;
 
-    sorted.sort((a, b) =>
-      String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }),
-    );
+    sorted.sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
     if (normalizedOrder === 'Z-A') sorted.reverse();
     return sorted;
   }

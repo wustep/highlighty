@@ -9,12 +9,7 @@ importScripts(
 );
 
 const { cloneDefaults, normalizeOptions } = HighlightyCore;
-const obsoleteOptionNames = [
-  'whitelist',
-  'blacklist',
-  'enableURLWhitelist',
-  'enableURLBlacklist',
-];
+const obsoleteOptionNames = ['whitelist', 'blacklist', 'enableURLWhitelist', 'enableURLBlacklist'];
 
 const actionStates = {
   autoOn: {

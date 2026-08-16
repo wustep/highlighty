@@ -11,7 +11,6 @@ module.exports = {
   quoteProps: 'as-needed',
   jsxSingleQuote: false,
   bracketSpacing: true,
-  jsxBracketSameLine: false,
   // Airbnb style guide defaults
   singleQuote: true /* default: "false" */,
   trailingComma: 'all' /* default: "none" */,
