@@ -35,13 +35,29 @@
                                   supported by Chrome, Opera and Firefox */
 }
 
+#Settings__keyboardShortcutField {
+  margin: 1.25rem 0;
+}
+
 #Settings__keyboardShortcut {
+  width: 13rem;
   text-align: center;
-  min-width: 6ch;
+  font-family:
+    BlinkMacSystemFont,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 #Settings__keyboardShortcut[data-recording='true'] {
-  outline-color: #bb0000;
+  border-color: #3273dc;
+  box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+}
+
+#Settings__keyboardShortcutStatus {
+  max-width: 34rem;
 }
 
 .Settings__saveRow {

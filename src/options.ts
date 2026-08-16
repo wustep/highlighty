@@ -2,7 +2,11 @@
 
 import { getTextColor, hexClean, rgbaStringToHex } from './modules/colors';
 import { getDelimitedPhrases, parseBulkImport } from './modules/import-export';
-import { shortcutFromKeyboardEvent } from './modules/keyboard';
+import {
+  isLikelyReservedShortcut,
+  normalizeShortcut,
+  shortcutFromKeyboardEvent,
+} from './modules/keyboard';
 import {
   addUniquePhrases,
   clonePhraseLists,
@@ -207,11 +211,26 @@ $(function () {
 
   function setupKeyboardShortcutHandler(savedShortcut) {
     const keyboardShortcutInput = $('#Settings__keyboardShortcut');
+    const shortcutStatus = $('#Settings__keyboardShortcutStatus');
+    let committedShortcut = '';
+    let pendingShortcut = '';
+    let pendingCode = '';
 
     function updateShortcutInput(shortcutString, isUserChange = false) {
-      const previousShortcut = keyboardShortcutInput.val();
+      shortcutString = normalizeShortcut(shortcutString);
+      const previousShortcut = committedShortcut;
+      committedShortcut = shortcutString;
       keyboardShortcutInput.val(shortcutString);
-      keyboardShortcutInput.width((shortcutString.length + 6) * 5);
+      const isReserved = isLikelyReservedShortcut(shortcutString);
+      shortcutStatus
+        .toggleClass('has-text-warning', isReserved)
+        .text(
+          isReserved
+            ? 'This shortcut is commonly reserved by the browser or operating system and may not be available.'
+            : shortcutString
+              ? 'Focus the shortcut box and press a new key combination to replace it.'
+              : 'No in-page shortcut is set. Focus the box and press a key combination.',
+        );
       if (isUserChange && previousShortcut !== shortcutString) {
         setSettingsDirty(true);
       }
@@ -220,6 +239,10 @@ $(function () {
     function stopRecording() {
       document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
       document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      if (pendingShortcut) updateShortcutInput(committedShortcut);
+      pendingShortcut = '';
+      pendingCode = '';
     }
 
     updateShortcutInput(savedShortcut);
@@ -227,6 +250,10 @@ $(function () {
     keyboardShortcutInput.on('focus', () => {
       document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'true');
       document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('keyup', handleKeyUp);
+      shortcutStatus
+        .removeClass('has-text-warning')
+        .text('Recording… Press a complete key combination. Escape clears the shortcut.');
     });
 
     keyboardShortcutInput.on('blur', () => {
@@ -234,18 +261,41 @@ $(function () {
     });
 
     function handleKeyDown(e) {
-      if (e.key === 'Enter') {
-        keyboardShortcutInput.blur();
-        return;
-      }
+      if (e.repeat) return;
       if (e.key === 'Escape') {
-        keyboardShortcutInput.blur();
+        e.preventDefault();
+        e.stopPropagation();
         updateShortcutInput('', true);
+        keyboardShortcutInput.blur();
         return;
       }
+      const shortcut = shortcutFromKeyboardEvent(e);
+      if (!shortcut) return;
       e.preventDefault();
-      updateShortcutInput(shortcutFromKeyboardEvent(e), true);
+      e.stopPropagation();
+      pendingShortcut = shortcut;
+      pendingCode = e.code;
+      keyboardShortcutInput.val(shortcut);
+      shortcutStatus.text('Release the key to use this shortcut.');
     }
+
+    function handleKeyUp(e) {
+      if (!pendingShortcut || e.code !== pendingCode) return;
+      e.preventDefault();
+      e.stopPropagation();
+      updateShortcutInput(pendingShortcut, true);
+      pendingShortcut = '';
+      pendingCode = '';
+    }
+
+    $('#Settings__clearKeyboardShortcut').on('click', () => {
+      updateShortcutInput('', true);
+      keyboardShortcutInput.focus();
+    });
+    $('#Settings__resetKeyboardShortcut').on('click', () => {
+      updateShortcutInput('F6', true);
+      keyboardShortcutInput.focus();
+    });
   }
 
   function setupSearchPhraseListsHandler() {

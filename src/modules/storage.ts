@@ -1,4 +1,5 @@
 import { getTextColor, hexClean, rgbaStringToHex } from './colors';
+import { normalizeShortcut } from './keyboard';
 import { normalizeListEnabled, normalizePhrases, normalizeSortOrder } from './phrase-lists';
 import { normalizeStyleDeclarations, validateStyleDeclarations } from './styles';
 import type { HighlightyOptions, PhraseList, StoredOptions } from './types';
@@ -144,7 +145,7 @@ export function normalizeOptions(storedOptions: unknown = {}): HighlightyOptions
   else if (typeof keyboardShortcut !== 'string') {
     options.keyboardShortcut = defaultOptions.keyboardShortcut;
   } else {
-    options.keyboardShortcut = keyboardShortcut;
+    options.keyboardShortcut = normalizeShortcut(keyboardShortcut);
   }
 
   return options;

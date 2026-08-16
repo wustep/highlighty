@@ -1,7 +1,7 @@
 /* Highlighty.js | by Stephen Wu */
 
 import { Hilitor } from './hilitor';
-import { isEditableTarget, shortcutFromKeyboardEvent } from './modules/keyboard';
+import { isEditableTarget, shortcutMatchesEvent } from './modules/keyboard';
 import { prepareHilitorOptions } from './modules/matching';
 import { isPhraseListEnabled, normalizePhrases } from './modules/phrase-lists';
 import { normalizeOptions } from './modules/storage';
@@ -418,13 +418,18 @@ $(function () {
   });
 
   window.addEventListener('keydown', (event) => {
-    if (!currentOptions?.keyboardShortcut?.trim() || isEditableTarget(event.target)) {
+    if (
+      event.repeat ||
+      !currentOptions?.keyboardShortcut?.trim() ||
+      isEditableTarget(event.target) ||
+      !shortcutMatchesEvent(currentOptions.keyboardShortcut, event)
+    ) {
       return;
     }
 
-    if (shortcutFromKeyboardEvent(event) === currentOptions.keyboardShortcut) {
-      toggleHighlights();
-    }
+    event.preventDefault();
+    event.stopPropagation();
+    toggleHighlights();
   });
 
   chrome.runtime.onMessage.addListener((message) => {
