@@ -10,12 +10,17 @@ $(function () {
   const HL_BASE_CLASS = 'Highlighty__phrase';
   const HL_TOOLTIP_CLASS = 'Highlighty__tooltip';
   const HL_STYLE_ID = 'Highlighty__styles';
+  const HL_TOOLBAR_ID = 'Highlighty__toolbar';
+  const HL_QUICK_CLASS = 'Highlighty__quick-result';
+  const HL_FOCUSED_CLASS = 'Highlighty__focused';
   const MUTATION_TIMER = 3000;
 
   let bodyHighlighted = false;
   let blockedPageOverride = false;
   let currentOptions = null;
   let phrasesToHighlight = [];
+  let currentMatchIndex = -1;
+  let quickSearchPhrase = '';
   let mutationTime = true;
   let mutationDelayPending = false;
 
@@ -48,7 +53,7 @@ $(function () {
 
   function setupHighlighter(options) {
     phrasesToHighlight = [];
-    let highlighterStyles = `<style id="${HL_STYLE_ID}">
+    let highlighterStyles = `
       .${HL_BASE_CLASS} { ${options.baseStyles} }
       .${HL_TOOLTIP_CLASS} { position: relative; cursor: help; }
       .${HL_TOOLTIP_CLASS}:hover::before {
@@ -98,12 +103,15 @@ $(function () {
 
       const highlighterColor = list.color || 'black';
       const textColor = list.textColor || 'white';
-      highlighterStyles += `.${HL_PREFIX_CLASS}${listIndex} { background-color: ${highlighterColor}; color: ${textColor}; }\r\n`;
+      const customStyles = list.styles || '';
+      highlighterStyles += `.${HL_PREFIX_CLASS}${listIndex} { background-color: ${highlighterColor}; color: ${textColor}; ${customStyles} }\r\n`;
       phrasesToHighlight[listIndex] = phrases;
     });
 
-    highlighterStyles += '</style>';
-    $('head').append(highlighterStyles);
+    const styleElement = document.createElement('style');
+    styleElement.id = HL_STYLE_ID;
+    styleElement.textContent = highlighterStyles;
+    document.head.appendChild(styleElement);
     log(phrasesToHighlight);
   }
 
@@ -118,6 +126,10 @@ $(function () {
       });
     }
 
+    if (quickSearchPhrase) {
+      applyQuickSearch(options, quickSearchPhrase);
+    }
+
     if (options.enableTitleMouseover) {
       options.highlighter.forEach((list, listIndex) => {
         if (list?.title && isPhraseListEnabled(list)) {
@@ -129,6 +141,143 @@ $(function () {
     }
 
     bodyHighlighted = true;
+    setupToolbar(options);
+  }
+
+  function getHighlightMarks() {
+    return Array.from(document.querySelectorAll(`mark.${HL_BASE_CLASS}`));
+  }
+
+  function updateNavigator() {
+    const countElement = document.querySelector(`#${HL_TOOLBAR_ID} .Highlighty__count`);
+    if (!countElement) return;
+
+    const marks = getHighlightMarks();
+    if (currentMatchIndex >= marks.length) {
+      currentMatchIndex = marks.length ? marks.length - 1 : -1;
+    }
+    const currentNumber = currentMatchIndex >= 0 ? currentMatchIndex + 1 : 0;
+    countElement.textContent = `${currentNumber} / ${marks.length}`;
+  }
+
+  function navigateHighlights(direction) {
+    const marks = getHighlightMarks();
+    if (!marks.length) {
+      currentMatchIndex = -1;
+      updateNavigator();
+      return;
+    }
+    marks.forEach((mark) => mark.classList.remove(HL_FOCUSED_CLASS));
+    currentMatchIndex =
+      currentMatchIndex === -1
+        ? direction > 0
+          ? 0
+          : marks.length - 1
+        : (currentMatchIndex + direction + marks.length) % marks.length;
+    const focusedMark = marks[currentMatchIndex];
+    focusedMark.classList.add(HL_FOCUSED_CLASS);
+    focusedMark.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    updateNavigator();
+  }
+
+  function removeMarksByClass(className) {
+    const marks = document.getElementsByClassName(className);
+    while (marks.length) {
+      const mark = marks[0];
+      const parent = mark.parentNode;
+      parent.replaceChild(mark.firstChild, mark);
+      parent.normalize();
+    }
+  }
+
+  function applyQuickSearch(options, phrase) {
+    const hilitor = new Hilitor();
+    hilitor.applyPhrases([phrase], {
+      classes: `${HL_BASE_CLASS} ${HL_QUICK_CLASS}`,
+      caseSensitive: !options.enableCaseInsensitive,
+      partialMatch: true,
+    });
+  }
+
+  function runQuickSearch(options, phrase) {
+    removeMarksByClass(HL_QUICK_CLASS);
+    quickSearchPhrase = phrase.trim();
+    currentMatchIndex = -1;
+    if (quickSearchPhrase) applyQuickSearch(options, quickSearchPhrase);
+    updateNavigator();
+  }
+
+  function setupToolbar(options) {
+    const toolbarEnabled = options.enablePhraseNavigator || options.enableQuickSearch;
+    let toolbar = document.getElementById(HL_TOOLBAR_ID);
+    if (!toolbarEnabled) {
+      toolbar?.remove();
+      return;
+    }
+    if (!toolbar) {
+      toolbar = document.createElement('aside');
+      toolbar.id = HL_TOOLBAR_ID;
+      toolbar.setAttribute('aria-label', 'Highlighty tools');
+      toolbar.setAttribute('data-highlighty-ignore', '');
+
+      if (options.enablePhraseNavigator) {
+        const navigator = document.createElement('div');
+        navigator.className = 'Highlighty__navigator';
+        const previousButton = document.createElement('button');
+        previousButton.type = 'button';
+        previousButton.textContent = '←';
+        previousButton.title = 'Previous highlight';
+        previousButton.setAttribute('aria-label', 'Previous highlight');
+        previousButton.addEventListener('click', () => navigateHighlights(-1));
+        const count = document.createElement('span');
+        count.className = 'Highlighty__count';
+        count.setAttribute('aria-live', 'polite');
+        const nextButton = document.createElement('button');
+        nextButton.type = 'button';
+        nextButton.textContent = '→';
+        nextButton.title = 'Next highlight';
+        nextButton.setAttribute('aria-label', 'Next highlight');
+        nextButton.addEventListener('click', () => navigateHighlights(1));
+        navigator.append(previousButton, count, nextButton);
+        toolbar.appendChild(navigator);
+      }
+
+      if (options.enableQuickSearch) {
+        const quickSearchForm = document.createElement('form');
+        quickSearchForm.className = 'Highlighty__quick-search';
+        const quickSearchInput = document.createElement('input');
+        quickSearchInput.className = 'Highlighty__quick-search-input';
+        quickSearchInput.type = 'search';
+        quickSearchInput.placeholder = 'Quick highlight…';
+        quickSearchInput.setAttribute('aria-label', 'Phrase to highlight');
+        quickSearchInput.value = quickSearchPhrase;
+        const searchButton = document.createElement('button');
+        searchButton.type = 'submit';
+        searchButton.textContent = 'Highlight';
+        const clearButton = document.createElement('button');
+        clearButton.type = 'button';
+        clearButton.textContent = 'Clear';
+        clearButton.addEventListener('click', () => {
+          quickSearchInput.value = '';
+          runQuickSearch(options, '');
+          quickSearchInput.focus();
+        });
+        quickSearchForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          runQuickSearch(options, quickSearchInput.value);
+        });
+        quickSearchForm.append(quickSearchInput, searchButton, clearButton);
+        toolbar.appendChild(quickSearchForm);
+      }
+      document.documentElement.appendChild(toolbar);
+    }
+    updateNavigator();
+  }
+
+  function removeToolbar() {
+    document.getElementById(HL_TOOLBAR_ID)?.remove();
+    currentMatchIndex = -1;
+    quickSearchPhrase = '';
   }
 
   function removeHighlights() {
@@ -145,6 +294,7 @@ $(function () {
   function clearHighlights() {
     removeHighlights();
     $(`#${HL_STYLE_ID}`).remove();
+    removeToolbar();
   }
 
   function renderHighlights(options) {

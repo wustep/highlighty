@@ -13,18 +13,15 @@ function Hilitor() {
   let caseSensitive = false;
 
   function setRegexFromPhrases(phrases) {
-    let input = '';
-    for (const phrase of phrases) {
-      const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      input += escapedPhrase + '|';
-    }
-    input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', 'g'), '');
-    if (input) {
-      let regex = '(' + input + ')';
+    const phraseSources = phrases.map((phrase) =>
+      String(phrase).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+    );
+    if (phraseSources.length) {
+      let regex = '(?:' + phraseSources.join('|') + ')';
       if (!partialMatch) {
         regex = '\\b' + regex + '\\b';
       }
-      let flags = caseSensitive ? '' : 'i';
+      const flags = caseSensitive ? '' : 'i';
       matchRegExp = new RegExp(regex, flags);
       return matchRegExp;
     }
@@ -36,6 +33,13 @@ function Hilitor() {
     if (node === undefined || !node) return;
     if (!matchRegExp) return;
     if (skipTags.test(node.nodeName)) return;
+    if (
+      node.nodeType === Node.TEXT_NODE &&
+      node.parentElement &&
+      node.parentElement.closest('[data-highlighty-ignore]')
+    ) {
+      return;
+    }
 
     if (node.hasChildNodes()) {
       for (const childNode of node.childNodes) {

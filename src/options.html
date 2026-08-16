@@ -170,6 +170,18 @@
             </label>
           </div>
           <div class="field is-grouped">
+            <input id="Settings__enablePhraseNavigator" type="checkbox" class="switch is-info" />
+            <label for="Settings__enablePhraseNavigator" class="label is-pulled-left">
+              Show an on-page highlight count and phrase navigator
+            </label>
+          </div>
+          <div class="field is-grouped">
+            <input id="Settings__enableQuickSearch" type="checkbox" class="switch is-info" />
+            <label for="Settings__enableQuickSearch" class="label is-pulled-left">
+              Show an on-page quick search bar
+            </label>
+          </div>
+          <div class="field is-grouped">
             <div class="control">
               <div class="input">
                 <input
@@ -191,7 +203,7 @@
             <div class="control">
               <div class="select">
                 <select id="Settings__sorting">
-                  <option value="None">None</option>
+                  <option value="None">Off</option>
                   <option value="A-Z">A-Z</option>
                   <option value="Z-A">Z-A</option>
                 </select>
@@ -199,12 +211,34 @@
             </div>
             <div class="field-label is-normal">
               <label
-                data-tooltip="Sorting only changes this options page"
+                data-tooltip="Keep stored phrase lists in this order"
                 for="Settings__sorting"
                 class="label is-pulled-left tooltip is-tooltip-right"
-                >Sort phrases</label
+                >Automatically sort phrase lists</label
               >
             </div>
+          </div>
+          <div class="field">
+            <label for="Settings__baseStyles" class="label"
+              >General highlight CSS declarations</label
+            >
+            <div class="control">
+              <textarea
+                id="Settings__baseStyles"
+                class="textarea is-family-monospace"
+                rows="3"
+                spellcheck="false"
+              ></textarea>
+            </div>
+            <p class="help">
+              Applied to every saved and quick-search highlight. Enter declarations only, without
+              selectors or braces.
+            </p>
+          </div>
+          <div class="buttons">
+            <button type="button" class="button" id="Settings__resetBaseStyles">
+              Reset general style
+            </button>
           </div>
           <div class="field is-grouped is-grouped-multiline Settings__saveRow">
             <div class="control">
@@ -303,6 +337,27 @@
                 </div>
               </div>
             </div>
+            <details class="PhraseList__styles">
+              <summary>Custom style for this list</summary>
+              <div class="field">
+                <label class="label">CSS declarations</label>
+                <div class="control">
+                  <textarea
+                    class="textarea is-family-monospace PhraseList__customStyles"
+                    rows="2"
+                    spellcheck="false"
+                    placeholder="Example: text-decoration: underline;"
+                  ></textarea>
+                </div>
+                <p class="help">Overrides the general style for highlights in this list.</p>
+              </div>
+              <div class="buttons">
+                <button type="button" class="button is-info PhraseList__saveStyles">
+                  Save style
+                </button>
+                <button type="button" class="button PhraseList__resetStyles">Reset</button>
+              </div>
+            </details>
             <form>
               <div class="columns">
                 <div class="column is-three-fifths PhraseList__newPhrase">

@@ -1,16 +1,21 @@
 /* Highlighty.js | by Stephen Wu */
 
 $(function () {
+  const DEFAULT_BASE_STYLES =
+    'display: inline; border-radius: 0.3rem; padding: 0.1rem; font-weight: normal; box-shadow: inset 0 -0.1rem 0 rgba(20,20,20,0.40);';
   const settingsInputSelector = [
     '#Settings__enableAutoHighlight',
     '#Settings__enableAutoHighlightUpdates',
     '#Settings__enableTitleMouseover',
     '#Settings__enablePartialMatch',
     '#Settings__enableCaseInsensitive',
+    '#Settings__enablePhraseNavigator',
+    '#Settings__enableQuickSearch',
     '#Settings__keyboardShortcut',
     '#Settings__enableURLDenylist',
     '#Settings__enableURLAllowlist',
     '#Settings__sorting',
+    '#Settings__baseStyles',
   ].join(', ');
   let settingsDirty = false;
 
@@ -36,6 +41,7 @@ $(function () {
       setupAddPhraseListHandler();
       setupImportExportModals();
       setupUnsavedSettingsHandlers();
+      setupOptionalSettingsHandlers();
     }
   }
 
@@ -121,10 +127,13 @@ $(function () {
     $('#Settings__enableTitleMouseover').prop('checked', options.enableTitleMouseover);
     $('#Settings__enablePartialMatch').prop('checked', options.enablePartialMatch);
     $('#Settings__enableCaseInsensitive').prop('checked', options.enableCaseInsensitive);
+    $('#Settings__enablePhraseNavigator').prop('checked', options.enablePhraseNavigator);
+    $('#Settings__enableQuickSearch').prop('checked', options.enableQuickSearch);
     $('#Settings__keyboardShortcut').val(options.keyboardShortcut);
     $('#Settings__enableURLDenylist').prop('checked', options.enableURLDenylist);
     $('#Settings__enableURLAllowlist').prop('checked', options.enableURLAllowlist);
     $('#Settings__sorting').val(options.sorting);
+    $('#Settings__baseStyles').val(options.baseStyles);
     showHideAutoHighlightSettings();
     setSettingsDirty(false);
   }
@@ -140,6 +149,12 @@ $(function () {
   function setupAutoHighlightHandler() {
     $('#Settings__enableAutoHighlight').on('click', function () {
       showHideAutoHighlightSettings();
+    });
+  }
+
+  function setupOptionalSettingsHandlers() {
+    $('#Settings__resetBaseStyles').on('click', () => {
+      $('#Settings__baseStyles').val(DEFAULT_BASE_STYLES).trigger('change');
     });
   }
 
@@ -282,17 +297,23 @@ $(function () {
   }
 
   function addExistingListStyles(options) {
-    let highlighterStyles = `<style id="HighlighterStyles">span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
+    let highlighterStyles = `span.PhraseList__phrase, span.Denylist__url { ${options.baseStyles} }\r\n`;
     for (let i = 0; i < options.highlighter.length; i++) {
-      const { color: highlighterColor = 'black', textColor = 'white' } = options.highlighter[i];
+      const {
+        color: highlighterColor = 'black',
+        textColor = 'white',
+        styles: customStyles = '',
+      } = options.highlighter[i];
       $(`#PhraseList--${i} .PhraseList__phraseCount`).css({
         backgroundColor: highlighterColor,
         color: textColor,
       });
-      highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor} }\r\n`;
+      highlighterStyles += `span.PhraseList__phrase--${i} { background-color: ${highlighterColor}; color: ${textColor}; ${customStyles} }\r\n`;
     }
-    highlighterStyles += '</style>';
-    $('head').append(highlighterStyles);
+    const styleElement = document.createElement('style');
+    styleElement.id = 'HighlighterStyles';
+    styleElement.textContent = highlighterStyles;
+    document.head.appendChild(styleElement);
   }
 
   function addExistingLists(options, isImportPreview = false) {
@@ -333,6 +354,7 @@ $(function () {
     $newListDiv.find('.PhraseList__color').css('background-color', list.color);
     $newListDiv.find('.PhraseList__title').text(list.title);
     $newListDiv.find('.PhraseList__phraseCount').text('0 phrases');
+    $newListDiv.find('.PhraseList__customStyles').val(list.styles || '');
     const toggleId = `PhraseList__enabled--${index}`;
     $newListDiv.find('.PhraseList__enabled').attr('id', toggleId).prop('checked', enabled);
     $newListDiv.find('.PhraseList__enabledLabel').attr('for', toggleId);
@@ -471,6 +493,7 @@ $(function () {
           textColor: listTextColor,
           title: listTitle,
           enabled: true,
+          styles: '',
         };
         addNewListDiv(newList, listIndex);
         options.highlighter.push(newList);
@@ -492,6 +515,33 @@ $(function () {
     setupPhraseListDeleteHandler($list);
     setupPhraseListAddPhraseHandler($list);
     setupPhraseListDeletePhraseHandler($list);
+    setupPhraseListStylesHandler($list);
+  }
+
+  function setupPhraseListStylesHandler($list) {
+    const listIndex = $list.data('index');
+    $list.on('click', '.PhraseList__saveStyles', () => {
+      const customStyles = $list.find('.PhraseList__customStyles').val().trim();
+      if (!validateStyleDeclarations(customStyles)) {
+        return;
+      }
+      chrome.storage.local.get((options) => {
+        options.highlighter[listIndex].styles = customStyles;
+        chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+          redoAllListStyles(options);
+          alert('List style saved!');
+        });
+      });
+    });
+    $list.on('click', '.PhraseList__resetStyles', () => {
+      $list.find('.PhraseList__customStyles').val('');
+      chrome.storage.local.get((options) => {
+        options.highlighter[listIndex].styles = '';
+        chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+          redoAllListStyles(options);
+        });
+      });
+    });
   }
 
   function setupPhraseListEnabledHandler($list) {
@@ -591,9 +641,10 @@ $(function () {
             });
           } else {
             options.highlighter[listIndex].phrases.push(newPhrase);
+            sortStoredPhraseLists(options.highlighter, options.sorting);
             $input.val('');
             chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-              addPhraseElement($list, newPhrase, listIndex);
+              setupOptionsPage(options, false);
             });
           }
         });
@@ -700,6 +751,8 @@ $(function () {
    * set up the bulk preview modal.
    */
   function setupBulkImportPreviewModal(newHighlighter) {
+    const sorting = $('#Settings__sorting').val() || 'None';
+    sortStoredPhraseLists(newHighlighter, sorting);
     $('#BulkImportPreviewModal__preview').html('');
     $('#BulkImportPreviewModal__phraseListCount').text(newHighlighter.length);
     $('#BulkImportPreviewModal__phraseCount').text(
@@ -708,7 +761,7 @@ $(function () {
     addExistingLists(
       {
         highlighter: newHighlighter,
-        sorting: $('#Settings__sorting').val() || 'None',
+        sorting,
       },
       true,
     );
@@ -803,6 +856,7 @@ $(function () {
                 existingList.color = newList.color;
                 existingList.textColor = newList.textColor;
                 existingList.enabled = newList.enabled;
+                existingList.styles = newList.styles;
               } else {
                 newListsToAppend.push(newList);
               }
@@ -855,6 +909,12 @@ $(function () {
       if ('toggled' in phraseList && typeof phraseList.toggled !== 'boolean') {
         throw new Error(`List ${index + 1} must have a boolean legacy "toggled" value.`);
       }
+      if ('styles' in phraseList && typeof phraseList.styles !== 'string') {
+        throw new Error(`List ${index + 1} must have a string "styles" value.`);
+      }
+      if ('styles' in phraseList && !validateStyleDeclarations(phraseList.styles, false)) {
+        throw new Error(`List ${index + 1} has unsafe CSS declarations in "styles".`);
+      }
       const normalizedPhrases = [
         ...new Set(phraseList.phrases.map((phrase) => phrase.trim()).filter(Boolean)),
       ];
@@ -870,6 +930,7 @@ $(function () {
             : typeof phraseList.toggled === 'boolean'
               ? phraseList.toggled
               : true,
+        styles: phraseList.styles || '',
       };
     });
   }
@@ -908,6 +969,7 @@ $(function () {
             color: phraseList.color,
             phrases: phraseList.phrases,
             enabled: phraseList.enabled !== false && phraseList.toggled !== false,
+            ...(phraseList.styles ? { styles: phraseList.styles } : {}),
           });
         });
         const highlightyExportText = JSON.stringify(highlighterExport, null, 2);
@@ -998,14 +1060,14 @@ $(function () {
           for (const phrase of phrasesToAdd) {
             if (!currentPhraseList.includes(phrase)) {
               currentPhraseList.push(phrase);
-              addPhraseElement($(`#PhraseList--${listIndex}`), phrase, listIndex, false);
               phrasesAdded++;
             } else {
               phrasesSkipped++;
             }
           }
+          sortStoredPhraseLists(options.highlighter, options.sorting);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-            applyPhraseSearch();
+            setupOptionsPage(options, false);
             let alertMessage = `${pluralize(phrasesAdded, 'phrase')} added.`;
             if (phrasesSkipped > 0) {
               alertMessage += `\n${pluralize(
@@ -1044,10 +1106,17 @@ $(function () {
       const newEnableTitleMouseover = $('#Settings__enableTitleMouseover').is(':checked');
       const newEnablePartialMatch = $('#Settings__enablePartialMatch').is(':checked');
       const newEnableCaseInsensitive = $('#Settings__enableCaseInsensitive').is(':checked');
+      const newEnablePhraseNavigator = $('#Settings__enablePhraseNavigator').is(':checked');
+      const newEnableQuickSearch = $('#Settings__enableQuickSearch').is(':checked');
       const newKeyboardShortcut = $('#Settings__keyboardShortcut').val();
       const newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
       const newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
       const newSorting = $('#Settings__sorting').val();
+      const newBaseStyles = $('#Settings__baseStyles').val().trim();
+
+      if (!validateStyleDeclarations(newBaseStyles)) {
+        return;
+      }
 
       const newOptions = {
         ...options,
@@ -1056,11 +1125,15 @@ $(function () {
         enableTitleMouseover: newEnableTitleMouseover,
         enablePartialMatch: newEnablePartialMatch,
         enableCaseInsensitive: newEnableCaseInsensitive,
+        enablePhraseNavigator: newEnablePhraseNavigator,
+        enableQuickSearch: newEnableQuickSearch,
         enableURLDenylist: newEnableURLDenylist,
         enableURLAllowlist: newEnableURLAllowlist,
         keyboardShortcut: newKeyboardShortcut,
         sorting: newSorting,
+        baseStyles: newBaseStyles,
       };
+      sortStoredPhraseLists(newOptions.highlighter, newSorting);
 
       if (newEnableAutoHighlight !== options.enableAutoHighlight) {
         newOptions.autoHighlighter = newEnableAutoHighlight;
@@ -1110,6 +1183,30 @@ $(function () {
     let sortedList = alphabetical(list);
     sortedList.reverse();
     return sortedList;
+  }
+
+  function sortStoredPhraseLists(highlighter, order) {
+    if (order === 'None') {
+      return highlighter;
+    }
+    highlighter.forEach((phraseList) => {
+      if (order === 'A-Z') {
+        alphabetical(phraseList.phrases);
+      } else if (order === 'Z-A') {
+        reverseAlphabetical(phraseList.phrases);
+      }
+    });
+    return highlighter;
+  }
+
+  function validateStyleDeclarations(styles, showAlert = true) {
+    const unsafeStyles = /[{}<>]|@import|url\s*\(|expression\s*\(/i.test(styles);
+    if (unsafeStyles && showAlert) {
+      alert(
+        'Styles must contain CSS declarations only. Braces, markup, imports, URLs, and expressions are not allowed.',
+      );
+    }
+    return !unsafeStyles;
   }
 
   /**
