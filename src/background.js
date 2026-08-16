@@ -7,6 +7,7 @@ const defaultOptions = {
       title: 'Highlighty',
       color: '#800080',
       textColor: '#ffffff',
+      enabled: true,
     },
   ],
   allowlist: [],
@@ -36,118 +37,150 @@ const migratedOptionsMap = {
   enableURLBlacklist: 'enableURLDenylist',
 };
 
+const actionStates = {
+  autoOn: {
+    color: 'Green',
+    title: 'Turn off auto-highlight',
+  },
+  autoOff: {
+    color: 'Blue',
+    title: 'Turn on auto-highlight',
+  },
+  manualOn: {
+    color: 'Yellow',
+    title: 'Remove highlights from this page',
+  },
+  manualOff: {
+    color: 'Blue',
+    title: 'Highlight phrases on this page',
+  },
+  blocked: {
+    color: 'Red',
+    title: 'Highlight phrases on this blocked page',
+  },
+};
+
 chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason == 'install') {
+  if (details.reason === 'install') {
     chrome.storage.local.set(defaultOptions, () => {
       chrome.runtime.openOptionsPage();
     });
-  } else {
-    chrome.storage.local.get((currentOptions) => {
-      /*
-       * When user updates, set new, missing options to their default.
-       * This ensures updates are not breaking for new options.
-       * Developers should still be cautious of modifying the structure of existing options.
-       */
-      for (const defaultOptionName of Object.keys(defaultOptions)) {
-        if (!(defaultOptionName in currentOptions)) {
-          chrome.storage.local.set({ [defaultOptionName]: defaultOptions[defaultOptionName] });
-        }
-      }
-      /**
-       * If we've renamed any options, let's migrate their values to their new name.
-       */
-      for (const oldOptionName of Object.keys(migratedOptionsMap)) {
-        if (oldOptionName in currentOptions) {
-          chrome.storage.local.set({
-            [migratedOptionsMap[oldOptionName]]: currentOptions[oldOptionName],
-          });
-          chrome.storage.local.remove(oldOptionName);
-        }
-      }
-      /**
-       * Convert any non-hex colors to hex.
-       */
-      currentOptions.highlighter.forEach((list) => {
-        // We used purple as a default list color in the past.
-        if (list.color === 'purple') {
-          list.color = '#800080';
-        } else if (list.color.startsWith('rgb')) {
-          list.color = rgbaStringToHex(list.color);
-        }
-        if (list.textColor.toLowerCase() === 'white') {
-          list.textColor = '#ffffff';
-        } else if (list.textColor.toLowerCase() === 'black') {
-          list.textColor = '#000000';
-        } else if (list.textColor.startsWith('rgb')) {
-          list.textColor = rgbaStringToHex(list.textColor);
-        }
-      });
-      chrome.storage.local.set({ highlighter: currentOptions.highlighter });
-
-      /**
-       * Convert legacy keyboard shortcut options to their updated equivalents.
-       */
-      if (currentOptions.keyboardShortcut === -1) {
-        currentOptions.keyboardShortcut = '';
-      } else if (currentOptions.keyboardShortcut === 117) {
-        currentOptions.keyboardShortcut = 'F6';
-      }
-      chrome.storage.local.set({ keyboardShortcut: currentOptions.keyboardShortcut });
-    });
+    return;
   }
+
+  chrome.storage.local.get((currentOptions) => {
+    const migratedOptions = { ...defaultOptions, ...currentOptions };
+    const obsoleteOptionNames = [];
+
+    for (const [oldOptionName, newOptionName] of Object.entries(migratedOptionsMap)) {
+      if (oldOptionName in currentOptions) {
+        migratedOptions[newOptionName] = currentOptions[oldOptionName];
+        obsoleteOptionNames.push(oldOptionName);
+      }
+    }
+
+    migratedOptions.highlighter = normalizePhraseLists(migratedOptions.highlighter);
+
+    if (migratedOptions.keyboardShortcut === -1) {
+      migratedOptions.keyboardShortcut = '';
+    } else if (migratedOptions.keyboardShortcut === 117) {
+      migratedOptions.keyboardShortcut = 'F6';
+    }
+
+    chrome.storage.local.set(migratedOptions, () => {
+      if (obsoleteOptionNames.length) {
+        chrome.storage.local.remove(obsoleteOptionNames);
+      }
+    });
+  });
 });
 
 chrome.action.onClicked.addListener((tab) => {
-  chrome.tabs.sendMessage(tab.id, 'highlighty');
+  if (!tab.id) {
+    return;
+  }
+
+  chrome.tabs.sendMessage(tab.id, { type: 'toggleHighlights' }, () => {
+    // Restricted browser pages do not have Highlighty's content script.
+    void chrome.runtime.lastError;
+  });
 });
 
-/*
-  Possible received messages:
-  {autoHighlighter: bool}
-    - update the autoHighlighter badge
-  {manualHighlighter: bool, tab: bool=true}
-    - updates the manualHighlighter badge, for only current tab if tab is false
-  {blockedHighlighter: bool}
-    - updates the blockedHighlighter badge for tab
-*/
 chrome.runtime.onMessage.addListener((request, sender) => {
-  /*
-    AutoHighlighter Mode:
-      Green - on
-      Red - blacklisted or not in whitelist? (TBD)
-      Blue - off
-    ManualHighlighter Mode:
-      Yellow - tab highlighted
-      Blue - tab not highlighted
-  */
-  if ('autoHighlighter' in request) {
-    let color = request.autoHighlighter ? 'Green' : 'Blue';
-    setBrowserIcon(color);
-    setBrowserIcon(color, sender.tab.id); // Need to set both here or else tab doesn't get set sometimes
-  } else if ('manualHighlighter' in request) {
-    let color = request.manualHighlighter ? 'Yellow' : 'Blue';
-    if ('tab' in request && request.tab) {
-      setBrowserIcon(color, sender.tab.id);
-    } else {
-      setBrowserIcon(color);
-    }
-  } else if ('blockedHighlighter' in request) {
-    setBrowserIcon('Red', sender.tab.id);
+  if (request?.type !== 'actionState' || !sender.tab?.id) {
+    return;
   }
+
+  setActionState(request.state, sender.tab.id);
 });
 
-function setBrowserIcon(color, tab = false) {
-  let iconObject = {
-    path: {
-      16: `img/16px${color}.png`,
-      24: `img/24px${color}.png`,
-      32: `img/32px${color}.png`,
-    },
-  };
-  if (tab) {
-    iconObject.tabId = tab;
+function setActionState(stateName, tabId) {
+  const state = actionStates[stateName];
+  if (!state) {
+    return;
   }
-  chrome.browserAction.setIcon(iconObject);
+
+  const actionDetails = { tabId };
+  chrome.action.setIcon(
+    {
+      ...actionDetails,
+      path: {
+        16: `img/16px${state.color}.png`,
+        24: `img/24px${state.color}.png`,
+        32: `img/32px${state.color}.png`,
+      },
+    },
+    () => void chrome.runtime.lastError,
+  );
+  chrome.action.setTitle(
+    {
+      ...actionDetails,
+      title: state.title,
+    },
+    () => void chrome.runtime.lastError,
+  );
+}
+
+function normalizePhraseLists(highlighter) {
+  if (!Array.isArray(highlighter)) {
+    return defaultOptions.highlighter;
+  }
+
+  return highlighter
+    .filter((list) => list && typeof list === 'object' && Object.keys(list).length)
+    .map((list) => {
+      const normalizedList = { ...list };
+
+      if (normalizedList.color === 'purple') {
+        normalizedList.color = '#800080';
+      } else if (normalizedList.color?.startsWith('rgb')) {
+        normalizedList.color = rgbaStringToHex(normalizedList.color);
+      }
+
+      if (normalizedList.textColor?.toLowerCase() === 'white') {
+        normalizedList.textColor = '#ffffff';
+      } else if (normalizedList.textColor?.toLowerCase() === 'black') {
+        normalizedList.textColor = '#000000';
+      } else if (normalizedList.textColor?.startsWith('rgb')) {
+        normalizedList.textColor = rgbaStringToHex(normalizedList.textColor);
+      }
+
+      normalizedList.enabled =
+        typeof normalizedList.enabled === 'boolean'
+          ? normalizedList.enabled
+          : typeof normalizedList.toggled === 'boolean'
+            ? normalizedList.toggled
+            : true;
+      delete normalizedList.toggled;
+
+      normalizedList.phrases = Array.isArray(normalizedList.phrases)
+        ? normalizedList.phrases
+            .filter((phrase) => typeof phrase === 'string' && phrase.trim())
+            .map((phrase) => phrase.trim())
+        : [];
+
+      return normalizedList;
+    });
 }
 
 /** rgbaToHex and rgbaStringToHex functions -- keep in sync with options.js **/
@@ -163,10 +196,10 @@ function rgbaToHex(rgba) {
   return hexClean(hex);
 }
 function rgbaStringToHex(rgbaString) {
-  const rgba = rgbaString
-    .match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/)
-    .slice(1);
-  return rgbaToHex(rgba);
+  const match = rgbaString.match(
+    /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+\.{0,1}\d*))?\)$/,
+  );
+  return match ? rgbaToHex(match.slice(1)) : rgbaString;
 }
 function hexClean(hex) {
   return hex.length > 7 && hex.slice(-2) === 'ff' ? hex.slice(0, 7) : hex;

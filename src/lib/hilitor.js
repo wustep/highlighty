@@ -6,17 +6,17 @@
  */
 
 function Hilitor() {
-  let hiliteTag = "MARK";
-  let skipTags = new RegExp("^(?:" + hiliteTag + "|FORM|HEAD|SCRIPT|STYLE|TEXTAREA)$");
+  const hiliteTag = "MARK";
+  const skipTags = new RegExp("^(?:" + hiliteTag + "|FORM|HEAD|SCRIPT|STYLE|TEXTAREA)$");
   let matchRegExp = "";
   let partialMatch = false;
   let caseSensitive = false;
 
   function setRegexFromPhrases(phrases) {
     let input = "";
-    for (phrase of phrases) {
-        phrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        input += phrase + "|";
+    for (const phrase of phrases) {
+        const escapedPhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        input += escapedPhrase + "|";
     }
     input = input.replace(new RegExp('^[^\\w]+|[^\\w]+$', "g"), "");
     if (input) {
@@ -38,19 +38,21 @@ function Hilitor() {
     if (skipTags.test(node.nodeName)) return;
 
     if (node.hasChildNodes()) {
-      for (node of node.childNodes) {
-        hiliteWords(node, classes);
+      for (const childNode of node.childNodes) {
+        hiliteWords(childNode, classes);
       }
     }
     if (node.nodeType == 3) { // NODE_TEXT
-      if ((nv = node.nodeValue) && (regs = matchRegExp.exec(nv))) {
-        let match = document.createElement(hiliteTag);
-        match.appendChild(document.createTextNode(regs[0]));
+      const nodeValue = node.nodeValue;
+      const regexMatch = nodeValue && matchRegExp.exec(nodeValue);
+      if (regexMatch) {
+        const match = document.createElement(hiliteTag);
+        match.appendChild(document.createTextNode(regexMatch[0]));
         if (classes.length) {
           match.className = classes;
         }
-        let after = node.splitText(regs.index);
-        after.nodeValue = after.nodeValue.substring(regs[0].length);
+        const after = node.splitText(regexMatch.index);
+        after.nodeValue = after.nodeValue.substring(regexMatch[0].length);
         node.parentNode.insertBefore(match, after);
       }
     };
