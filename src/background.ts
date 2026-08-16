@@ -24,6 +24,10 @@ const actionStates = {
     color: 'Red',
     title: 'Highlight phrases on this blocked page',
   },
+  browserBlocked: {
+    color: 'Red',
+    title: 'Highlighty cannot run on this browser-protected page',
+  },
 };
 
 chrome.runtime.onInstalled.addListener((details) => {
@@ -43,15 +47,35 @@ chrome.runtime.onInstalled.addListener((details) => {
   });
 });
 
-chrome.action.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener(async (tab) => {
   if (!tab.id) {
     return;
   }
 
-  chrome.tabs.sendMessage(tab.id, { type: 'toggleHighlights' }, () => {
-    // Restricted browser pages do not have Highlighty's content script.
-    void chrome.runtime.lastError;
-  });
+  if (await sendToggleMessage(tab.id)) {
+    clearBlockedBadge(tab.id);
+    return;
+  }
+
+  try {
+    await chrome.scripting.insertCSS({
+      target: { tabId: tab.id, frameIds: [0] },
+      files: ['highlighty.css'],
+    });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id, frameIds: [0] },
+      files: ['highlighty.js'],
+    });
+
+    if (await sendToggleMessage(tab.id)) {
+      clearBlockedBadge(tab.id);
+      return;
+    }
+  } catch {
+    // Chrome rejects injection on internal pages, the Web Store, and some PDF viewer contexts.
+  }
+
+  showBrowserBlockedState(tab);
 });
 
 chrome.runtime.onMessage.addListener((request, sender) => {
@@ -87,4 +111,38 @@ function setActionState(stateName, tabId) {
     },
     () => void chrome.runtime.lastError,
   );
+  clearBlockedBadge(tabId);
+}
+
+function sendToggleMessage(tabId: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(tabId, { type: 'toggleHighlights' }, () => {
+      resolve(!chrome.runtime.lastError);
+    });
+  });
+}
+
+function clearBlockedBadge(tabId: number): void {
+  chrome.action.setBadgeText({ tabId, text: '' }, () => void chrome.runtime.lastError);
+}
+
+function showBrowserBlockedState(tab: chrome.tabs.Tab): void {
+  if (!tab.id) return;
+
+  const fileAccessHint = tab.url?.startsWith('file:')
+    ? ' Enable “Allow access to file URLs” for Highlighty in chrome://extensions.'
+    : '';
+  setActionState('browserBlocked', tab.id);
+  chrome.action.setTitle(
+    {
+      tabId: tab.id,
+      title: `Highlighty cannot run on this page because Chrome blocks extension access.${fileAccessHint}`,
+    },
+    () => void chrome.runtime.lastError,
+  );
+  chrome.action.setBadgeBackgroundColor(
+    { tabId: tab.id, color: '#bb0000' },
+    () => void chrome.runtime.lastError,
+  );
+  chrome.action.setBadgeText({ tabId: tab.id, text: '!' }, () => void chrome.runtime.lastError);
 }

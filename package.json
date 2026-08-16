@@ -1,6 +1,6 @@
 {
   "name": "highlighty",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "private": true,
   "description": "Web extension to highlight phrases from given lists.",
   "scripts": {
@@ -23,7 +23,6 @@
   "homepage": "https://github.com/wustep/highlighty#readme",
   "devDependencies": {
     "@types/chrome": "^0.2.6",
-    "@types/jquery": "^4.0.1",
     "@types/node": "^26.2.0",
     "esbuild": "^0.28.2",
     "prettier": "^3.9.6",

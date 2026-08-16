@@ -10,12 +10,14 @@ import { buildPhraseRegExp, type PhraseMatchOptions } from './modules/matching';
 export interface HilitorOptions extends PhraseMatchOptions {
   targetNode?: Node;
   classes?: string;
+  decorateMatch?: (mark: HTMLElement, matchedText: string) => void;
 }
 
 export class Hilitor {
   private readonly hiliteTag = 'MARK';
   private readonly skipTags = new RegExp(`^(?:${this.hiliteTag}|FORM|HEAD|SCRIPT|STYLE|TEXTAREA)$`);
   private matchRegExp: RegExp | null = null;
+  private decorateMatch: HilitorOptions['decorateMatch'];
 
   // Recursively apply word highlighting
   private hiliteWords(node: Node | null | undefined, classes = ''): void {
@@ -39,11 +41,14 @@ export class Hilitor {
       const regexMatch = nodeValue && this.matchRegExp.exec(nodeValue);
       if (regexMatch) {
         const match = document.createElement(this.hiliteTag);
+        match.setAttribute('data-highlighty-ignore', '');
         match.appendChild(document.createTextNode(regexMatch[0]));
         if (classes.length) match.className = classes;
+        this.decorateMatch?.(match, regexMatch[0]);
         const after = textNode.splitText(regexMatch.index);
         after.nodeValue = after.nodeValue.substring(regexMatch[0].length);
         textNode.parentNode?.insertBefore(match, after);
+        this.hiliteWords(after, classes);
       }
     }
   }
@@ -53,6 +58,7 @@ export class Hilitor {
       partialMatch: Boolean(options.partialMatch),
       caseSensitive: Boolean(options.caseSensitive),
     });
+    this.decorateMatch = options.decorateMatch;
     this.hiliteWords(options.targetNode || document.body, options.classes || '');
   }
 }

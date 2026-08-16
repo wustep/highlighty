@@ -4,7 +4,7 @@
   "name": "Highlighty",
   "short_name": "highlighty",
   "description": "Highlight selected phrases from custom phrase lists.",
-  "version": "2.0.3",
+  "version": "2.0.4",
 
   "icons": {
     "16": "img/16pxYellow.png",
@@ -16,11 +16,13 @@
 
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
+      "matches": ["<all_urls>"],
       "css": ["highlighty.css"],
-      "js": ["lib/jquery.3.3.1.min.js", "highlighty.js"]
+      "js": ["highlighty.js"]
     }
   ],
+
+  "host_permissions": ["<all_urls>"],
 
   "action": {
     "default_title": "Highlight phrases on this page",
@@ -40,5 +42,5 @@
     "service_worker": "background.js"
   },
 
-  "permissions": ["storage"]
+  "permissions": ["scripting", "storage"]
 }

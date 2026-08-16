@@ -26,6 +26,11 @@ const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/m
 const { normalizeOptions, normalizePhraseLists } = require('../src/modules/storage.ts');
 const { validateStyleDeclarations } = require('../src/modules/styles.ts');
 const { isEditableTarget } = require('../src/modules/keyboard.ts');
+const {
+  buildHighlightAssignments,
+  findHighlightAssignment,
+} = require('../src/modules/highlight-plan.ts');
+const { selectHighlightRoots } = require('../src/modules/mutation-roots.ts');
 
 test('phrases are trimmed and empty or duplicate values are removed', () => {
   assert.deepEqual(normalizePhrases([' hello ', '', 'hello', 'world', 42, '  ']), [
@@ -322,6 +327,66 @@ test('page shortcuts ignore editable controls', () => {
   assert.equal(isEditableTarget({ tagName: 'TEXTAREA', isContentEditable: false }), true);
   assert.equal(isEditableTarget({ tagName: 'DIV', isContentEditable: true }), true);
   assert.equal(isEditableTarget({ tagName: 'BUTTON', isContentEditable: false }), false);
+});
+
+test('overlapping phrase lists receive one stable combined assignment', () => {
+  const assignments = buildHighlightAssignments(
+    [
+      { listIndex: 0, phrases: [' Shared ', 'first'] },
+      { listIndex: 1, phrases: ['shared', 'second', 'shared'] },
+      { listIndex: 2, phrases: ['SHARED'] },
+    ],
+    false,
+  );
+
+  assert.deepEqual(assignments, [
+    { phrase: 'Shared', listIndexes: [0, 1, 2] },
+    { phrase: 'first', listIndexes: [0] },
+    { phrase: 'second', listIndexes: [1] },
+  ]);
+  assert.deepEqual(findHighlightAssignment('sHaReD', assignments, false), assignments[0]);
+  assert.equal(findHighlightAssignment('sHaReD', assignments, true), undefined);
+});
+
+test('incremental highlighting selects only top-level non-Highlighty added roots', () => {
+  class TestNode {
+    parentNode;
+    parentElement;
+    ignored;
+    isConnected;
+    nodeType;
+
+    constructor({ parent = null, ignored = false, connected = true, nodeType = 1 } = {}) {
+      this.parentNode = parent;
+      this.parentElement = nodeType === 3 ? parent : this;
+      this.ignored = ignored;
+      this.isConnected = connected;
+      this.nodeType = nodeType;
+    }
+
+    contains(other) {
+      for (let current = other; current; current = current.parentNode) {
+        if (current === this) return true;
+      }
+      return false;
+    }
+
+    closest() {
+      for (let current = this; current; current = current.parentNode) {
+        if (current.ignored) return current;
+      }
+      return null;
+    }
+  }
+
+  const parent = new TestNode();
+  const child = new TestNode({ parent });
+  const text = new TestNode({ parent: child, nodeType: 3 });
+  const ignored = new TestNode({ ignored: true });
+  const ignoredChild = new TestNode({ parent: ignored });
+  const detached = new TestNode({ connected: false });
+
+  assert.deepEqual(selectHighlightRoots([text, child, parent, ignoredChild, detached]), [parent]);
 });
 
 test('sorting supports A-Z, Z-A, and Off without mutating display inputs', () => {
