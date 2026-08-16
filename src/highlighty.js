@@ -8,6 +8,7 @@ $(function () {
 
   const HL_PREFIX_CLASS = 'Highlighty__phrase--';
   const HL_BASE_CLASS = 'Highlighty__phrase';
+  const HL_TOOLTIP_CLASS = 'Highlighty__tooltip';
   const HL_STYLE_ID = 'Highlighty__styles';
   const MUTATION_TIMER = 3000;
 
@@ -47,7 +48,43 @@ $(function () {
 
   function setupHighlighter(options) {
     phrasesToHighlight = [];
-    let highlighterStyles = `<style id="${HL_STYLE_ID}">.${HL_BASE_CLASS} { ${options.baseStyles} } `;
+    let highlighterStyles = `<style id="${HL_STYLE_ID}">
+      .${HL_BASE_CLASS} { ${options.baseStyles} }
+      .${HL_TOOLTIP_CLASS} { position: relative; cursor: help; }
+      .${HL_TOOLTIP_CLASS}:hover::before {
+        content: attr(data-highlighty-title);
+        position: absolute;
+        z-index: 2147483647;
+        bottom: calc(100% + 0.55rem);
+        left: 50%;
+        transform: translateX(-50%);
+        width: max-content;
+        max-width: 16rem;
+        padding: 0.4rem 0.8rem;
+        overflow: hidden;
+        border-radius: 4px;
+        background: rgba(74, 74, 74, 0.96);
+        box-shadow: 0 2px 4px rgba(10, 10, 10, 0.2);
+        color: #ffffff;
+        font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", sans-serif;
+        font-size: 0.75rem;
+        font-weight: 400;
+        line-height: 1.5;
+        text-align: center;
+        white-space: normal;
+        pointer-events: none;
+      }
+      .${HL_TOOLTIP_CLASS}:hover::after {
+        content: "";
+        position: absolute;
+        z-index: 2147483647;
+        bottom: calc(100% + 0.15rem);
+        left: 50%;
+        transform: translateX(-50%);
+        border: 0.4rem solid transparent;
+        border-top-color: rgba(74, 74, 74, 0.96);
+        pointer-events: none;
+      }`;
 
     options.highlighter.forEach((list, listIndex) => {
       if (!list || !Object.keys(list).length || !isPhraseListEnabled(list)) {
@@ -84,7 +121,9 @@ $(function () {
     if (options.enableTitleMouseover) {
       options.highlighter.forEach((list, listIndex) => {
         if (list?.title && isPhraseListEnabled(list)) {
-          $(`.${HL_PREFIX_CLASS}${listIndex}`).attr('title', list.title);
+          $(`.${HL_PREFIX_CLASS}${listIndex}`)
+            .addClass(HL_TOOLTIP_CLASS)
+            .attr('data-highlighty-title', list.title);
         }
       });
     }

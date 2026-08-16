@@ -15,7 +15,12 @@
         <div class="container">
           <h1 class="title">Highlighty Options</h1>
           <h2 class="subtitle">Add phrases to your lists or modify settings below.</h2>
-          <a href="info.html" class="button is-primary">Info</a>
+          <a
+            href="info.html"
+            class="button is-primary tooltip is-tooltip-right"
+            data-tooltip="How Highlighty works"
+            >Info</a
+          >
         </div>
       </div>
     </section>
@@ -75,7 +80,15 @@
                       />
                     </div>
                     <div class="control">
-                      <button type="submit" class="button is-primary" id="Allowlist__add">+</button>
+                      <button
+                        type="submit"
+                        class="button is-primary tooltip"
+                        data-tooltip="Add URL to allowlist"
+                        aria-label="Add URL to allowlist"
+                        id="Allowlist__add"
+                      >
+                        Add
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -107,7 +120,15 @@
                       />
                     </div>
                     <div class="control">
-                      <button type="submit" class="button is-danger" id="Denylist__add">+</button>
+                      <button
+                        type="submit"
+                        class="button is-danger tooltip"
+                        data-tooltip="Add URL to denylist"
+                        aria-label="Add URL to denylist"
+                        id="Denylist__add"
+                      >
+                        Add
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -178,17 +199,23 @@
             </div>
             <div class="field-label is-normal">
               <label
-                title="Page highlighting will not use sorting"
+                data-tooltip="Sorting only changes this options page"
                 for="Settings__sorting"
-                class="label is-pulled-left"
-                ><u>Sort phrases</u></label
+                class="label is-pulled-left tooltip is-tooltip-right"
+                >Sort phrases</label
               >
             </div>
           </div>
           <div class="field is-grouped is-grouped-multiline Settings__saveRow">
             <div class="control">
-              <button type="button" class="button is-info" id="Settings__save" disabled>
-                Save
+              <button
+                type="button"
+                class="button is-info tooltip"
+                data-tooltip="Save all settings"
+                id="Settings__save"
+                disabled
+              >
+                Save settings
               </button>
             </div>
             <div class="control">
@@ -221,28 +248,58 @@
         </div>
         <div id="PhraseLists__results">
           <div class="box PhraseList" id="PhraseList--invisible">
-            <div class="columns">
+            <div class="columns is-vcentered PhraseList__top">
               <div class="column is-three-fifths">
                 <div class="field is-grouped PhraseList__header">
-                  <h1 class="title">
+                  <h3 class="title is-4">
                     <input
                       type="checkbox"
                       class="switch is-rounded is-info PhraseList__enabled"
                       checked="checked"
                     />
                     <label class="PhraseList__enabledLabel">Enabled</label>
-                    <button class="PhraseList__color" style="background-color: #000000"></button>
+                    <button
+                      type="button"
+                      class="PhraseList__color tooltip is-tooltip-right"
+                      data-tooltip="Change list color"
+                      aria-label="Change list color"
+                      style="background-color: #000000"
+                    ></button>
                     <span class="PhraseList__title"> </span>
                     <span class="tag PhraseList__phraseCount"> </span>
-                  </h1>
+                  </h3>
                 </div>
               </div>
               <div class="column is-two-fifths">
                 <div class="buttons is-right PhraseList__actions">
-                  <button class="button is-info PhraseList__editName">Edit Name</button>
-                  <button class="button is-link PhraseList__import">Import</button>
-                  <button class="button is-success PhraseList__export">Export</button>
-                  <button class="button is-danger PhraseList__delete">Delete</button>
+                  <button
+                    type="button"
+                    class="button is-small is-info tooltip PhraseList__editName"
+                    data-tooltip="Rename this list"
+                  >
+                    Rename
+                  </button>
+                  <button
+                    type="button"
+                    class="button is-small is-link tooltip PhraseList__import"
+                    data-tooltip="Add several phrases at once"
+                  >
+                    Import
+                  </button>
+                  <button
+                    type="button"
+                    class="button is-small is-success tooltip PhraseList__export"
+                    data-tooltip="Copy phrases from this list"
+                  >
+                    Export
+                  </button>
+                  <button
+                    type="button"
+                    class="button is-small is-danger tooltip PhraseList__delete"
+                    data-tooltip="Permanently delete this list"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>
@@ -258,8 +315,13 @@
                       />
                     </div>
                     <div class="control">
-                      <button type="submit" class="button is-success PhraseList__newPhrase__add">
-                        +
+                      <button
+                        type="submit"
+                        class="button is-success tooltip PhraseList__newPhrase__add"
+                        data-tooltip="Add phrase to this list"
+                        aria-label="Add phrase to this list"
+                      >
+                        Add
                       </button>
                     </div>
                   </div>
@@ -272,7 +334,7 @@
 
         <div id="NewPhraseList">
           <form>
-            <label class="label"> Add new list </label>
+            <label class="label" for="NewPhraseList__title">Add a new list</label>
             <div class="columns">
               <div class="column is-three-fifths">
                 <div class="field has-addons">
@@ -286,15 +348,24 @@
                   </div>
                   <div class="control">
                     <button
-                      class="button"
+                      type="button"
+                      class="button tooltip"
                       style="background-color: #bb0000; color: #ffffff"
                       id="NewPhraseList__color"
+                      data-tooltip="Choose the highlight color"
                     >
-                      Color
+                      Pick color
                     </button>
                   </div>
                   <div class="control">
-                    <button type="submit" class="button is-link" id="NewPhraseList__add">+</button>
+                    <button
+                      type="submit"
+                      class="button is-link tooltip"
+                      data-tooltip="Create phrase list"
+                      id="NewPhraseList__add"
+                    >
+                      Create list
+                    </button>
                   </div>
                 </div>
               </div>
@@ -302,8 +373,22 @@
           </form>
         </div>
         <div id="BulkImportExport">
-          <button type="button" class="button is-link" id="BulkImport">Bulk Import</button>
-          <button type="button" class="button is-success" id="BulkExport">Bulk Export</button>
+          <button
+            type="button"
+            class="button is-link tooltip"
+            data-tooltip="Import one or more complete lists"
+            id="BulkImport"
+          >
+            Bulk Import
+          </button>
+          <button
+            type="button"
+            class="button is-success tooltip"
+            data-tooltip="Back up all phrase lists"
+            id="BulkExport"
+          >
+            Bulk Export
+          </button>
         </div>
       </div>
     </section>
@@ -531,6 +616,37 @@
           <div>Lists: <span id="BulkExportModal__phraseListCount">0</span></div>
           &nbsp;
           <div>Phrases: <span id="BulkExportModal__phraseCount">0</span></div>
+        </footer>
+      </div>
+    </div>
+    <!-- Reusable Bulma dialog: replaces browser alert, confirm, and prompt UI -->
+    <div
+      class="modal"
+      id="DialogModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="DialogModal__title"
+      aria-describedby="DialogModal__message"
+      aria-hidden="true"
+    >
+      <div class="modal-background"></div>
+      <div class="modal-card">
+        <header class="modal-card-head">
+          <p class="modal-card-title" id="DialogModal__title">Highlighty</p>
+          <button id="DialogModal__close" class="delete" aria-label="Close dialog"></button>
+        </header>
+        <section class="modal-card-body">
+          <p id="DialogModal__message"></p>
+          <div class="field" id="DialogModal__inputField">
+            <label class="label" for="DialogModal__input">List name</label>
+            <div class="control">
+              <input class="input" id="DialogModal__input" type="text" />
+            </div>
+          </div>
+        </section>
+        <footer class="modal-card-foot">
+          <button type="button" id="DialogModal__confirm" class="button is-link">OK</button>
+          <button type="button" id="DialogModal__cancel" class="button">Cancel</button>
         </footer>
       </div>
     </div>

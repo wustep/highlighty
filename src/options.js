@@ -39,6 +39,68 @@ $(function () {
     }
   }
 
+  function showDialog({
+    title = 'Highlighty',
+    message,
+    confirmLabel = 'OK',
+    cancelLabel = '',
+    isDanger = false,
+    inputValue,
+    onConfirm = () => {},
+  }) {
+    const $modal = $('#DialogModal');
+    const $confirm = $('#DialogModal__confirm');
+    const $cancel = $('#DialogModal__cancel');
+    const $inputField = $('#DialogModal__inputField');
+    const $input = $('#DialogModal__input');
+    const previouslyFocused = document.activeElement;
+    const hasInput = typeof inputValue === 'string';
+
+    $('#DialogModal__title').text(title);
+    $('#DialogModal__message').text(message);
+    $confirm
+      .text(confirmLabel)
+      .toggleClass('is-link', !isDanger)
+      .toggleClass('is-danger', isDanger);
+    $cancel.text(cancelLabel || 'Cancel').toggle(Boolean(cancelLabel));
+    $inputField.toggle(hasInput);
+    $input.val(hasInput ? inputValue : '');
+
+    function closeDialog() {
+      $modal.removeClass('is-active').attr('aria-hidden', 'true');
+      $(document).off('keydown.highlightyDialog');
+      if (previouslyFocused) {
+        previouslyFocused.focus();
+      }
+    }
+
+    $confirm.off('click.highlightyDialog').on('click.highlightyDialog', () => {
+      const value = hasInput ? $input.val().trim() : undefined;
+      closeDialog();
+      onConfirm(value);
+    });
+    $('#DialogModal__cancel, #DialogModal__close, #DialogModal .modal-background')
+      .off('click.highlightyDialog')
+      .on('click.highlightyDialog', closeDialog);
+    $(document)
+      .off('keydown.highlightyDialog')
+      .on('keydown.highlightyDialog', (e) => {
+        if (e.key === 'Escape') {
+          closeDialog();
+        } else if (e.key === 'Enter' && (hasInput || document.activeElement === $confirm[0])) {
+          e.preventDefault();
+          $confirm.trigger('click');
+        }
+      });
+
+    $modal.addClass('is-active').attr('aria-hidden', 'false');
+    if (hasInput) {
+      $input.focus().select();
+    } else {
+      $confirm.focus();
+    }
+  }
+
   function removeExistingLists() {
     // This will also remove all associated handlers in the phrase list
     $('#PhraseLists__results .PhraseList').not('#PhraseList--invisible').remove();
@@ -347,7 +409,10 @@ $(function () {
         const urls = options[optionName] || [];
         $input.val('');
         if (urls.includes(newURL)) {
-          alert('URL was already in list!');
+          showDialog({
+            title: 'Already added',
+            message: `That URL is already in the ${optionName}.`,
+          });
           return;
         }
         urls.push(newURL);
@@ -360,16 +425,23 @@ $(function () {
     $('#Settings').on('click', `.${listName}__url__delete`, (event) => {
       const $url = $(event.target).parent();
       const url = $url.data('url');
-      if (!window.confirm(`Are you sure you want to remove: ${url}?`)) return;
-
-      chrome.storage.local.get((options) => {
-        const urls = options[optionName] || [];
-        const urlIndex = urls.indexOf(url);
-        if (urlIndex < 0) return;
-        urls.splice(urlIndex, 1);
-        chrome.storage.local.set({ [optionName]: urls }, () => {
-          $url.remove();
-        });
+      showDialog({
+        title: `Remove ${optionName} URL?`,
+        message: `Remove “${url}” from the ${optionName}?`,
+        confirmLabel: 'Remove',
+        cancelLabel: 'Keep URL',
+        isDanger: true,
+        onConfirm: () => {
+          chrome.storage.local.get((options) => {
+            const urls = options[optionName] || [];
+            const urlIndex = urls.indexOf(url);
+            if (urlIndex < 0) return;
+            urls.splice(urlIndex, 1);
+            chrome.storage.local.set({ [optionName]: urls }, () => {
+              $url.remove();
+            });
+          });
+        },
       });
     });
   }
@@ -461,31 +533,45 @@ $(function () {
 
   function setupPhraseListEditNameHandler($list) {
     $list.on('click', '.PhraseList__editName', () => {
-      var oldListName = $list.find('.PhraseList__title').text();
-      var newListName = window.prompt('Please enter a new phrase list name', oldListName);
-      if (newListName != null && newListName != '' && newListName != oldListName) {
-        chrome.storage.local.get((options) => {
-          // TODO: functionalize this?
-          options.highlighter[$list.data('index')].title = newListName;
-          chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-            $list.find('.PhraseList__title').text(newListName);
-          });
-        });
-      }
+      const oldListName = $list.find('.PhraseList__title').text();
+      showDialog({
+        title: 'Rename phrase list',
+        message: 'Choose a short name that describes these phrases.',
+        confirmLabel: 'Save name',
+        cancelLabel: 'Cancel',
+        inputValue: oldListName,
+        onConfirm: (newListName) => {
+          if (newListName && newListName !== oldListName) {
+            chrome.storage.local.get((options) => {
+              options.highlighter[$list.data('index')].title = newListName;
+              chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+                $list.find('.PhraseList__title').text(newListName);
+              });
+            });
+          }
+        },
+      });
     });
   }
 
   function setupPhraseListDeleteHandler($list) {
     $list.on('click', '.PhraseList__delete', () => {
       const oldListName = $list.find('.PhraseList__title').text();
-      if (window.confirm(`Are you sure you want to delete ${oldListName}?`)) {
-        chrome.storage.local.get((options) => {
-          options.highlighter.splice($list.data('index'), 1);
-          chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-            setupOptionsPage(options, false);
+      showDialog({
+        title: 'Delete phrase list?',
+        message: `“${oldListName}” and all of its phrases will be permanently deleted.`,
+        confirmLabel: 'Delete list',
+        cancelLabel: 'Keep list',
+        isDanger: true,
+        onConfirm: () => {
+          chrome.storage.local.get((options) => {
+            options.highlighter.splice($list.data('index'), 1);
+            chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+              setupOptionsPage(options, false);
+            });
           });
-        });
-      }
+        },
+      });
     });
   }
 
@@ -499,7 +585,10 @@ $(function () {
         chrome.storage.local.get((options) => {
           if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
             $input.val('');
-            alert('Phrase was already in list!');
+            showDialog({
+              title: 'Already added',
+              message: 'That phrase is already in this list.',
+            });
           } else {
             options.highlighter[listIndex].phrases.push(newPhrase);
             $input.val('');
@@ -518,19 +607,25 @@ $(function () {
     $phrases.on('click', '.PhraseList__phrase__delete', (e) => {
       const $phrase = $(e.target).parent();
       const phrase = $phrase.data('phrase');
-      let confirmationMessage = 'Are you sure you want to delete: ' + phrase + '?';
-      if (window.confirm(confirmationMessage)) {
-        chrome.storage.local.get((options) => {
-          let phraseIndex = options.highlighter[listIndex].phrases.indexOf(phrase);
-          if (phraseIndex < 0) return;
-          options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
-          chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-            $phrase.remove();
-            decrementPhraseCount($list);
-            applyPhraseSearch();
+      showDialog({
+        title: 'Delete phrase?',
+        message: `Remove “${phrase}” from this list?`,
+        confirmLabel: 'Delete phrase',
+        cancelLabel: 'Keep phrase',
+        isDanger: true,
+        onConfirm: () => {
+          chrome.storage.local.get((options) => {
+            const phraseIndex = options.highlighter[listIndex].phrases.indexOf(phrase);
+            if (phraseIndex < 0) return;
+            options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
+            chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+              $phrase.remove();
+              decrementPhraseCount($list);
+              applyPhraseSearch();
+            });
           });
-        });
-      }
+        },
+      });
     });
   }
 
@@ -718,9 +813,13 @@ $(function () {
           throw new Error(`Invalid import type: ${importType}.`);
         }
       } catch (error) {
-        alert(
-          `Invalid import data. Please use a .txt or .json file created by Bulk Export.\r\n\r\nError: ${error.message}`,
-        );
+        const nothingToImport = error.message === 'Nothing to import.';
+        showDialog({
+          title: nothingToImport ? 'Nothing to import' : 'Invalid import data',
+          message: nothingToImport
+            ? 'Paste a Highlighty bulk export before previewing the import.'
+            : `Please use a .txt or .json file created by Bulk Export.\n\nDetails: ${error.message}`,
+        });
       }
     });
   }
@@ -914,7 +1013,10 @@ $(function () {
                 'phrase',
               )} skipped due to already being in the list.`;
             }
-            alert(alertMessage);
+            showDialog({
+              title: 'Import complete',
+              message: alertMessage,
+            });
           });
         });
       }
@@ -973,6 +1075,10 @@ $(function () {
           return;
         }
         setSettingsDirty(false);
+        showDialog({
+          title: 'Settings saved',
+          message: 'Your Highlighty settings are up to date.',
+        });
         setupOptionsPage(newOptions, false);
       });
     });
