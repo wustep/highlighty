@@ -661,14 +661,19 @@ $(function () {
         return;
       }
 
+      $('#BulkImportModal__previewImport').prop('disabled', true);
+      $('#BulkImportModal__fileStatus')
+        .removeClass('has-text-danger has-text-success')
+        .text(`Reading ${file.name}…`);
       const reader = new FileReader();
       reader.onload = () => {
         const $body = $('#BulkImportModal__body');
         $body.stop(true, true).fadeTo(100, 0, () => {
           $body.val(reader.result).fadeTo(150, 1);
+          $('#BulkImportModal__fileName').text(file.name);
+          $('#BulkImportModal__previewImport').prop('disabled', false);
+          setBulkImportFileStatus(`Loaded ${file.name}. Its contents replaced the text below.`);
         });
-        $('#BulkImportModal__fileName').text(file.name);
-        setBulkImportFileStatus(`Loaded ${file.name}. Its contents replaced the text below.`);
       };
       reader.onerror = () => {
         resetBulkImportFile();
@@ -780,6 +785,7 @@ $(function () {
   function resetBulkImportFile() {
     $('#BulkImportModal__fileInput').val('');
     $('#BulkImportModal__fileName').text('No file selected');
+    $('#BulkImportModal__previewImport').prop('disabled', false);
     setBulkImportFileStatus('');
   }
 
