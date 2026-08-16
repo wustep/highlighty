@@ -70,42 +70,7 @@ function initializeHighlighty() {
     const sources = [];
     activeLists = new Map();
     let highlighterStyles = `
-      .${HL_BASE_CLASS} { ${options.baseStyles} }
-      .${HL_TOOLTIP_CLASS} { position: relative; cursor: help; }
-      .${HL_TOOLTIP_CLASS}:hover::before {
-        content: attr(data-highlighty-title);
-        position: absolute;
-        z-index: 2147483647;
-        bottom: calc(100% + 0.55rem);
-        left: 50%;
-        transform: translateX(-50%);
-        width: max-content;
-        max-width: 16rem;
-        padding: 0.4rem 0.8rem;
-        overflow: hidden;
-        border-radius: 4px;
-        background: rgba(74, 74, 74, 0.96);
-        box-shadow: 0 2px 4px rgba(10, 10, 10, 0.2);
-        color: #ffffff;
-        font-family: BlinkMacSystemFont, -apple-system, "Segoe UI", sans-serif;
-        font-size: 0.75rem;
-        font-weight: 400;
-        line-height: 1.5;
-        text-align: center;
-        white-space: normal;
-        pointer-events: none;
-      }
-      .${HL_TOOLTIP_CLASS}:hover::after {
-        content: "";
-        position: absolute;
-        z-index: 2147483647;
-        bottom: calc(100% + 0.15rem);
-        left: 50%;
-        transform: translateX(-50%);
-        border: 0.4rem solid transparent;
-        border-top-color: rgba(74, 74, 74, 0.96);
-        pointer-events: none;
-      }`;
+      .${HL_BASE_CLASS} { ${options.baseStyles} }`;
 
     options.highlighter.forEach((list, listIndex) => {
       if (
@@ -172,16 +137,23 @@ function initializeHighlighty() {
       if (options.enableTitleMouseover && title) {
         mark.classList.add(HL_TOOLTIP_CLASS);
         mark.dataset.highlightyTitle = title;
+        mark.tabIndex = 0;
+        mark.setAttribute('aria-label', `${matchedText} — ${title}`);
       }
       return;
     }
 
-    mark.classList.add(overlapClass(assignment.listIndexes), HL_TOOLTIP_CLASS);
+    mark.classList.add(
+      overlapClass(assignment.listIndexes),
+      HL_TOOLTIP_CLASS,
+      `${HL_TOOLTIP_CLASS}--overlap`,
+    );
     const titles = assignment.listIndexes
       .map((index) => activeLists.get(index)?.title)
       .filter(Boolean);
-    mark.dataset.highlightyTitle = `Lists: ${titles.join(', ')}`;
-    mark.setAttribute('aria-label', `${matchedText} — ${mark.dataset.highlightyTitle}`);
+    mark.dataset.highlightyTitle = titles.join(' · ');
+    mark.tabIndex = 0;
+    mark.setAttribute('aria-label', `${matchedText} — also in ${titles.join(' and ')}`);
   }
 
   function highlightPhrases(options, targetNodes: Node[] = [document.body]) {

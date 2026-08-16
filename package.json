@@ -1,6 +1,6 @@
 {
   "name": "highlighty",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "private": true,
   "description": "Web extension to highlight phrases from given lists.",
   "scripts": {

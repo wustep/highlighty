@@ -4,7 +4,7 @@
   "name": "Highlighty",
   "short_name": "highlighty",
   "description": "Highlight selected phrases from custom phrase lists.",
-  "version": "2.0.4",
+  "version": "2.0.5",
 
   "icons": {
     "16": "img/16pxYellow.png",

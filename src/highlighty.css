@@ -1,26 +1,34 @@
 #Highlighty__toolbar {
   all: initial;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid #b5b5b5;
-  border-radius: 6px;
+  align-items: stretch;
+  background: #1f2430;
+  border: 1px solid rgba(255, 221, 87, 0.42);
+  border-radius: 10px;
   bottom: 1rem;
-  box-shadow: 0 3px 14px rgba(10, 10, 10, 0.22);
+  box-shadow: 0 10px 28px rgba(10, 10, 10, 0.28);
   box-sizing: border-box;
-  color: #363636;
+  color: #f4f1ea;
   display: flex;
   flex-wrap: wrap;
   font:
-    14px/1.4 BlinkMacSystemFont,
+    13px/1.35 BlinkMacSystemFont,
     -apple-system,
     'Segoe UI',
     sans-serif;
   gap: 0.45rem;
   max-width: calc(100vw - 2rem);
-  padding: 0.55rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.4rem;
   position: fixed;
   right: 1rem;
   z-index: 2147483647;
+}
+
+#Highlighty__toolbar::before {
+  align-self: stretch;
+  background: #ffdd57;
+  border-radius: 99px;
+  content: '';
+  flex: 0 0 0.28rem;
 }
 
 #Highlighty__toolbar *,
@@ -35,19 +43,24 @@
 }
 
 #Highlighty__toolbar button {
-  background: #f5f5f5;
-  border: 1px solid #b5b5b5;
-  border-radius: 4px;
-  color: #363636;
+  background: #2c3342;
+  border: 1px solid #3d4558;
+  border-radius: 6px;
+  color: #f4f1ea;
   cursor: pointer;
   min-height: 2rem;
   padding: 0.25rem 0.65rem;
 }
 
-#Highlighty__toolbar button:hover,
-#Highlighty__toolbar button:focus-visible {
-  background: #e8e8e8;
-  border-color: #7a7a7a;
+#Highlighty__toolbar button:hover {
+  background: #394155;
+  border-color: #ffdd57;
+}
+
+#Highlighty__toolbar button:focus-visible,
+#Highlighty__toolbar input:focus-visible {
+  outline: 2px solid #ffdd57;
+  outline-offset: 2px;
 }
 
 #Highlighty__toolbar .Highlighty__navigator {
@@ -57,8 +70,13 @@
 }
 
 #Highlighty__toolbar .Highlighty__count {
+  background: rgba(255, 221, 87, 0.16);
+  border-radius: 999px;
+  color: #ffdd57;
   font-variant-numeric: tabular-nums;
-  min-width: 4.8rem;
+  font-weight: 700;
+  min-width: 4.4rem;
+  padding: 0.2rem 0.55rem;
   text-align: center;
 }
 
@@ -69,18 +87,21 @@
 }
 
 #Highlighty__toolbar .Highlighty__quick-search-input {
-  background: #ffffff;
-  border: 1px solid #b5b5b5;
-  border-radius: 4px;
-  color: #363636;
+  background: #151924;
+  border: 1px solid #3d4558;
+  border-radius: 6px;
+  color: #f4f1ea;
   height: 2rem;
   min-width: 12rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.55rem;
+}
+
+#Highlighty__toolbar .Highlighty__quick-search-input::placeholder {
+  color: #9aa3b5;
 }
 
 #Highlighty__toolbar .Highlighty__quick-search-input:focus {
-  border-color: #3298dc;
-  outline: 2px solid rgba(50, 152, 220, 0.2);
+  border-color: #ffdd57;
 }
 
 mark.Highlighty__phrase {
@@ -94,7 +115,7 @@ mark.Highlighty__quick-result {
 
 mark.Highlighty__focused {
   animation: Highlighty__focus-pulse 650ms ease-out;
-  outline: 3px solid #209cee;
+  outline: 3px solid #ffdd57;
   outline-offset: 2px;
 }
 
@@ -106,6 +127,62 @@ mark.Highlighty__focused {
   to {
     outline-width: 3px;
   }
+}
+
+.Highlighty__tooltip {
+  cursor: help;
+  position: relative;
+}
+
+.Highlighty__tooltip:hover::before,
+.Highlighty__tooltip:focus-visible::before {
+  background: #1f2430;
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(10, 10, 10, 0.28);
+  color: #ffffff;
+  content: attr(data-highlighty-title);
+  font-family:
+    BlinkMacSystemFont,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  left: 50%;
+  line-height: 1.45;
+  max-width: 16rem;
+  overflow: hidden;
+  padding: 0.4rem 0.7rem;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+  transform: translateX(-50%);
+  white-space: normal;
+  width: max-content;
+  z-index: 2147483647;
+}
+
+.Highlighty__tooltip:hover::before {
+  bottom: calc(100% + 0.55rem);
+}
+
+.Highlighty__tooltip:hover::after,
+.Highlighty__tooltip:focus-visible::after {
+  border: 0.4rem solid transparent;
+  border-top-color: #1f2430;
+  bottom: calc(100% + 0.15rem);
+  content: '';
+  left: 50%;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+}
+
+.Highlighty__tooltip--overlap:hover::before,
+.Highlighty__tooltip--overlap:focus-visible::before {
+  border-top: 3px solid #ffdd57;
+  padding-top: 0.35rem;
 }
 
 @media (max-width: 520px) {
