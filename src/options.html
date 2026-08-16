@@ -63,8 +63,15 @@
               </label>
             </div>
             <p>
-              Only URLs containing these phrases will be highlighted by auto-highlight mode unless
-              manually triggered, e.g. <i>"example.com"</i>.
+              Only URLs matching these patterns will be highlighted by auto-highlight mode unless
+              manually triggered.
+            </p>
+            <p class="help">
+              Use an exact host (<i>example.com</i>), subdomains (<i>*.example.com</i>), a host with
+              a path prefix (<i>example.com/blog</i>), or a path on any host (<i>/blog</i>). Path
+              prefixes match complete segments. <i>www</i> is not removed, and wildcards do not
+              include the base host. Bare words such as <i>reddit</i> are invalid and no longer
+              match URL substrings.
             </p>
             <br />
             <form>
@@ -103,8 +110,8 @@
               </label>
             </div>
             <p>
-              Only URLs that do not contain these phrases will be highlighted by auto-highlight mode
-              unless manually triggered, e.g. <i>"example.com"</i>.
+              URLs matching these patterns will not be highlighted by auto-highlight mode unless
+              manually triggered. Patterns use the syntax described above.
             </p>
             <br />
             <form>
@@ -376,7 +383,8 @@
               <summary>URL filters for this list</summary>
               <p class="help PhraseList__URLHelp">
                 Leave both empty to use this list on every page allowed by the global URL settings.
-                Denylist matches take priority.
+                Denylist matches take priority. Patterns use the same exact-host,
+                wildcard-subdomain, and path-prefix syntax described in Settings above.
               </p>
               <div class="columns">
                 <div class="column">

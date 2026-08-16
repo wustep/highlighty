@@ -19,6 +19,7 @@ const {
   isURLAllowedForPhraseList,
   normalizeURLPhrases,
   urlMatchesAny,
+  urlMatchesPattern,
 } = require('../src/modules/urls.ts');
 const { getDelimitedPhrases, parseBulkImport } = require('../src/modules/import-export.ts');
 const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/modules/colors.ts');
@@ -82,7 +83,38 @@ test('Hilitor input respects case sensitivity and whole-word matching', () => {
   );
 });
 
-test('URL allowlist and denylist use normalized non-empty substrings', () => {
+test('URL patterns match exact hosts without matching hostname substrings', () => {
+  assert.equal(urlMatchesPattern('https://example.com/articles/1', 'example.com'), true);
+  assert.equal(urlMatchesPattern('https://www.example.com/articles/1', 'example.com'), false);
+  assert.equal(urlMatchesPattern('https://www.example.com/articles/1', 'www.example.com'), true);
+  assert.equal(urlMatchesPattern('https://www.example.com/articles/1', '*.example.com'), true);
+  assert.equal(urlMatchesPattern('https://deep.www.example.com/', '*.example.com'), true);
+  assert.equal(urlMatchesPattern('https://example.com/', '*.example.com'), false);
+  assert.equal(urlMatchesPattern('https://notexample.com/', 'example.com'), false);
+  assert.equal(urlMatchesPattern('https://example.com.evil/', 'example.com'), false);
+  assert.equal(urlMatchesPattern('https://example.com/', 'com'), false);
+});
+
+test('URL patterns support segment-aware host and bare path prefixes', () => {
+  assert.equal(urlMatchesPattern('https://example.com/blog', 'example.com/blog'), true);
+  assert.equal(urlMatchesPattern('https://example.com/blog/post', 'example.com/blog'), true);
+  assert.equal(urlMatchesPattern('https://example.com/blogging', 'example.com/blog'), false);
+  assert.equal(urlMatchesPattern('https://other.example/foo', '/foo'), true);
+  assert.equal(urlMatchesPattern('https://other.example/foo/bar', '/foo'), true);
+  assert.equal(urlMatchesPattern('https://other.example/foobar', '/foo'), false);
+});
+
+test('invalid URLs and patterns fail closed', () => {
+  assert.equal(urlMatchesPattern('not a URL', 'example.com'), false);
+  assert.equal(urlMatchesPattern('file:///tmp/example.com', '/tmp'), false);
+  assert.equal(urlMatchesPattern('https://example.com/', ''), false);
+  assert.equal(urlMatchesPattern('https://example.com/', 'https://example.com'), false);
+  assert.equal(urlMatchesPattern('https://example.com/', 'example'), false);
+  assert.equal(urlMatchesPattern('https://example.com/', 'example.com?query'), false);
+  assert.equal(urlMatchesPattern('https://example.com/', 'example.com/%zz'), false);
+});
+
+test('URL allowlist and denylist use normalized non-empty patterns', () => {
   const url = 'https://example.com/articles/1';
   assert.equal(urlMatchesAny(url, [' example.com ', '']), true);
   assert.deepEqual(normalizeURLPhrases(['', ' example.com ', 'example.com']), ['example.com']);
@@ -114,8 +146,23 @@ test('URL allowlist and denylist use normalized non-empty substrings', () => {
   );
 });
 
-test('phrase-list URL filters apply independently with denylist precedence', () => {
+test('global and phrase-list URL filters compose with denylist precedence', () => {
   const articleURL = 'https://example.com/articles/1';
+  const globalAllow = {
+    enableURLAllowlist: true,
+    allowlist: ['example.com'],
+    enableURLDenylist: false,
+    denylist: [],
+  };
+  const globallyBlocked = {
+    enableURLAllowlist: false,
+    allowlist: [],
+    enableURLDenylist: true,
+    denylist: ['example.com'],
+  };
+  const listRuns = (url, options, list) =>
+    isAllowedURL(url, options) && isURLAllowedForPhraseList(url, list);
+
   assert.equal(isURLAllowedForPhraseList(articleURL, {}), true);
   assert.equal(isURLAllowedForPhraseList(articleURL, { allowlist: [], denylist: [] }), true);
   assert.equal(
@@ -132,13 +179,10 @@ test('phrase-list URL filters apply independently with denylist precedence', () 
     }),
     false,
   );
-  assert.equal(
-    isURLAllowedForPhraseList(articleURL, {
-      allowlist: ['example.com'],
-      denylist: ['/articles/'],
-    }),
-    false,
-  );
+  assert.equal(listRuns(articleURL, globallyBlocked, { allowlist: ['example.com'] }), false);
+  assert.equal(listRuns(articleURL, globalAllow, { denylist: ['/articles'] }), false);
+  assert.equal(listRuns(articleURL, globalAllow, { allowlist: ['example.com'] }), true);
+  assert.equal(listRuns(articleURL, globalAllow, { allowlist: ['other.example'] }), false);
 });
 
 test('bulk import parses and normalizes a valid export', () => {
