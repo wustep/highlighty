@@ -30,7 +30,17 @@ $(function () {
   ].join(', ');
   let settingsDirty = false;
 
-  function getOptions(callback) {
+  interface DialogOptions {
+    title?: string;
+    message: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    isDanger?: boolean;
+    inputValue?: string;
+    onConfirm?: (value?: string) => void;
+  }
+
+  function getOptions(callback: (options: HighlightyOptions) => void): void {
     chrome.storage.local.get((options) => callback(normalizeOptions(options)));
   }
 
@@ -38,7 +48,7 @@ $(function () {
    * Set up or reset the options page handlers and lists components.
    * If fresh is false, then don't run the one-time handlers setup meant for a fresh load.
    */
-  function setupOptionsPage(options, fresh = true) {
+  function setupOptionsPage(options: HighlightyOptions, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
 
@@ -68,7 +78,7 @@ $(function () {
     isDanger = false,
     inputValue,
     onConfirm = () => {},
-  }) {
+  }: DialogOptions) {
     const $modal = $('#DialogModal');
     const $confirm = $('#DialogModal__confirm');
     const $cancel = $('#DialogModal__cancel');
@@ -90,13 +100,13 @@ $(function () {
     function closeDialog() {
       $modal.removeClass('is-active').attr('aria-hidden', 'true');
       $(document).off('keydown.highlightyDialog');
-      if (previouslyFocused) {
+      if (previouslyFocused instanceof HTMLElement) {
         previouslyFocused.focus();
       }
     }
 
     $confirm.off('click.highlightyDialog').on('click.highlightyDialog', () => {
-      const value = hasInput ? $input.val().trim() : undefined;
+      const value = hasInput ? String($input.val() ?? '').trim() : undefined;
       closeDialog();
       onConfirm(value);
     });
@@ -242,7 +252,9 @@ $(function () {
   }
 
   function applyPhraseSearch() {
-    const searchText = $.trim($('#PhraseLists__search').val() || '').toLowerCase();
+    const searchText = String($('#PhraseLists__search').val() || '')
+      .trim()
+      .toLowerCase();
     let matchingPhraseCount = 0;
     let matchingListCount = 0;
 
@@ -337,7 +349,7 @@ $(function () {
     )
       .clone()
       .attr('id', `PhraseList--${index}`)
-      .attr('data-enabled', enabled)
+      .attr('data-enabled', String(enabled))
       .data('index', index);
     $newListDiv.find('.PhraseList__color').css('background-color', list.color);
     $newListDiv.find('.PhraseList__title').text(list.title);
@@ -412,7 +424,7 @@ $(function () {
     $(`#${listName}__add`).on('click', (event) => {
       event.preventDefault();
       const $input = $(`#${listName}__urlInput`);
-      const newURL = $.trim($input.val());
+      const newURL = String($input.val() || '').trim();
       if (!newURL) return;
 
       getOptions((options) => {
@@ -472,7 +484,7 @@ $(function () {
       e.preventDefault();
       getOptions((options) => {
         const listIndex = options.highlighter.length;
-        const listTitle = $('#NewPhraseList__title').val().trim() || 'Untitled';
+        const listTitle = String($('#NewPhraseList__title').val() || '').trim() || 'Untitled';
         const listColor = rgbaStringToHex($('#NewPhraseList__color').css('background-color'));
         const listTextColor = rgbaStringToHex($('#NewPhraseList__color').css('color'));
         const newList = {
@@ -508,7 +520,7 @@ $(function () {
 
   function setupPhraseListStylesHandler($list) {
     $list.on('click', '.PhraseList__saveStyles', () => {
-      const customStyles = $list.find('.PhraseList__customStyles').val().trim();
+      const customStyles = String($list.find('.PhraseList__customStyles').val() || '').trim();
       if (!validateStyleDeclarations(customStyles)) {
         return;
       }
@@ -541,7 +553,7 @@ $(function () {
         options.highlighter[listIndex].enabled = enabled;
         delete options.highlighter[listIndex].toggled;
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-          $list.attr('data-enabled', enabled);
+          $list.attr('data-enabled', String(enabled));
         });
       });
     });
@@ -618,7 +630,7 @@ $(function () {
     $list.on('click', '.PhraseList__newPhrase__add', (e) => {
       e.preventDefault();
       const $input = $list.find('.PhraseList__newPhrase__phrase');
-      const newPhrase = $.trim($input.val());
+      const newPhrase = String($input.val() || '').trim();
       if (newPhrase.length > 0) {
         getOptions((options) => {
           const listIndex = $list.data('index');
@@ -776,14 +788,14 @@ $(function () {
 
     $('#BulkImportModal__typesSelect').change((e) => {
       $('#BulkImportModal__typesInfo > div').hide();
-      const importType = e.target.value;
-      const importName = $.trim($(`#BulkImportModal__typesSelect--${importType}`).text());
+      const importType = (e.target as HTMLSelectElement).value;
+      const importName = $(`#BulkImportModal__typesSelect--${importType}`).text().trim();
       $(`#BulkImportModal__typesInfo--${importType}`).show();
       $('#BulkImportPreviewModal__optionName').text(importName);
     });
 
     $('#BulkImportModal__fileInput').on('change', (event) => {
-      const file = event.target.files[0];
+      const file = (event.target as HTMLInputElement).files?.[0];
       if (!file) {
         resetBulkImportFile();
         return;
@@ -804,7 +816,7 @@ $(function () {
       reader.onload = () => {
         const $body = $('#BulkImportModal__body');
         $body.stop(true, true).fadeTo(100, 0, () => {
-          $body.val(reader.result).fadeTo(150, 1);
+          $body.val(String(reader.result || '')).fadeTo(150, 1);
           $('#BulkImportModal__fileName').text(file.name);
           $('#BulkImportModal__previewImport').prop('disabled', false);
           setBulkImportFileStatus(`Loaded ${file.name}. Its contents replaced the text below.`);
@@ -821,7 +833,7 @@ $(function () {
       const importType = $('#BulkImportModal__typesSelect').val();
       const importBody = $('#BulkImportModal__body').val();
       try {
-        if ($.trim(importBody).length === 0) {
+        if (String(importBody).trim().length === 0) {
           throw new Error('Nothing to import.');
         }
         const newImportLists = parseBulkImport(importBody);
@@ -1031,7 +1043,7 @@ $(function () {
       const newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
       const newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
       const newSorting = $('#Settings__sorting').val();
-      const newBaseStyles = $('#Settings__baseStyles').val().trim();
+      const newBaseStyles = String($('#Settings__baseStyles').val() || '').trim();
 
       if (!validateStyleDeclarations(newBaseStyles)) {
         return;

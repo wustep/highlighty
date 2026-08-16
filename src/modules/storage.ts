@@ -88,10 +88,11 @@ export function normalizePhraseLists(highlighter: unknown): PhraseList[] {
 }
 
 export function normalizeOptions(storedOptions: unknown = {}): HighlightyOptions {
-  const stored =
+  const stored = (
     storedOptions && typeof storedOptions === 'object' && !Array.isArray(storedOptions)
       ? storedOptions
-      : {};
+      : {}
+  ) as StoredOptions & Record<string, unknown>;
   const options = { ...cloneDefaults(), ...stored } as HighlightyOptions & StoredOptions;
 
   if (!('allowlist' in stored) && Array.isArray(stored.whitelist)) {
@@ -131,10 +132,13 @@ export function normalizeOptions(storedOptions: unknown = {}): HighlightyOptions
     }
   }
 
-  if (options.keyboardShortcut === -1) options.keyboardShortcut = '';
-  else if (options.keyboardShortcut === 117) options.keyboardShortcut = 'F6';
-  else if (typeof options.keyboardShortcut !== 'string') {
+  const keyboardShortcut: unknown = stored.keyboardShortcut ?? options.keyboardShortcut;
+  if (keyboardShortcut === -1) options.keyboardShortcut = '';
+  else if (keyboardShortcut === 117) options.keyboardShortcut = 'F6';
+  else if (typeof keyboardShortcut !== 'string') {
     options.keyboardShortcut = defaultOptions.keyboardShortcut;
+  } else {
+    options.keyboardShortcut = keyboardShortcut;
   }
 
   return options;

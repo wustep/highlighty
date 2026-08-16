@@ -448,8 +448,7 @@ $(function () {
     }
   }
 
-  const MutationObserverClass = window.MutationObserver || window.WebKitMutationObserver;
-  observer = new MutationObserverClass(() => {
+  observer = new MutationObserver(() => {
     if (
       !currentOptions?.enableAutoHighlight ||
       !currentOptions.enableAutoHighlightUpdates ||
