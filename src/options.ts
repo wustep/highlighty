@@ -6,6 +6,7 @@ import { shortcutFromKeyboardEvent } from './modules/keyboard';
 import {
   addUniquePhrases,
   clonePhraseLists,
+  normalizeSortOrder,
   sortPhrases,
   sortStoredPhraseLists,
 } from './modules/phrase-lists';
@@ -420,7 +421,10 @@ $(function () {
     });
   }
 
-  function setupURLListHandler(listName, optionName) {
+  function setupURLListHandler(
+    listName: 'Denylist' | 'Allowlist',
+    optionName: 'denylist' | 'allowlist',
+  ) {
     $(`#${listName}__add`).on('click', (event) => {
       event.preventDefault();
       const $input = $(`#${listName}__urlInput`);
@@ -1039,10 +1043,10 @@ $(function () {
       const newEnableCaseInsensitive = $('#Settings__enableCaseInsensitive').is(':checked');
       const newEnablePhraseNavigator = $('#Settings__enablePhraseNavigator').is(':checked');
       const newEnableQuickSearch = $('#Settings__enableQuickSearch').is(':checked');
-      const newKeyboardShortcut = $('#Settings__keyboardShortcut').val();
+      const newKeyboardShortcut = String($('#Settings__keyboardShortcut').val() || '');
       const newEnableURLDenylist = $('#Settings__enableURLDenylist').is(':checked');
       const newEnableURLAllowlist = $('#Settings__enableURLAllowlist').is(':checked');
-      const newSorting = $('#Settings__sorting').val();
+      const newSorting = normalizeSortOrder($('#Settings__sorting').val());
       const newBaseStyles = String($('#Settings__baseStyles').val() || '').trim();
 
       if (!validateStyleDeclarations(newBaseStyles)) {
