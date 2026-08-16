@@ -4,7 +4,10 @@
   root.HighlightyCore = Object.assign(root.HighlightyCore || {}, api);
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   function validateStyleDeclarations(styles) {
-    return typeof styles === 'string' && !/[{}<>]|@import|url\s*\(|expression\s*\(/i.test(styles);
+    return (
+      typeof styles === 'string' &&
+      !/[{}<>]|\/\*|\*\/|@import|url\s*\(|expression\s*\(/i.test(styles)
+    );
   }
 
   function normalizeStyleDeclarations(styles) {

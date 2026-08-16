@@ -57,12 +57,8 @@ function Hilitor() {
    * markOptions should be { caseSensitive: bool, partialMatch: bool, ... }
    */
   this.applyPhrases = function (phrases, options = {}) {
-    if (options.partialMatch) {
-      partialMatch = true;
-    }
-    if (options.caseSensitive) {
-      caseSensitive = true;
-    }
+    partialMatch = Boolean(options.partialMatch);
+    caseSensitive = Boolean(options.caseSensitive);
     setRegexFromPhrases(phrases);
     hiliteWords(
       options.targetNode ? options.targetNode : document.body,

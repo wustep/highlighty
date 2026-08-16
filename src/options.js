@@ -1086,7 +1086,7 @@ $(function () {
     const valid = isValidStyleDeclarations(styles);
     if (!valid) {
       alert(
-        'Styles must contain CSS declarations only. Braces, markup, imports, URLs, and expressions are not allowed.',
+        'Styles must contain CSS declarations only. Braces, comments, markup, imports, URLs, and expressions are not allowed.',
       );
     }
     return valid;

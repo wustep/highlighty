@@ -3,6 +3,7 @@
 $(function () {
   const {
     isAllowedURL,
+    isEditableTarget,
     isPhraseListEnabled,
     normalizeOptions,
     normalizePhrases,
@@ -31,6 +32,8 @@ $(function () {
   let quickSearchPhrase = '';
   let mutationTime = true;
   let mutationDelayPending = false;
+  let observer = null;
+  let observerPauseDepth = 0;
 
   const developerMode = !('update_url' in chrome.runtime.getManifest());
 
@@ -42,6 +45,19 @@ $(function () {
     const now = new Date();
     const logPrefix = `[Highlighty] [${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}.${now.getMilliseconds()}]`;
     console.log(logPrefix, stuff);
+  }
+
+  function withoutObservedMutations(callback) {
+    if (observerPauseDepth === 0) observer?.disconnect();
+    observerPauseDepth++;
+    try {
+      return callback();
+    } finally {
+      observerPauseDepth--;
+      if (observerPauseDepth === 0) {
+        observer?.observe(document, { subtree: true, childList: true });
+      }
+    }
   }
 
   function setupHighlighter(options) {
@@ -109,31 +125,33 @@ $(function () {
   }
 
   function highlightPhrases(options) {
-    for (const phraseListIndex in phrasesToHighlight) {
-      const markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
-      const hilitor = new Hilitor();
-      hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
-        ...prepareHilitorOptions(options),
-        classes: markClasses,
-      });
-    }
+    withoutObservedMutations(() => {
+      for (const phraseListIndex in phrasesToHighlight) {
+        const markClasses = `${HL_BASE_CLASS} ${HL_PREFIX_CLASS}${phraseListIndex}`;
+        const hilitor = new Hilitor();
+        hilitor.applyPhrases(phrasesToHighlight[phraseListIndex], {
+          ...prepareHilitorOptions(options),
+          classes: markClasses,
+        });
+      }
 
-    if (quickSearchPhrase) {
-      applyQuickSearch(options, quickSearchPhrase);
-    }
+      if (quickSearchPhrase) {
+        applyQuickSearch(options, quickSearchPhrase);
+      }
 
-    if (options.enableTitleMouseover) {
-      options.highlighter.forEach((list, listIndex) => {
-        if (list?.title && isPhraseListEnabled(list)) {
-          $(`.${HL_PREFIX_CLASS}${listIndex}`)
-            .addClass(HL_TOOLTIP_CLASS)
-            .attr('data-highlighty-title', list.title);
-        }
-      });
-    }
+      if (options.enableTitleMouseover) {
+        options.highlighter.forEach((list, listIndex) => {
+          if (list?.title && isPhraseListEnabled(list)) {
+            $(`.${HL_PREFIX_CLASS}${listIndex}`)
+              .addClass(HL_TOOLTIP_CLASS)
+              .attr('data-highlighty-title', list.title);
+          }
+        });
+      }
 
-    bodyHighlighted = true;
-    setupToolbar(options);
+      bodyHighlighted = true;
+      setupToolbar(options);
+    });
   }
 
   function getHighlightMarks() {
@@ -149,7 +167,8 @@ $(function () {
       currentMatchIndex = marks.length ? marks.length - 1 : -1;
     }
     const currentNumber = currentMatchIndex >= 0 ? currentMatchIndex + 1 : 0;
-    countElement.textContent = `${currentNumber} / ${marks.length}`;
+    const countText = `${currentNumber} / ${marks.length}`;
+    if (countElement.textContent !== countText) countElement.textContent = countText;
   }
 
   function navigateHighlights(direction) {
@@ -191,11 +210,13 @@ $(function () {
   }
 
   function runQuickSearch(options, phrase) {
-    removeMarksByClass(HL_QUICK_CLASS);
-    quickSearchPhrase = phrase.trim();
-    currentMatchIndex = -1;
-    if (quickSearchPhrase) applyQuickSearch(options, quickSearchPhrase);
-    updateNavigator();
+    withoutObservedMutations(() => {
+      removeMarksByClass(HL_QUICK_CLASS);
+      quickSearchPhrase = phrase.trim();
+      currentMatchIndex = -1;
+      if (quickSearchPhrase) applyQuickSearch(options, quickSearchPhrase);
+      updateNavigator();
+    });
   }
 
   function setupToolbar(options) {
@@ -283,15 +304,19 @@ $(function () {
   }
 
   function clearHighlights() {
-    removeHighlights();
-    $(`#${HL_STYLE_ID}`).remove();
-    removeToolbar();
+    withoutObservedMutations(() => {
+      removeHighlights();
+      $(`#${HL_STYLE_ID}`).remove();
+      removeToolbar();
+    });
   }
 
   function renderHighlights(options) {
-    clearHighlights();
-    setupHighlighter(options);
-    highlightPhrases(options);
+    withoutObservedMutations(() => {
+      clearHighlights();
+      setupHighlighter(options);
+      highlightPhrases(options);
+    });
   }
 
   function getActionState(options) {
@@ -389,7 +414,7 @@ $(function () {
   });
 
   window.addEventListener('keydown', (event) => {
-    if (!currentOptions?.keyboardShortcut?.trim()) {
+    if (!currentOptions?.keyboardShortcut?.trim() || isEditableTarget(event.target)) {
       return;
     }
 
@@ -425,7 +450,7 @@ $(function () {
   }
 
   const MutationObserverClass = window.MutationObserver || window.WebKitMutationObserver;
-  const observer = new MutationObserverClass(() => {
+  observer = new MutationObserverClass(() => {
     if (
       !currentOptions?.enableAutoHighlight ||
       !currentOptions.enableAutoHighlightUpdates ||

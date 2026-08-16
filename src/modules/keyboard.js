@@ -18,5 +18,12 @@
     return pressedKeys.join(' + ').trim();
   }
 
-  return { shortcutFromKeyboardEvent };
+  function isEditableTarget(target) {
+    return Boolean(
+      target &&
+      (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)),
+    );
+  }
+
+  return { isEditableTarget, shortcutFromKeyboardEvent };
 });

@@ -19,6 +19,7 @@ const { getDelimitedPhrases, parseBulkImport } = require('../src/modules/import-
 const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/modules/colors.js');
 const { normalizeOptions, normalizePhraseLists } = require('../src/modules/storage.js');
 const { validateStyleDeclarations } = require('../src/modules/styles.js');
+const { isEditableTarget } = require('../src/modules/keyboard.js');
 
 test('phrases are trimmed and empty or duplicate values are removed', () => {
   assert.deepEqual(normalizePhrases([' hello ', '', 'hello', 'world', 42, '  ']), [
@@ -67,6 +68,9 @@ test('Hilitor input respects case sensitivity and whole-word matching', () => {
   assert.equal(partial.test('Lorem'), true);
   assert.equal(whole.test('Lorem'), false);
   assert.equal(buildPhraseRegExp(['C++']).test('Use C++ here'), true);
+  assert.equal(buildPhraseRegExp(['#tag']).test('Use #tag here'), true);
+  assert.equal(buildPhraseRegExp(['cafe\u0301']).test('Try cafe\u0301 today'), true);
+  assert.equal(buildPhraseRegExp(['New', 'New York']).exec('New York')[0], 'New York');
   assert.deepEqual(
     prepareHilitorOptions({ enableCaseInsensitive: true, enablePartialMatch: false }),
     { caseSensitive: false, partialMatch: false },
@@ -197,10 +201,18 @@ test('style declaration validation rejects rule and resource injection', () => {
     '@import "bad.css";',
     'background: url(https://example.com/x)',
     'width: expression(alert(1))',
+    'color: red; /*',
     '<style>body{display:none}</style>',
   ]) {
     assert.equal(validateStyleDeclarations(unsafe), false, unsafe);
   }
+});
+
+test('page shortcuts ignore editable controls', () => {
+  assert.equal(isEditableTarget({ tagName: 'INPUT', isContentEditable: false }), true);
+  assert.equal(isEditableTarget({ tagName: 'TEXTAREA', isContentEditable: false }), true);
+  assert.equal(isEditableTarget({ tagName: 'DIV', isContentEditable: true }), true);
+  assert.equal(isEditableTarget({ tagName: 'BUTTON', isContentEditable: false }), false);
 });
 
 test('sorting supports A-Z, Z-A, and Off without mutating display inputs', () => {

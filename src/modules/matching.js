@@ -11,13 +11,14 @@
     const sources = (Array.isArray(phrases) ? phrases : [])
       .filter((phrase) => typeof phrase === 'string' && phrase.trim())
       .map((phrase) => phrase.trim())
+      .sort((a, b) => b.length - a.length)
       .map((phrase) => {
         const escaped = escapePhrase(phrase);
         if (options.partialMatch) return escaped;
-        const startsWithWord = /^[\p{L}\p{N}_]/u.test(phrase);
-        const endsWithWord = /[\p{L}\p{N}_]$/u.test(phrase);
-        return `${startsWithWord ? '(?<![\\p{L}\\p{N}_])' : ''}${escaped}${
-          endsWithWord ? '(?![\\p{L}\\p{N}_])' : ''
+        const startsWithWord = /^[\p{L}\p{N}\p{M}_]/u.test(phrase);
+        const endsWithWord = /[\p{L}\p{N}\p{M}_]$/u.test(phrase);
+        return `${startsWithWord ? '(?<![\\p{L}\\p{N}\\p{M}_])' : ''}${escaped}${
+          endsWithWord ? '(?![\\p{L}\\p{N}\\p{M}_])' : ''
         }`;
       });
     if (!sources.length) return null;
