@@ -181,23 +181,37 @@
               Show an on-page quick search bar
             </label>
           </div>
-          <div class="field is-grouped">
-            <div class="control">
-              <div class="input">
+          <div class="field" id="Settings__keyboardShortcutField">
+            <label for="Settings__keyboardShortcut" class="label">
+              In-page highlight shortcut
+            </label>
+            <div class="field has-addons">
+              <div class="control">
                 <input
+                  class="input"
                   type="text"
                   id="Settings__keyboardShortcut"
                   data-recording="false"
                   readonly
-                  placeholder="none"
+                  autocomplete="off"
+                  aria-describedby="Settings__keyboardShortcutStatus"
+                  placeholder="Click to record"
                 />
               </div>
+              <div class="control">
+                <button type="button" class="button" id="Settings__clearKeyboardShortcut">
+                  Clear
+                </button>
+              </div>
+              <div class="control">
+                <button type="button" class="button" id="Settings__resetKeyboardShortcut">
+                  Reset to F6
+                </button>
+              </div>
             </div>
-            <div class="field-label is-normal">
-              <label for="Settings__keyboardShortcut" class="label is-pulled-left">
-                Keyboard shortcut for extension button
-              </label>
-            </div>
+            <p class="help" id="Settings__keyboardShortcutStatus" role="status" aria-live="polite">
+              Focus the shortcut box and press a key combination.
+            </p>
           </div>
           <div class="field is-grouped">
             <div class="control">
