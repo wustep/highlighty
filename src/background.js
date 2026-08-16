@@ -8,6 +8,7 @@ const defaultOptions = {
       color: '#800080',
       textColor: '#ffffff',
       enabled: true,
+      styles: '',
     },
   ],
   allowlist: [],
@@ -20,6 +21,8 @@ const defaultOptions = {
   enableTitleMouseover: false,
   enablePartialMatch: false,
   enableCaseInsensitive: true,
+  enablePhraseNavigator: false,
+  enableQuickSearch: false,
   enableURLDenylist: false,
   enableURLAllowlist: false,
   /**
@@ -172,6 +175,8 @@ function normalizePhraseLists(highlighter) {
             ? normalizedList.toggled
             : true;
       delete normalizedList.toggled;
+      normalizedList.styles =
+        typeof normalizedList.styles === 'string' ? normalizedList.styles : '';
 
       normalizedList.phrases = Array.isArray(normalizedList.phrases)
         ? normalizedList.phrases

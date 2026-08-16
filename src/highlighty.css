@@ -1,0 +1,125 @@
+#Highlighty__toolbar {
+  all: initial;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #b5b5b5;
+  border-radius: 6px;
+  bottom: 1rem;
+  box-shadow: 0 3px 14px rgba(10, 10, 10, 0.22);
+  box-sizing: border-box;
+  color: #363636;
+  display: flex;
+  flex-wrap: wrap;
+  font:
+    14px/1.4 BlinkMacSystemFont,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  gap: 0.45rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.55rem;
+  position: fixed;
+  right: 1rem;
+  z-index: 2147483647;
+}
+
+#Highlighty__toolbar *,
+#Highlighty__toolbar *::before,
+#Highlighty__toolbar *::after {
+  box-sizing: border-box;
+}
+
+#Highlighty__toolbar button,
+#Highlighty__toolbar input {
+  font: inherit;
+}
+
+#Highlighty__toolbar button {
+  background: #f5f5f5;
+  border: 1px solid #b5b5b5;
+  border-radius: 4px;
+  color: #363636;
+  cursor: pointer;
+  min-height: 2rem;
+  padding: 0.25rem 0.65rem;
+}
+
+#Highlighty__toolbar button:hover,
+#Highlighty__toolbar button:focus-visible {
+  background: #e8e8e8;
+  border-color: #7a7a7a;
+}
+
+#Highlighty__toolbar .Highlighty__navigator {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+}
+
+#Highlighty__toolbar .Highlighty__count {
+  font-variant-numeric: tabular-nums;
+  min-width: 4.8rem;
+  text-align: center;
+}
+
+#Highlighty__toolbar .Highlighty__quick-search {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+#Highlighty__toolbar .Highlighty__quick-search-input {
+  background: #ffffff;
+  border: 1px solid #b5b5b5;
+  border-radius: 4px;
+  color: #363636;
+  height: 2rem;
+  min-width: 12rem;
+  padding: 0.25rem 0.5rem;
+}
+
+#Highlighty__toolbar .Highlighty__quick-search-input:focus {
+  border-color: #3298dc;
+  outline: 2px solid rgba(50, 152, 220, 0.2);
+}
+
+mark.Highlighty__phrase {
+  scroll-margin-block: 30vh;
+}
+
+mark.Highlighty__quick-result {
+  background-color: #ffdd57;
+  color: #1f1f1f;
+}
+
+mark.Highlighty__focused {
+  animation: Highlighty__focus-pulse 650ms ease-out;
+  outline: 3px solid #209cee;
+  outline-offset: 2px;
+}
+
+@keyframes Highlighty__focus-pulse {
+  from {
+    outline-width: 7px;
+  }
+
+  to {
+    outline-width: 3px;
+  }
+}
+
+@media (max-width: 520px) {
+  #Highlighty__toolbar {
+    left: 0.5rem;
+    right: 0.5rem;
+  }
+
+  #Highlighty__toolbar .Highlighty__quick-search {
+    flex: 1 1 100%;
+  }
+
+  #Highlighty__toolbar .Highlighty__quick-search-input {
+    flex: 1;
+    min-width: 0;
+  }
+}

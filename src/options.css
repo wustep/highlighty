@@ -131,6 +131,31 @@ span.PhraseList__phraseCount {
   font-size: 0.8rem;
 }
 
+.PhraseList__styles {
+  margin: -0.5rem 0 1.25rem;
+}
+
+.PhraseList__styles summary {
+  color: #3273dc;
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.PhraseList__styles[open] {
+  background: #f5f7fa;
+  border-radius: 4px;
+  padding: 0.9rem 1rem 0.25rem;
+}
+
+.PhraseList__styles[open] summary {
+  margin-bottom: 1rem;
+}
+
+.PhraseList__customStyles {
+  min-height: 5rem;
+}
+
 span.Denylist__url {
   background-color: #ff3860;
   color: white;

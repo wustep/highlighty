@@ -36,6 +36,13 @@ function Hilitor() {
     if (node === undefined || !node) return;
     if (!matchRegExp) return;
     if (skipTags.test(node.nodeName)) return;
+    if (
+      node.nodeType === Node.TEXT_NODE &&
+      node.parentElement &&
+      node.parentElement.closest('[data-highlighty-ignore]')
+    ) {
+      return;
+    }
 
     if (node.hasChildNodes()) {
       for (const childNode of node.childNodes) {
