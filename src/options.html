@@ -185,59 +185,89 @@
               >
             </div>
           </div>
-          <div class="button is-info" id="Settings__save">Save</div>
+          <div class="field is-grouped is-grouped-multiline Settings__saveRow">
+            <div class="control">
+              <button type="button" class="button is-info" id="Settings__save" disabled>
+                Save
+              </button>
+            </div>
+            <div class="control">
+              <span id="Settings__saveStatus" class="tag is-light" role="status" aria-live="polite">
+                All settings saved
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="container" id="PhraseLists">
         <h2 class="title">Lists</h2>
-        <div class="box PhraseList" id="PhraseList--invisible">
-          <div class="columns">
-            <div class="column is-three-fifths">
-              <div class="field is-grouped PhraseList__header">
-                <h1 class="title">
-                  <input
-                    type="checkbox"
-                    class="switch is-rounded is-info PhraseList__enabled"
-                    checked="checked"
-                  />
-                  <label class="PhraseList__enabledLabel">Enabled</label>
-                  <button class="PhraseList__color" style="background-color: #000000"></button>
-                  <span class="PhraseList__title"> </span>
-                  <span class="tag PhraseList__phraseCount"> </span>
-                </h1>
-              </div>
-            </div>
-            <div class="column is-two-fifths">
-              <div class="buttons is-right PhraseList__actions">
-                <button class="button is-info PhraseList__editName">Edit Name</button>
-                <button class="button is-link PhraseList__import">Import</button>
-                <button class="button is-success PhraseList__export">Export</button>
-                <button class="button is-danger PhraseList__delete">Delete</button>
-              </div>
-            </div>
+        <div class="field" id="PhraseLists__searchField">
+          <label class="label" for="PhraseLists__search">Search phrases</label>
+          <div class="control">
+            <input
+              class="input"
+              type="search"
+              id="PhraseLists__search"
+              placeholder="Filter phrases in all lists"
+              autocomplete="off"
+              aria-controls="PhraseLists__results"
+            />
           </div>
-          <form>
+          <p class="help" id="PhraseLists__searchSummary" role="status" aria-live="polite"></p>
+        </div>
+        <div id="PhraseLists__noResults" class="notification is-light is-hidden">
+          No phrases match your search.
+        </div>
+        <div id="PhraseLists__results">
+          <div class="box PhraseList" id="PhraseList--invisible">
             <div class="columns">
-              <div class="column is-three-fifths PhraseList__newPhrase">
-                <div class="field has-addons">
-                  <div class="control is-expanded">
+              <div class="column is-three-fifths">
+                <div class="field is-grouped PhraseList__header">
+                  <h1 class="title">
                     <input
-                      class="input PhraseList__newPhrase__phrase"
-                      type="text"
-                      placeholder="Add a new phrase"
+                      type="checkbox"
+                      class="switch is-rounded is-info PhraseList__enabled"
+                      checked="checked"
                     />
-                  </div>
-                  <div class="control">
-                    <button type="submit" class="button is-success PhraseList__newPhrase__add">
-                      +
-                    </button>
-                  </div>
+                    <label class="PhraseList__enabledLabel">Enabled</label>
+                    <button class="PhraseList__color" style="background-color: #000000"></button>
+                    <span class="PhraseList__title"> </span>
+                    <span class="tag PhraseList__phraseCount"> </span>
+                  </h1>
+                </div>
+              </div>
+              <div class="column is-two-fifths">
+                <div class="buttons is-right PhraseList__actions">
+                  <button class="button is-info PhraseList__editName">Edit Name</button>
+                  <button class="button is-link PhraseList__import">Import</button>
+                  <button class="button is-success PhraseList__export">Export</button>
+                  <button class="button is-danger PhraseList__delete">Delete</button>
                 </div>
               </div>
             </div>
-          </form>
-          <div class="PhraseList__phrases"></div>
+            <form>
+              <div class="columns">
+                <div class="column is-three-fifths PhraseList__newPhrase">
+                  <div class="field has-addons">
+                    <div class="control is-expanded">
+                      <input
+                        class="input PhraseList__newPhrase__phrase"
+                        type="text"
+                        placeholder="Add a new phrase"
+                      />
+                    </div>
+                    <div class="control">
+                      <button type="submit" class="button is-success PhraseList__newPhrase__add">
+                        +
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+            <div class="PhraseList__phrases"></div>
+          </div>
         </div>
 
         <div id="NewPhraseList">
@@ -302,6 +332,13 @@
               <li id="ImportModal__tab--Space-Delimited"><a>Space-Delimited</a></li>
             </ul>
           </div>
+          <article id="ImportModal__spaceWarning" class="message is-warning is-hidden">
+            <div class="message-body">
+              <b>Multi-word phrases are not preserved.</b> Every space-separated word will be
+              imported as its own phrase. Use Line-Delimited for phrases such as “Sherlock and
+              Holmes.”
+            </div>
+          </article>
           <textarea id="ImportModal__body" class="textarea"></textarea>
         </section>
         <footer class="modal-card-foot">
@@ -325,11 +362,12 @@
           <div class="tabs">
             <ul id="ExportModal__tabs">
               <li id="ExportModal__tab--Line-Delimited" class="is-active"><a>Line-Delimited</a></li>
-              <li id="ExportModal__tab--Space-Delimited" class="is-active">
-                <a>Space-Delimited</a>
-              </li>
+              <li id="ExportModal__tab--Space-Delimited"><a>Space-Delimited</a></li>
             </ul>
           </div>
+          <article id="ExportModal__spaceWarning" class="message is-warning is-hidden">
+            <div class="message-body"></div>
+          </article>
           <textarea id="ExportModal__body" class="textarea" readonly></textarea>
         </section>
         <footer class="modal-card-foot">
@@ -396,7 +434,32 @@
               </article>
             </div>
           </div>
-          <textarea id="BulkImportModal__body" class="textarea"></textarea>
+          <div class="field">
+            <label class="label">Upload an export file</label>
+            <div id="BulkImportModal__file" class="file has-name is-fullwidth">
+              <label class="file-label">
+                <input
+                  id="BulkImportModal__fileInput"
+                  class="file-input"
+                  type="file"
+                  accept=".txt,.json,text/plain,application/json"
+                />
+                <span class="file-cta">
+                  <span class="file-label">Choose a .txt or .json file</span>
+                </span>
+                <span id="BulkImportModal__fileName" class="file-name">No file selected</span>
+              </label>
+            </div>
+            <p id="BulkImportModal__fileStatus" class="help" role="status" aria-live="polite"></p>
+          </div>
+          <div class="field">
+            <label class="label" for="BulkImportModal__body">Or paste export data</label>
+            <textarea
+              id="BulkImportModal__body"
+              class="textarea"
+              placeholder="Paste the JSON from Bulk Export"
+            ></textarea>
+          </div>
         </section>
         <footer class="modal-card-foot">
           <button id="BulkImportModal__previewImport" class="button is-link">Preview Import</button>
@@ -405,7 +468,7 @@
       </div>
     </div>
     <!-- Modal-on-Modal: Bulk Import Preview-->
-    <div class="box" class="PhraseList" id="PhraseListPreview--invisible">
+    <div class="box PhraseList" id="PhraseListPreview--invisible">
       <h2 class="title is-4">
         <button class="PhraseList__color" style="background-color: #000000"></button>
         <span class="PhraseList__title"></span>

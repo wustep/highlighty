@@ -44,7 +44,15 @@
   outline-color: #bb0000;
 }
 
+.Settings__saveRow {
+  align-items: center;
+}
+
 /* Phrase & URL lists */
+
+#PhraseLists__searchField {
+  margin-bottom: 1.5rem;
+}
 
 #PhraseList--invisible,
 #PhraseListPreview--invisible {
@@ -125,10 +133,18 @@ span.Allowlist__url {
   padding-bottom: 1rem;
 }
 
+#BulkImportModal__fileName {
+  max-width: 18rem;
+}
+
 #BulkImportModal__body,
 #BulkExportModal__body {
   height: 15em;
   font-size: 0.8em;
+}
+
+#BulkImportModal__body {
+  transition: opacity 150ms ease;
 }
 
 /* Color picker */
