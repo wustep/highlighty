@@ -1,6 +1,19 @@
 /* Highlighty.js | by Stephen Wu */
 
 $(function () {
+  const settingsInputSelector = [
+    '#Settings__enableAutoHighlight',
+    '#Settings__enableAutoHighlightUpdates',
+    '#Settings__enableTitleMouseover',
+    '#Settings__enablePartialMatch',
+    '#Settings__enableCaseInsensitive',
+    '#Settings__keyboardShortcut',
+    '#Settings__enableURLDenylist',
+    '#Settings__enableURLAllowlist',
+    '#Settings__sorting',
+  ].join(', ');
+  let settingsDirty = false;
+
   /**
    * Set up or reset the options page handlers and lists components.
    * If fresh is false, then don't run the one-time handlers setup meant for a fresh load.
@@ -8,25 +21,27 @@ $(function () {
   function setupOptionsPage(options, fresh = true) {
     removeExistingLists();
     removeExistingListStyles();
-    updateKeyboardShortcutInput(options.keyboardShortcut);
 
     addExistingLists(options);
     addExistingListStyles(options);
+    applyPhraseSearch();
     // These handlers should only be ran once.
     if (fresh) {
+      setupKeyboardShortcutHandler(options.keyboardShortcut);
+      setupSearchPhraseListsHandler();
       addExistingURLLists(options);
       setPrimarySettings(options);
-      setupKeyboardShortcutHandler();
       setupAutoHighlightHandler();
       setupURLListHandlers();
       setupAddPhraseListHandler();
       setupImportExportModals();
+      setupUnsavedSettingsHandlers();
     }
   }
 
   function removeExistingLists() {
     // This will also remove all associated handlers in the phrase list
-    $('.PhraseList').not('#PhraseList--invisible').remove();
+    $('#PhraseLists__results .PhraseList').not('#PhraseList--invisible').remove();
   }
 
   function removeExistingListStyles() {
@@ -49,6 +64,7 @@ $(function () {
     $('#Settings__enableURLAllowlist').prop('checked', options.enableURLAllowlist);
     $('#Settings__sorting').val(options.sorting);
     showHideAutoHighlightSettings();
+    setSettingsDirty(false);
   }
 
   function showHideAutoHighlightSettings() {
@@ -65,19 +81,45 @@ $(function () {
     });
   }
 
-  function updateKeyboardShortcutInput(shortcutString = '') {
-    const keyboardShortcutInput = $('#Settings__keyboardShortcut');
-    keyboardShortcutInput.val(shortcutString);
-    keyboardShortcutInput.width((shortcutString.length + 6) * 5);
+  function setSettingsDirty(isDirty) {
+    settingsDirty = isDirty;
+    $('#Settings__save').prop('disabled', !isDirty);
+    $('#Settings__saveStatus')
+      .removeClass('is-danger')
+      .toggleClass('is-light', !isDirty)
+      .toggleClass('is-warning', isDirty)
+      .text(isDirty ? 'Unsaved settings' : 'All settings saved');
   }
 
-  function setupKeyboardShortcutHandler() {
+  function setupUnsavedSettingsHandlers() {
+    $('#Settings').on('change', settingsInputSelector, () => {
+      setSettingsDirty(true);
+    });
+    window.addEventListener('beforeunload', (event) => {
+      if (!settingsDirty) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
+  }
+
+  function setupKeyboardShortcutHandler(savedShortcut) {
     const keyboardShortcutInput = $('#Settings__keyboardShortcut');
+
+    function updateShortcutInput(shortcutString, isUserChange = false) {
+      const previousShortcut = keyboardShortcutInput.val();
+      keyboardShortcutInput.val(shortcutString);
+      keyboardShortcutInput.width((shortcutString.length + 6) * 5);
+      if (isUserChange && previousShortcut !== shortcutString) {
+        setSettingsDirty(true);
+      }
+    }
 
     function stopRecording() {
       document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'false');
       document.removeEventListener('keydown', handleKeyDown);
     }
+
+    updateShortcutInput(savedShortcut);
 
     keyboardShortcutInput.on('focus', () => {
       document.getElementById('Settings__keyboardShortcut').setAttribute('data-recording', 'true');
@@ -95,9 +137,10 @@ $(function () {
       }
       if (e.key === 'Escape') {
         keyboardShortcutInput.blur();
-        updateKeyboardShortcutInput('');
+        updateShortcutInput('', true);
         return;
       }
+      e.preventDefault();
       const specialKeys = {
         ' ': 'space',
       };
@@ -106,7 +149,7 @@ $(function () {
       if (e.shiftKey) pressedKeys.push('shift');
       if (e.altKey) pressedKeys.push('alt');
       if (e.metaKey) pressedKeys.push('meta');
-      let keyStr = ['Control', 'Shift', 'Alt', 'Meta,'].includes(e.key)
+      let keyStr = ['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)
         ? ''
         : specialKeys[e.key] || e.key;
       // Function keys remain capitalized
@@ -115,33 +158,65 @@ $(function () {
       }
       if (keyStr) pressedKeys.push(keyStr);
       let pressedKeysString = pressedKeys.join(' + ').trim();
-      updateKeyboardShortcutInput(pressedKeysString);
+      updateShortcutInput(pressedKeysString, true);
     }
+  }
+
+  function setupSearchPhraseListsHandler() {
+    $('#PhraseLists__search').on('input', applyPhraseSearch);
+  }
+
+  function applyPhraseSearch() {
+    const searchText = $.trim($('#PhraseLists__search').val() || '').toLowerCase();
+    let matchingPhraseCount = 0;
+    let matchingListCount = 0;
+
+    $('#PhraseLists__results .PhraseList')
+      .not('#PhraseList--invisible')
+      .each(function () {
+        const $list = $(this);
+        let listMatchCount = 0;
+        $list.find('.PhraseList__phrase').each(function () {
+          const $phrase = $(this);
+          const phraseText = String($phrase.data('phrase') || $phrase.text()).toLowerCase();
+          const matches = searchText.length === 0 || phraseText.includes(searchText);
+          $phrase.toggle(matches);
+          if (matches) listMatchCount++;
+        });
+        const listMatches = searchText.length === 0 || listMatchCount > 0;
+        $list.toggle(listMatches);
+        if (listMatches) {
+          matchingListCount++;
+          matchingPhraseCount += listMatchCount;
+        }
+      });
+
+    $('#PhraseLists__noResults').toggleClass(
+      'is-hidden',
+      searchText.length === 0 || matchingPhraseCount > 0,
+    );
+    $('#PhraseLists__searchSummary').text(
+      searchText.length === 0
+        ? `${pluralize(matchingPhraseCount, 'phrase')} in ${pluralize(matchingListCount, 'list')}`
+        : `${pluralize(matchingPhraseCount, 'matching phrase')} in ${pluralize(
+            matchingListCount,
+            'list',
+          )}`,
+    );
   }
 
   function addExistingURLLists(options) {
-    if (options.denylist.length) {
-      for (let url of options.denylist) {
-        addDenylistURLElement(url);
-      }
-    }
-    if (options.allowlist.length) {
-      for (let url of options.allowlist) {
-        addAllowlistURLElement(url);
-      }
-    }
+    (options.denylist || []).forEach((url) => addURLListElement('Denylist', url));
+    (options.allowlist || []).forEach((url) => addURLListElement('Allowlist', url));
   }
 
-  function addDenylistURLElement(url) {
-    const $url = $('<span>', { class: 'tag is-medium Denylist__url' }).text(url);
-    $url.append($('<button>', { class: 'delete is-small Denylist__url__delete' }));
-    $('#Denylist__urls').append($url);
-  }
-
-  function addAllowlistURLElement(url) {
-    const $url = $('<span>', { class: 'tag is-medium Allowlist__url' }).text(url);
-    $url.append($('<button>', { class: 'delete is-small Allowlist__url__delete' }));
-    $('#Allowlist__urls').append($url);
+  function addURLListElement(listName, url) {
+    const $url = $('<span>').addClass(`tag is-medium ${listName}__url`).data('url', url).text(url);
+    $('<button>')
+      .addClass(`delete is-small ${listName}__url__delete`)
+      .attr('aria-label', `Delete ${url}`)
+      .appendTo($url);
+    $(`#${listName}__urls`).append($url);
   }
 
   function addExistingListStyles(options) {
@@ -168,7 +243,7 @@ $(function () {
         if (isImportPreview) {
           addPreviewPhraseElement($newListDiv, phrase, highlighter[i].color);
         } else {
-          addPhraseElement($newListDiv, phrase, i);
+          addPhraseElement($newListDiv, phrase, i, false);
         }
       }
     }
@@ -203,19 +278,24 @@ $(function () {
       $('#BulkImportPreviewModal__preview').append($newListDiv);
     } else {
       setupPhraseListHandlers($newListDiv);
-      $newListDiv.insertBefore('#NewPhraseList');
+      $newListDiv.insertBefore('#PhraseList--invisible');
     }
     return $newListDiv;
   }
 
-  function addPhraseElement($listDiv, phrase, listIndex) {
-    const $phrase = $('<span>', {
-      class: `tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}`,
-      'data-list': listIndex,
-    }).text(phrase);
-    $phrase.append($('<button>', { class: 'delete is-small PhraseList__phrase__delete' }));
+  function addPhraseElement($listDiv, phrase, listIndex, updateSearch = true) {
+    const $phrase = $('<span>')
+      .addClass(`tag is-medium PhraseList__phrase PhraseList__phrase--${listIndex}`)
+      .attr('data-list', listIndex)
+      .data('phrase', phrase)
+      .text(phrase);
+    $('<button>')
+      .addClass('delete is-small PhraseList__phrase__delete')
+      .attr('aria-label', `Delete ${phrase}`)
+      .appendTo($phrase);
     $listDiv.find('.PhraseList__phrases').append($phrase);
     incrementPhraseCount($listDiv);
+    if (updateSearch) applyPhraseSearch();
   }
 
   function incrementPhraseCount($listDiv) {
@@ -230,83 +310,67 @@ $(function () {
   function decrementPhraseCount($listDiv) {
     const $phraseCount = $listDiv.find('.PhraseList__phraseCount');
     let phraseCount = parseInt($phraseCount.data('count') || 0, 10);
-    phraseCount--;
+    phraseCount = Math.max(0, phraseCount - 1);
     $phraseCount.data('count', phraseCount);
     $phraseCount.text(`${phraseCount} phrase${phraseCount !== 1 ? 's' : ''}`);
   }
 
   function addPreviewPhraseElement($listDiv, phrase, color) {
     const textColor = getTextColor(color);
-    const $phrase = $('<span>', { class: 'tag is-medium PhraseList__phrase' })
+    $('<span>')
+      .addClass('tag is-medium PhraseList__phrase')
+      .data('phrase', phrase)
+      .css({ backgroundColor: color, color: textColor })
       .text(phrase)
-      .css({ backgroundColor: color, color: textColor });
-    $listDiv.find('.PhraseList__phrases').append($phrase);
+      .appendTo($listDiv.find('.PhraseList__phrases'));
   }
 
   function setupURLListHandlers() {
-    $('#Denylist__add').on('click', (e) => {
-      e.preventDefault();
-      const newURL = $('#Denylist__urlInput').val().trim();
-      if (newURL) {
-        chrome.storage.local.get((options) => {
-          $('#Denylist__urlInput').val('');
-          if (options.denylist.includes(newURL)) {
-            alert('URL was already in list!');
-          } else {
-            options.denylist.push(newURL);
-            chrome.storage.local.set({ denylist: options.denylist }, () => {
-              addDenylistURLElement(newURL);
-            });
-          }
-        });
-      }
-    });
-    $('#Allowlist__add').on('click', (e) => {
-      e.preventDefault();
-      const newURL = $('#Allowlist__urlInput').val().trim();
-      if (newURL) {
-        chrome.storage.local.get((options) => {
-          $('#Allowlist__urlInput').val('');
-          if (options.allowlist.includes(newURL)) {
-            alert('URL was already in list!');
-          } else {
-            options.allowlist.push(newURL);
-            chrome.storage.local.set({ allowlist: options.allowlist }, () => {
-              addAllowlistURLElement(newURL);
-            });
-          }
-        });
-      }
-    });
-    $('#Settings').on('click', '.Denylist__url__delete', (e) => {
-      let $url = $(e.target).parent();
-      if (window.confirm('Are you sure you want to remove: ' + $url.text() + '?')) {
-        chrome.storage.local.get((options) => {
-          let urlIndex = options.denylist.indexOf($url.text());
-          options.denylist.splice(urlIndex, 1);
-          chrome.storage.local.set({ denylist: options.denylist }, () => {
-            $url.remove();
-          });
-        });
-      }
-    });
-    $('#Settings').on('click', '.Allowlist__url__delete', (e) => {
-      let $url = $(e.target).parent();
-      if (window.confirm('Are you sure you want to remove: ' + $url.text() + '?')) {
-        chrome.storage.local.get((options) => {
-          let urlIndex = options.allowlist.indexOf($url.text());
-          options.allowlist.splice(urlIndex, 1);
-          chrome.storage.local.set({ allowlist: options.allowlist }, () => {
-            $url.remove();
-          });
-        });
-      }
-    });
-    $('#Settings').on('click', '#Settings__enableURLDenylist', (e) => {
+    setupURLListHandler('Denylist', 'denylist');
+    setupURLListHandler('Allowlist', 'allowlist');
+    $('#Settings').on('click', '#Settings__enableURLDenylist', () => {
       $('#Settings__enableURLAllowlist').prop('checked', false);
     });
-    $('#Settings').on('click', '#Settings__enableURLAllowlist', (e) => {
+    $('#Settings').on('click', '#Settings__enableURLAllowlist', () => {
       $('#Settings__enableURLDenylist').prop('checked', false);
+    });
+  }
+
+  function setupURLListHandler(listName, optionName) {
+    $(`#${listName}__add`).on('click', (event) => {
+      event.preventDefault();
+      const $input = $(`#${listName}__urlInput`);
+      const newURL = $.trim($input.val());
+      if (!newURL) return;
+
+      chrome.storage.local.get((options) => {
+        const urls = options[optionName] || [];
+        $input.val('');
+        if (urls.includes(newURL)) {
+          alert('URL was already in list!');
+          return;
+        }
+        urls.push(newURL);
+        chrome.storage.local.set({ [optionName]: urls }, () => {
+          addURLListElement(listName, newURL);
+        });
+      });
+    });
+
+    $('#Settings').on('click', `.${listName}__url__delete`, (event) => {
+      const $url = $(event.target).parent();
+      const url = $url.data('url');
+      if (!window.confirm(`Are you sure you want to remove: ${url}?`)) return;
+
+      chrome.storage.local.get((options) => {
+        const urls = options[optionName] || [];
+        const urlIndex = urls.indexOf(url);
+        if (urlIndex < 0) return;
+        urls.splice(urlIndex, 1);
+        chrome.storage.local.set({ [optionName]: urls }, () => {
+          $url.remove();
+        });
+      });
     });
   }
 
@@ -341,6 +405,7 @@ $(function () {
         chrome.storage.local.set({ highlighter: options.highlighter }, () => {
           redoAllListStyles(options);
           $('#NewPhraseList__title').val('');
+          applyPhraseSearch();
         });
       });
     });
@@ -396,11 +461,11 @@ $(function () {
 
   function setupPhraseListEditNameHandler($list) {
     $list.on('click', '.PhraseList__editName', () => {
-      const oldListName = $list.find('.PhraseList__title').text();
-      const enteredListName = window.prompt('Please enter a new phrase list name', oldListName);
-      const newListName = enteredListName?.trim();
-      if (newListName && newListName !== oldListName) {
+      var oldListName = $list.find('.PhraseList__title').text();
+      var newListName = window.prompt('Please enter a new phrase list name', oldListName);
+      if (newListName != null && newListName != '' && newListName != oldListName) {
         chrome.storage.local.get((options) => {
+          // TODO: functionalize this?
           options.highlighter[$list.data('index')].title = newListName;
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
             $list.find('.PhraseList__title').text(newListName);
@@ -425,25 +490,25 @@ $(function () {
   }
 
   function setupPhraseListAddPhraseHandler($list) {
-    const listIndex = $list.data('index');
+    let listIndex = $list.data('index');
     $list.on('click', '.PhraseList__newPhrase__add', (e) => {
       e.preventDefault();
-      const newPhrase = $list.find('.PhraseList__newPhrase__phrase').val().trim();
-      if (!newPhrase) {
-        return;
+      const $input = $list.find('.PhraseList__newPhrase__phrase');
+      const newPhrase = $.trim($input.val());
+      if (newPhrase.length > 0) {
+        chrome.storage.local.get((options) => {
+          if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
+            $input.val('');
+            alert('Phrase was already in list!');
+          } else {
+            options.highlighter[listIndex].phrases.push(newPhrase);
+            $input.val('');
+            chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+              addPhraseElement($list, newPhrase, listIndex);
+            });
+          }
+        });
       }
-
-      chrome.storage.local.get((options) => {
-        $list.find('.PhraseList__newPhrase__phrase').val('');
-        if (options.highlighter[listIndex].phrases.includes(newPhrase)) {
-          alert('Phrase was already in list!');
-        } else {
-          options.highlighter[listIndex].phrases.push(newPhrase);
-          chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-            addPhraseElement($list, newPhrase, listIndex);
-          });
-        }
-      });
     });
   }
 
@@ -451,15 +516,18 @@ $(function () {
     let listIndex = $list.data('index');
     let $phrases = $list.find('.PhraseList__phrases');
     $phrases.on('click', '.PhraseList__phrase__delete', (e) => {
-      let $phrase = $(e.target).parent();
-      let confirmationMessage = 'Are you sure you want to delete: ' + $phrase.text().trim() + '?';
+      const $phrase = $(e.target).parent();
+      const phrase = $phrase.data('phrase');
+      let confirmationMessage = 'Are you sure you want to delete: ' + phrase + '?';
       if (window.confirm(confirmationMessage)) {
         chrome.storage.local.get((options) => {
-          let phraseIndex = options.highlighter[listIndex].phrases.indexOf($phrase.text());
+          let phraseIndex = options.highlighter[listIndex].phrases.indexOf(phrase);
+          if (phraseIndex < 0) return;
           options.highlighter[listIndex].phrases.splice(phraseIndex, 1);
           chrome.storage.local.set({ highlighter: options.highlighter }, () => {
-            $phrases.find($phrase).remove();
+            $phrase.remove();
             decrementPhraseCount($list);
+            applyPhraseSearch();
           });
         });
       }
@@ -494,27 +562,42 @@ $(function () {
       'placeholder',
       `Enter your ${tabName.toLowerCase()} phrase list here.`,
     );
+    $('#ImportModal__spaceWarning').toggleClass('is-hidden', tabName !== 'Space-Delimited');
   }
 
   function setExportModalTab(tabName) {
     $('#ExportModal__tabs').find('li').removeClass('is-active');
     $('#ExportModal__tabs').find(`#ExportModal__tab--${tabName}`).addClass('is-active');
     chrome.storage.local.get((options) => {
-      let listIndex = $('#ExportModal').data('index');
-      let exportFormat = $('#ExportModal__tabs li.is-active').attr('id').split('--')[1];
-      let phraseList = '';
-      if (exportFormat === 'Line-Delimited') {
-        for (let phrase of options.highlighter[listIndex].phrases) {
-          phraseList += phrase + '\r\n';
-        }
-      } else if (exportFormat === 'Space-Delimited') {
-        for (let phrase of options.highlighter[listIndex].phrases) {
-          phraseList += phrase + ' ';
-        }
-      }
-      $('#ExportModal__body').val(phraseList.trim());
-      $('#ExportModal__body').trigger('change');
+      const listIndex = $('#ExportModal').data('index');
+      const phrases = options.highlighter[listIndex].phrases;
+      const delimiter = tabName === 'Line-Delimited' ? '\r\n' : ' ';
+      const multiWordPhraseCount = phrases.filter((phrase) => /\s/.test(phrase)).length;
+
+      $('#ExportModal__body').val(phrases.join(delimiter));
+      $('#ExportModal__phraseCount').text(phrases.length);
+      $('#ExportModal__spaceWarning')
+        .toggleClass('is-hidden', tabName !== 'Space-Delimited')
+        .find('.message-body')
+        .html(
+          multiWordPhraseCount > 0
+            ? `<b>${pluralize(
+                multiWordPhraseCount,
+                'multi-word phrase',
+              )} will not be preserved.</b> A space-delimited import treats every word as a separate phrase. Use Line-Delimited for a lossless export.`
+            : '<b>Space-delimited exports cannot preserve multi-word phrases.</b> Use Line-Delimited if you add any phrases containing spaces.',
+        );
     });
+  }
+
+  function getDelimitedPhrases(body, format) {
+    if (format === 'Space-Delimited') {
+      return body.match(/\S+/g) || [];
+    }
+    return body
+      .split(/\r?\n/)
+      .map((phrase) => phrase.trim())
+      .filter(Boolean);
   }
 
   /**
@@ -527,12 +610,17 @@ $(function () {
     $('#BulkImportPreviewModal__phraseCount').text(
       newHighlighter.reduce((prev, curr) => prev + curr.phrases.length, 0),
     );
-    addExistingLists(newHighlighter, true);
+    addExistingLists(
+      {
+        highlighter: newHighlighter,
+        sorting: $('#Settings__sorting').val() || 'None',
+      },
+      true,
+    );
     $('#BulkImportPreviewModal').addClass('is-active');
     $('#BulkImportPreviewModal__import').off('click');
-    $('#BulkImportPreviewModal__import').on('click', (e) => {
+    $('#BulkImportPreviewModal__import').on('click', () => {
       chrome.storage.local.set({ highlighter: newHighlighter }, () => {
-        // Rather than making some changes, re-doing the whole settings page is just easier
         chrome.storage.local.get((options) => {
           setupOptionsPage(options, false);
         });
@@ -540,11 +628,14 @@ $(function () {
       $('#BulkImportModal').removeClass('is-active');
       $('#BulkImportPreviewModal').removeClass('is-active');
       $('#BulkImportModal__body').val('');
+      resetBulkImportFile();
     });
   }
 
   function setupBulkImportModal() {
-    $('#BulkImport').on('click', (e) => {
+    $('#BulkImport').on('click', () => {
+      $('#BulkImportModal__body').val('').css('opacity', 1);
+      resetBulkImportFile();
       $('#BulkImportModal').addClass('is-active');
     });
 
@@ -556,122 +647,157 @@ $(function () {
       $('#BulkImportPreviewModal__optionName').text(importName);
     });
 
-    $('#BulkImportModal__previewImport').on('click', (e) => {
+    $('#BulkImportModal__fileInput').on('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) {
+        resetBulkImportFile();
+        return;
+      }
+
+      const fileExtension = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : '';
+      if (!['txt', 'json'].includes(fileExtension)) {
+        resetBulkImportFile();
+        setBulkImportFileStatus('Choose a file ending in .txt or .json.', true);
+        return;
+      }
+
+      $('#BulkImportModal__previewImport').prop('disabled', true);
+      $('#BulkImportModal__fileStatus')
+        .removeClass('has-text-danger has-text-success')
+        .text(`Reading ${file.name}…`);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const $body = $('#BulkImportModal__body');
+        $body.stop(true, true).fadeTo(100, 0, () => {
+          $body.val(reader.result).fadeTo(150, 1);
+          $('#BulkImportModal__fileName').text(file.name);
+          $('#BulkImportModal__previewImport').prop('disabled', false);
+          setBulkImportFileStatus(`Loaded ${file.name}. Its contents replaced the text below.`);
+        });
+      };
+      reader.onerror = () => {
+        resetBulkImportFile();
+        setBulkImportFileStatus(`Highlighty could not read ${file.name}.`, true);
+      };
+      reader.readAsText(file);
+    });
+
+    $('#BulkImportModal__previewImport').on('click', () => {
       const importType = $('#BulkImportModal__typesSelect').val();
       const importBody = $('#BulkImportModal__body').val();
       try {
-        // Validate the contents of the import text.
-        const importBodyParsed = JSON.parse(importBody);
-        const newImportLists = [];
-        if (!Array.isArray(importBodyParsed) || importBodyParsed.length === 0) {
-          throw new Error(
-            `Imported contents must be a non-empty array representing phrase lists. Check the Bulk Export tool for an example.`,
-          );
+        if ($.trim(importBody).length === 0) {
+          throw new Error('Nothing to import.');
         }
-        importBodyParsed.forEach((phraseList, i) => {
-          const phraseListKeys = Object.keys(phraseList);
-          if (
-            !phraseListKeys.includes('title') ||
-            typeof phraseList.title !== 'string' ||
-            !phraseList.title.trim()
-          ) {
-            throw new Error(`List ${i} must have proper "title" string property`);
-          }
-          if (
-            !phraseListKeys.includes('color') ||
-            typeof phraseList.color !== 'string' ||
-            !phraseList.color.match(/^#[a-f\d]{6}$/i)
-          ) {
-            throw new Error(
-              `List ${i} must have proper "color" property with hexadecimal color string, e.g. "#ffffff"`,
-            );
-          }
-          if (!phraseListKeys.includes('phrases') || !Array.isArray(phraseList.phrases)) {
-            throw new Error(
-              `List ${i} must have proper "phrases" property with array of phrases, e.g. ["Hello", "world"]`,
-            );
-          }
-          for (const phrase of phraseList.phrases) {
-            if (typeof phrase !== 'string') {
-              throw new Error(`List ${i}'s phrases must be all strings, e.g. ["Hello", "world"].`);
+        const newImportLists = parseBulkImport(importBody);
+        if (importType === 'Replace') {
+          setupBulkImportPreviewModal(newImportLists);
+        } else if (importType === 'ImportAsNew' || importType === 'ImportAndMerge') {
+          chrome.storage.local.get((options) => {
+            const existingLists = clonePhraseLists(options.highlighter);
+            if (importType === 'ImportAsNew') {
+              setupBulkImportPreviewModal(existingLists.concat(newImportLists));
+              return;
             }
-          }
-          if ('enabled' in phraseList && typeof phraseList.enabled !== 'boolean') {
-            throw new Error(`List ${i} must have a boolean "enabled" property when provided.`);
-          }
-          const normalizedPhrases = [
-            ...new Set(phraseList.phrases.map((phrase) => phrase.trim()).filter(Boolean)),
-          ];
-          newImportLists.push({
-            color: phraseList.color,
-            phrases: normalizedPhrases,
-            textColor: getTextColor(phraseList.color),
-            title: phraseList.title.trim(),
-            enabled:
-              typeof phraseList.enabled === 'boolean'
-                ? phraseList.enabled
-                : typeof phraseList.toggled === 'boolean'
-                  ? phraseList.toggled
-                  : true,
-          });
-        });
 
-        // Set up the new highlighter object as preview, then setup & open the modal
-        // Note that because chrome.storage.local.get is async, we have to put the modal set up inside that call.
-        let newHighlighter = [];
-        if (importType === 'ImportAsNew') {
-          chrome.storage.local.get((options) => {
-            newHighlighter = options.highlighter.concat(newImportLists);
-            setupBulkImportPreviewModal(newHighlighter);
-          });
-        } else if (importType === 'ImportAndMerge') {
-          chrome.storage.local.get((options) => {
-            const existingLists = options.highlighter.map((list) => ({
-              ...list,
-              phrases: list.phrases.slice(),
-            }));
             const newListsToAppend = [];
             newImportLists.forEach((newList) => {
-              const existingListToMerge = existingLists.find(
-                (list) => list.title === newList.title,
-              );
-              if (existingListToMerge) {
-                existingListToMerge.phrases = arrayMerge(
-                  existingListToMerge.phrases,
-                  newList.phrases,
-                );
-                existingListToMerge.color = newList.color;
-                existingListToMerge.textColor = newList.textColor;
-                existingListToMerge.enabled = newList.enabled;
+              const existingList = existingLists.find((list) => list.title === newList.title);
+              if (existingList) {
+                existingList.phrases = arrayMerge(existingList.phrases, newList.phrases);
+                existingList.color = newList.color;
+                existingList.textColor = newList.textColor;
+                existingList.enabled = newList.enabled;
               } else {
                 newListsToAppend.push(newList);
               }
             });
-            newHighlighter = existingLists.concat(newListsToAppend);
-            setupBulkImportPreviewModal(newHighlighter);
+            setupBulkImportPreviewModal(existingLists.concat(newListsToAppend));
           });
-        } else if (importType === 'Replace') {
-          newHighlighter = [].concat(newImportLists);
-          setupBulkImportPreviewModal(newHighlighter);
         } else {
-          alert(
-            `Invalid import type: ${importType}. Please report this bug via the Contact form on Info!`,
-          );
+          throw new Error(`Invalid import type: ${importType}.`);
         }
-      } catch (e) {
-        if ($.trim(importBody).length === 0) {
-          alert('Nothing to import!');
-        } else {
-          alert(
-            `Invalid import text! Please ensure your import was formatted properly from the Bulk Export tool.\r\n\r\Debug Error: ${e.message}\r\n\r\nIf you think this is a bug, please report via the contact form on the Info page!`,
-          );
-        }
+      } catch (error) {
+        alert(
+          `Invalid import data. Please use a .txt or .json file created by Bulk Export.\r\n\r\nError: ${error.message}`,
+        );
       }
     });
   }
 
+  function parseBulkImport(importBody) {
+    const parsedLists = JSON.parse(importBody);
+    if (!Array.isArray(parsedLists) || parsedLists.length === 0) {
+      throw new Error('Imported contents must be a non-empty array of phrase lists.');
+    }
+
+    return parsedLists.map((phraseList, index) => {
+      if (!phraseList || typeof phraseList !== 'object' || Array.isArray(phraseList)) {
+        throw new Error(`List ${index + 1} must be an object.`);
+      }
+      if (typeof phraseList.title !== 'string' || !phraseList.title.trim()) {
+        throw new Error(`List ${index + 1} must have a non-empty "title" string.`);
+      }
+      if (
+        typeof phraseList.color !== 'string' ||
+        !/^#[a-f\d]{6}(?:[a-f\d]{2})?$/i.test(phraseList.color)
+      ) {
+        throw new Error(`List ${index + 1} must have a hex color such as "#ffffff".`);
+      }
+      if (!Array.isArray(phraseList.phrases)) {
+        throw new Error(`List ${index + 1} must have a "phrases" array.`);
+      }
+      if (phraseList.phrases.some((phrase) => typeof phrase !== 'string')) {
+        throw new Error(`Every phrase in list ${index + 1} must be a string.`);
+      }
+      if ('enabled' in phraseList && typeof phraseList.enabled !== 'boolean') {
+        throw new Error(`List ${index + 1} must have a boolean "enabled" value.`);
+      }
+      if ('toggled' in phraseList && typeof phraseList.toggled !== 'boolean') {
+        throw new Error(`List ${index + 1} must have a boolean legacy "toggled" value.`);
+      }
+      const normalizedPhrases = [
+        ...new Set(phraseList.phrases.map((phrase) => phrase.trim()).filter(Boolean)),
+      ];
+
+      return {
+        color: phraseList.color,
+        phrases: normalizedPhrases,
+        textColor: getTextColor(phraseList.color),
+        title: phraseList.title.trim(),
+        enabled:
+          typeof phraseList.enabled === 'boolean'
+            ? phraseList.enabled
+            : typeof phraseList.toggled === 'boolean'
+              ? phraseList.toggled
+              : true,
+      };
+    });
+  }
+
+  function clonePhraseLists(highlighter) {
+    return (highlighter || []).map((list) => ({
+      ...list,
+      phrases: list.phrases.slice(),
+    }));
+  }
+
+  function resetBulkImportFile() {
+    $('#BulkImportModal__fileInput').val('');
+    $('#BulkImportModal__fileName').text('No file selected');
+    $('#BulkImportModal__previewImport').prop('disabled', false);
+    setBulkImportFileStatus('');
+  }
+
+  function setBulkImportFileStatus(message, isError = false) {
+    $('#BulkImportModal__fileStatus')
+      .toggleClass('has-text-danger', isError)
+      .toggleClass('has-text-success', Boolean(message) && !isError)
+      .text(message);
+  }
+
   function setupBulkExportModal() {
-    $('#BulkExport').on('click', (e) => {
+    $('#BulkExport').on('click', () => {
       $('#BulkExportModal').addClass('is-active');
       chrome.storage.local.get((options) => {
         const highlighterExport = [];
@@ -719,106 +845,77 @@ $(function () {
 
   function setupImportExportTabHandlers() {
     $('#ImportModal__tabs > li').on('click', (e) => {
-      let tabName = e.currentTarget.id.split('--')[1];
+      const tabName = e.currentTarget.id.split('--')[1];
       setImportModalTab(tabName);
-      $('#ImportModal__body').trigger('change'); // Force change to trigger phrase count change
+      $('#ImportModal__body').trigger('input');
     });
     $('#ExportModal__tabs > li').on('click', (e) => {
-      let tabName = e.currentTarget.id.split('--')[1];
+      const tabName = e.currentTarget.id.split('--')[1];
       setExportModalTab(tabName);
     });
   }
 
   function setupImportExportCloseHandlers() {
-    $('#ImportModal__cancel, #ImportModal__close').on('click', (e) => {
+    $('#ImportModal__cancel, #ImportModal__close').on('click', () => {
       $('#ImportModal').removeClass('is-active');
     });
-    $('#ExportModal__cancel, #ExportModal__close').on('click', (e) => {
+    $('#ExportModal__cancel, #ExportModal__close').on('click', () => {
       $('#ExportModal').removeClass('is-active');
     });
-    $('#BulkExportModal__cancel, #BulkExportModal__close').on('click', (e) => {
+    $('#BulkExportModal__cancel, #BulkExportModal__close').on('click', () => {
       $('#BulkExportModal').removeClass('is-active');
     });
-    $('#BulkImportModal__cancel, #BulkImportModal__close').on('click', (e) => {
+    $('#BulkImportModal__cancel, #BulkImportModal__close').on('click', () => {
+      resetBulkImportFile();
       $('#BulkImportModal').removeClass('is-active');
     });
-    $('#BulkImportPreviewModal__cancel, #BulkImportPreviewModal__close').on('click', (e) => {
+    $('#BulkImportPreviewModal__cancel, #BulkImportPreviewModal__close').on('click', () => {
       $('#BulkImportPreviewModal').removeClass('is-active');
     });
   }
 
   function setupImportExportPhraseCountHandler() {
-    $('#ImportModal__body').on('change keyup paste', () => {
-      let importFormat = $('#ImportModal__tabs li.is-active').attr('id').split('--')[1];
-      let phraseCount = 0;
-      if (importFormat === 'Line-Delimited') {
-        phraseCount = (
-          $('#ImportModal__body')
-            .val()
-            .split('\n')
-            .filter((p) => p.trim() != '') || []
-        ).length;
-      } else if (importFormat === 'Space-Delimited') {
-        phraseCount = ($('#ImportModal__body').val().match(/\S+/g) || []).length;
-      }
+    $('#ImportModal__body').on('input', () => {
+      const importFormat = getActiveDelimitedFormat('ImportModal');
+      const phraseCount = getDelimitedPhrases($('#ImportModal__body').val(), importFormat).length;
       $('#ImportModal__phraseCount').text(phraseCount);
     });
-    $('#ExportModal__body').on('change', () => {
-      const exportFormat = $('#ExportModal__tabs li.is-active').attr('id').split('--')[1];
-      let phraseCount = 0;
-      if (exportFormat === 'Line-Delimited') {
-        phraseCount = (
-          $('#ExportModal__body')
-            .val()
-            .split('\n')
-            .filter((p) => p.trim() != '') || []
-        ).length;
-      } else if (exportFormat === 'Space-Delimited') {
-        phraseCount = ($('#ExportModal__body').val().match(/\S+/g) || []).length;
-      }
-      $('#ExportModal__phraseCount').text(phraseCount);
-    });
+  }
+
+  function getActiveDelimitedFormat(modalId) {
+    return $(`#${modalId}__tabs li.is-active`).attr('id').split('--')[1];
   }
 
   function setupImportSubmitButton() {
     $('#ImportModal__submit').on('click', () => {
-      const phraseCount = Number($('#ImportModal__phraseCount').text());
-      if (phraseCount > 0) {
+      const importFormat = getActiveDelimitedFormat('ImportModal');
+      const phrasesToAdd = getDelimitedPhrases($('#ImportModal__body').val(), importFormat);
+      if (phrasesToAdd.length > 0) {
         chrome.storage.local.get((options) => {
           const listIndex = $('#ImportModal').data('index');
           const currentPhraseList = options.highlighter[listIndex].phrases;
-          const importFormat = $('#ImportModal__tabs li.is-active').attr('id').split('--')[1];
-          let phrasesToAdd = [];
-          if (importFormat === 'Space-Delimited') {
-            phrasesToAdd = $('#ImportModal__body').val().match(/\S+/g) || [];
-          } else if (importFormat === 'Line-Delimited') {
-            phrasesToAdd =
-              $('#ImportModal__body')
-                .val()
-                .split('\n')
-                .map((phrase) => phrase.trim())
-                .filter(Boolean) || [];
-          }
           let phrasesSkipped = 0;
           let phrasesAdded = 0;
-          for (const phrase of new Set(phrasesToAdd)) {
+          for (const phrase of phrasesToAdd) {
             if (!currentPhraseList.includes(phrase)) {
-              options.highlighter[listIndex].phrases.push(phrase);
-              addPhraseElement($(`#PhraseList--${listIndex}`), phrase, listIndex);
+              currentPhraseList.push(phrase);
+              addPhraseElement($(`#PhraseList--${listIndex}`), phrase, listIndex, false);
               phrasesAdded++;
             } else {
               phrasesSkipped++;
             }
           }
-          let alertMessage = `${pluralize(phrasesAdded, 'phrase')} added.`;
-          if (phrasesSkipped > 0) {
-            alertMessage += `\n${pluralize(
-              phrasesSkipped,
-              'phrase',
-            )} skipped due to already being in the list.`;
-          }
-          alert(alertMessage);
-          chrome.storage.local.set({ highlighter: options.highlighter });
+          chrome.storage.local.set({ highlighter: options.highlighter }, () => {
+            applyPhraseSearch();
+            let alertMessage = `${pluralize(phrasesAdded, 'phrase')} added.`;
+            if (phrasesSkipped > 0) {
+              alertMessage += `\n${pluralize(
+                phrasesSkipped,
+                'phrase',
+              )} skipped due to already being in the list.`;
+            }
+            alert(alertMessage);
+          });
         });
       }
       $('#ImportModal').removeClass('is-active');
@@ -826,7 +923,7 @@ $(function () {
   }
 
   function setupExportCopyButton() {
-    $('#ExportModal__copy').on('click', (e) => {
+    $('#ExportModal__copy').on('click', () => {
       $('#ExportModal__body').select();
       document.execCommand('copy');
     });
@@ -868,7 +965,14 @@ $(function () {
       }
 
       chrome.storage.local.set(newOptions, () => {
-        alert('Settings saved!');
+        if (chrome.runtime.lastError) {
+          $('#Settings__saveStatus')
+            .removeClass('is-light is-warning')
+            .addClass('is-danger')
+            .text('Settings could not be saved');
+          return;
+        }
+        setSettingsDirty(false);
         setupOptionsPage(newOptions, false);
       });
     });
