@@ -71,7 +71,7 @@
 
     return {
       ...list,
-      title: typeof list.title === 'string' && list.title.trim() ? list.title.trim() : 'Untitled',
+      title: typeof list.title === 'string' && list.title.trim() ? list.title : 'Untitled',
       color: core.hexClean(color),
       textColor: core.hexClean(textColor),
       enabled: core.normalizeListEnabled(list),

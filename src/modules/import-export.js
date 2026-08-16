@@ -14,7 +14,10 @@
   function getDelimitedPhrases(body, format) {
     if (typeof body !== 'string') return [];
     if (format === 'Space-Delimited') return body.match(/\S+/g) || [];
-    return core.normalizePhrases(body.split(/\r?\n/));
+    return body
+      .split(/\r?\n/)
+      .map((phrase) => phrase.trim())
+      .filter(Boolean);
   }
 
   function parseBulkImport(importBody) {

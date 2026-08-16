@@ -15,7 +15,7 @@ const {
   prepareHilitorOptions,
 } = require('../src/modules/matching.js');
 const { isAllowedURL, normalizeURLPhrases, urlMatchesAny } = require('../src/modules/urls.js');
-const { parseBulkImport } = require('../src/modules/import-export.js');
+const { getDelimitedPhrases, parseBulkImport } = require('../src/modules/import-export.js');
 const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/modules/colors.js');
 const { normalizeOptions, normalizePhraseLists } = require('../src/modules/storage.js');
 const { validateStyleDeclarations } = require('../src/modules/styles.js');
@@ -33,6 +33,14 @@ test('adding phrases reports exact duplicates while preserving unique order', ()
     added: 2,
     skipped: 2,
   });
+});
+
+test('line imports trim empty phrases but preserve duplicates for skip reporting', () => {
+  assert.deepEqual(getDelimitedPhrases(' one \n\none\n two ', 'Line-Delimited'), [
+    'one',
+    'one',
+    'two',
+  ]);
 });
 
 test('Hilitor input escapes phrases instead of treating them as regular expressions', () => {
@@ -151,6 +159,7 @@ test('color helpers choose contrast colors and convert clean hex values', () => 
 test('legacy list toggles normalize to enabled without losing false', () => {
   assert.equal(isPhraseListEnabled({}), true);
   assert.equal(isPhraseListEnabled({ toggled: false }), false);
+  assert.equal(isPhraseListEnabled({ enabled: true, toggled: false }), true);
   assert.equal(normalizeListEnabled({ toggled: false }), false);
   assert.equal(normalizeListEnabled({ enabled: true, toggled: false }), true);
 

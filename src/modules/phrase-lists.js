@@ -36,7 +36,7 @@
   }
 
   function isPhraseListEnabled(list) {
-    return list?.enabled !== false && list?.toggled !== false;
+    return normalizeListEnabled(list);
   }
 
   function normalizeListEnabled(list) {
@@ -54,7 +54,13 @@
     const normalizedOrder = normalizeSortOrder(order);
     if (normalizedOrder === 'None') return sorted;
 
-    sorted.sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }));
+    sorted.sort((a, b) => {
+      const first = String(a).toLowerCase();
+      const second = String(b).toLowerCase();
+      if (first < second) return -1;
+      if (first > second) return 1;
+      return 0;
+    });
     if (normalizedOrder === 'Z-A') sorted.reverse();
     return sorted;
   }
