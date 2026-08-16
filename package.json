@@ -4,10 +4,12 @@
   "private": true,
   "description": "Web extension to highlight phrases from given lists.",
   "scripts": {
-    "test": "node --test",
+    "build": "node scripts/build.mjs",
+    "test": "tsx --test test/**/*.test.ts",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && node --check src/background.js && node --check src/highlighty.js && node --check src/options.js"
+    "check": "npm run format:check && npm run typecheck && node --check scripts/build.mjs"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,12 @@
   },
   "homepage": "https://github.com/wustep/highlighty#readme",
   "devDependencies": {
-    "prettier": "^3.9.6"
+    "@types/chrome": "^0.2.6",
+    "@types/jquery": "^4.0.1",
+    "@types/node": "^26.2.0",
+    "esbuild": "^0.28.2",
+    "prettier": "^3.9.6",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2"
   }
 }

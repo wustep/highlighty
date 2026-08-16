@@ -9,23 +9,28 @@ Web extension to highlight phrases from given lists.
 
 ## Development
 
-The extension runs directly from `src/`; no build step or bundler is required.
-
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Choose **Load unpacked** and select this repository's `src` directory.
-4. Open Highlighty's options page to configure phrase lists, then visit an HTTP or HTTPS page
-   and use the extension button or configured shortcut.
-
-Install the development dependency and run the automated checks with:
+The extension source is TypeScript. Build it into the unpacked `dist/` directory before loading it
+in Chrome:
 
 ```sh
 npm install
+npm run build
+```
+
+1. Open `chrome://extensions`.
+2. Enable **Developer mode**.
+3. Choose **Load unpacked** and select this repository's `dist` directory.
+4. Open Highlighty's options page to configure phrase lists, then visit an HTTP or HTTPS page
+   and use the extension button or configured shortcut.
+
+Run the automated tests, formatting check, and TypeScript check with:
+
+```sh
 npm test
 npm run check
 ```
 
-The tests use Node's built-in test runner and exercise the pure helpers in `src/modules`.
+The tests run against the TypeScript helpers in `src/modules`.
 
 ## Tech
 
@@ -37,6 +42,9 @@ The tests use Node's built-in test runner and exercise the pure helpers in `src/
   - JavaScript extension library
 - [Hilitor.js](https://www.the-art-of-web.com/javascript/search-highlight/)
   - Keyword highlighting library
+- [TypeScript](https://www.typescriptlang.org/) and
+  [esbuild](https://esbuild.github.io/)
+  - Typed extension source and the unpacked-extension build
 
 ## Contributing
 

@@ -1,15 +1,14 @@
 /* Highlighty.js | by Stephen Wu */
 
+import { Hilitor } from './hilitor';
+import { isEditableTarget, shortcutFromKeyboardEvent } from './modules/keyboard';
+import { prepareHilitorOptions } from './modules/matching';
+import { isPhraseListEnabled, normalizePhrases } from './modules/phrase-lists';
+import { normalizeOptions } from './modules/storage';
+import type { HighlightyOptions } from './modules/types';
+import { isAllowedURL } from './modules/urls';
+
 $(function () {
-  const {
-    isAllowedURL,
-    isEditableTarget,
-    isPhraseListEnabled,
-    normalizeOptions,
-    normalizePhrases,
-    prepareHilitorOptions,
-    shortcutFromKeyboardEvent,
-  } = HighlightyCore;
   if (window.top !== window.self) {
     // Don't run on frames or iframes.
     return;

@@ -1,14 +1,6 @@
 /* Highlighty.js | by Stephen Wu */
 
-importScripts(
-  'modules/styles.js',
-  'modules/colors.js',
-  'modules/phrase-lists.js',
-  'modules/urls.js',
-  'modules/storage.js',
-);
-
-const { cloneDefaults, normalizeOptions } = HighlightyCore;
+import { cloneDefaults, normalizeOptions } from './modules/storage';
 const obsoleteOptionNames = ['whitelist', 'blacklist', 'enableURLWhitelist', 'enableURLBlacklist'];
 
 const actionStates = {

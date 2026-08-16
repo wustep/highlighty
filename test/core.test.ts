@@ -8,18 +8,18 @@ const {
   normalizePhrases,
   sortPhrases,
   sortStoredPhraseLists,
-} = require('../src/modules/phrase-lists.js');
+} = require('../src/modules/phrase-lists.ts');
 const {
   buildPhraseRegExp,
   escapePhrase,
   prepareHilitorOptions,
-} = require('../src/modules/matching.js');
-const { isAllowedURL, normalizeURLPhrases, urlMatchesAny } = require('../src/modules/urls.js');
-const { getDelimitedPhrases, parseBulkImport } = require('../src/modules/import-export.js');
-const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/modules/colors.js');
-const { normalizeOptions, normalizePhraseLists } = require('../src/modules/storage.js');
-const { validateStyleDeclarations } = require('../src/modules/styles.js');
-const { isEditableTarget } = require('../src/modules/keyboard.js');
+} = require('../src/modules/matching.ts');
+const { isAllowedURL, normalizeURLPhrases, urlMatchesAny } = require('../src/modules/urls.ts');
+const { getDelimitedPhrases, parseBulkImport } = require('../src/modules/import-export.ts');
+const { getTextColor, hexClean, rgbaStringToHex, rgbaToHex } = require('../src/modules/colors.ts');
+const { normalizeOptions, normalizePhraseLists } = require('../src/modules/storage.ts');
+const { validateStyleDeclarations } = require('../src/modules/styles.ts');
+const { isEditableTarget } = require('../src/modules/keyboard.ts');
 
 test('phrases are trimmed and empty or duplicate values are removed', () => {
   assert.deepEqual(normalizePhrases([' hello ', '', 'hello', 'world', 42, '  ']), [

@@ -1,21 +1,19 @@
 /* Highlighty.js | by Stephen Wu */
 
+import { getTextColor, hexClean, rgbaStringToHex } from './modules/colors';
+import { getDelimitedPhrases, parseBulkImport } from './modules/import-export';
+import { shortcutFromKeyboardEvent } from './modules/keyboard';
+import {
+  addUniquePhrases,
+  clonePhraseLists,
+  sortPhrases,
+  sortStoredPhraseLists,
+} from './modules/phrase-lists';
+import { DEFAULT_BASE_STYLES, normalizeOptions } from './modules/storage';
+import { validateStyleDeclarations as isValidStyleDeclarations } from './modules/styles';
+import type { HighlightyOptions } from './modules/types';
+
 $(function () {
-  const {
-    DEFAULT_BASE_STYLES,
-    addUniquePhrases,
-    clonePhraseLists,
-    getDelimitedPhrases,
-    getTextColor,
-    hexClean,
-    normalizeOptions,
-    parseBulkImport,
-    rgbaStringToHex,
-    shortcutFromKeyboardEvent,
-    sortPhrases,
-    sortStoredPhraseLists,
-    validateStyleDeclarations: isValidStyleDeclarations,
-  } = HighlightyCore;
   const settingsInputSelector = [
     '#Settings__enableAutoHighlight',
     '#Settings__enableAutoHighlightUpdates',

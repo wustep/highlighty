@@ -18,18 +18,7 @@
     {
       "matches": ["http://*/*", "https://*/*"],
       "css": ["highlighty.css"],
-      "js": [
-        "lib/jquery.3.3.1.min.js",
-        "modules/phrase-lists.js",
-        "modules/urls.js",
-        "modules/matching.js",
-        "modules/keyboard.js",
-        "modules/styles.js",
-        "modules/colors.js",
-        "modules/storage.js",
-        "lib/hilitor.js",
-        "highlighty.js"
-      ]
+      "js": ["lib/jquery.3.3.1.min.js", "highlighty.js"]
     }
   ],
 
